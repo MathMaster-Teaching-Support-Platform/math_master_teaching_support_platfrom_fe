@@ -24,14 +24,16 @@ import type { BookResponse, CreateBookRequest } from '../../../../types/book.typ
 import BookPdfPreview from '../BookPdfPreview';
 
 interface Props {
+  seriesId?: string;
   book?: BookResponse;
-  onCreated: (bookId: string) => void;
+  onCreated: (payload: { bookId: string; seriesId: string }) => void;
   onSelectBook: (bookId: string) => void;
   onSwitchToNew: () => void;
   onUploaded: () => void;
 }
 
 const BookUploadStep: React.FC<Props> = ({
+  seriesId,
   book,
   onCreated,
   onSelectBook,
@@ -76,18 +78,19 @@ const BookUploadStep: React.FC<Props> = ({
   const deleteBook = useDeleteBook();
   const uploadPdf = useUploadBookPdf(isAddingAnother ? '' : (book?.id ?? ''));
   const relatedBooksQuery = useBookList({
-    schoolGradeId: schoolGradeId || undefined,
-    subjectId: subjectId || undefined,
+    bookSeriesId: seriesId || book?.bookSeriesId || undefined,
     page: 0,
     size: 50,
   });
 
   const relatedBooks = useMemo(
     () =>
-      (relatedBooksQuery.data?.result?.content ?? []).filter(
-        (item) => item.schoolGradeId === schoolGradeId && item.subjectId === subjectId
-      ),
-    [relatedBooksQuery.data, schoolGradeId, subjectId]
+      (relatedBooksQuery.data?.result?.content ?? []).sort((a, b) => {
+        const aTime = new Date(a.createdAt ?? 0).getTime();
+        const bTime = new Date(b.createdAt ?? 0).getTime();
+        return bTime - aTime;
+      }),
+    [relatedBooksQuery.data]
   );
 
   const validate = (): string | null => {
@@ -113,7 +116,7 @@ const BookUploadStep: React.FC<Props> = ({
     const payload: CreateBookRequest = {
       schoolGradeId,
       subjectId,
-      bookSeriesId: book?.bookSeriesId ?? null,
+      bookSeriesId: seriesId ?? book?.bookSeriesId ?? null,
       title: title.trim(),
       publisher: publisher.trim() || null,
       academicYear: academicYear.trim() || null,
@@ -135,8 +138,9 @@ const BookUploadStep: React.FC<Props> = ({
       } else {
         const res = await createBook.mutateAsync(payload);
         if (res.result?.id) {
+          const nextSeriesId = res.result.bookSeriesId ?? seriesId ?? res.result.id;
           setIsAddingAnother(false);
-          onCreated(res.result.id);
+          onCreated({ bookId: res.result.id, seriesId: nextSeriesId });
         }
       }
     } catch (e) {
@@ -234,7 +238,7 @@ const BookUploadStep: React.FC<Props> = ({
         <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-medium text-slate-700">
-              Sách cùng khối/môn ({relatedBooks.length})
+              {seriesId ? 'Các cuốn trong bộ sách' : 'Sách cùng khối/môn'} ({relatedBooks.length})
             </div>
             {!isAddingAnother && (
               <button

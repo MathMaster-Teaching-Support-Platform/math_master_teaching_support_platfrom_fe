@@ -9,8 +9,6 @@ import { useChaptersBySubject } from '../../../../hooks/useChapters';
 import { useLessonsByChapter } from '../../../../hooks/useLessons';
 import type { BookResponse, SeriesPageMappingItem } from '../../../../types/book.types';
 import {
-  detectBookRangeConflicts,
-  type BookRangeInput,
   toSeriesRangeRows,
 } from '../../../../utils/seriesMappingOverlap';
 import SeriesMappingGrid from './SeriesMappingGrid';
@@ -24,12 +22,92 @@ interface DraftItem {
   lessonTitle: string;
   chapterId: string;
   chapterTitle: string;
+  chapterOrderIndex: number | null;
+  lessonOrderIndex: number | null;
   bookId: string;
   pageStart: number | '';
   pageEnd: number | '';
 }
 
-type MappingMode = 'single' | 'series';
+const CURRICULUM_SORT_FALLBACK = 999999;
+
+function sortDraftByCurriculum(a: DraftItem, b: DraftItem): number {
+  const ca = a.chapterOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+  const cb = b.chapterOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+  if (ca !== cb) return ca - cb;
+  const la = a.lessonOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+  const lb = b.lessonOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+  return la - lb;
+}
+
+function validateSeriesOrderingPerBook(
+  draft: DraftItem[],
+  seriesBookNameMap: Map<string, string>
+): { ok: boolean; message?: string } {
+  const byBook = new Map<string, DraftItem[]>();
+  for (const d of draft) {
+    if (
+      !d.bookId ||
+      d.pageStart === '' ||
+      d.pageEnd === '' ||
+      Number(d.pageEnd) < Number(d.pageStart)
+    ) {
+      continue;
+    }
+    const list = byBook.get(d.bookId) ?? [];
+    list.push(d);
+    byBook.set(d.bookId, list);
+  }
+  for (const [, rows] of byBook) {
+    const sorted = [...rows].sort(sortDraftByCurriculum);
+    for (let i = 1; i < sorted.length; i++) {
+      const prevRow = sorted[i - 1];
+      const curRow = sorted[i];
+      const prevEnd = Number(prevRow.pageEnd);
+      const curStart = Number(curRow.pageStart);
+      if (curStart < prevEnd) {
+        const bookTitle = seriesBookNameMap.get(curRow.bookId) ?? curRow.bookId;
+        return {
+          ok: false,
+          message: `Trên "${bookTitle}", sau bài "${prevRow.lessonTitle}" (đến tr.${prevEnd}), bài "${curRow.lessonTitle}" không được bắt đầu trước tr.${prevEnd} (hiện tr.${curStart}).`,
+        };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function validateDraftRowsShape(
+  draft: DraftItem[],
+  seriesBooks: BookResponse[],
+  book: BookResponse
+): { ok: boolean; message?: string } {
+  const knownBookIds = new Set(seriesBooks.map((b) => b.id));
+  const ocrFrom = book.ocrPageFrom ?? 1;
+  const ocrTo = book.ocrPageTo ?? Number.MAX_SAFE_INTEGER;
+  for (const d of draft) {
+    if (!d.bookId || !knownBookIds.has(d.bookId)) {
+      return { ok: false, message: `Lesson "${d.lessonTitle}" chưa chọn sách/tập.` };
+    }
+    if (d.pageStart === '' || d.pageEnd === '') {
+      return { ok: false, message: `Lesson "${d.lessonTitle}" thiếu khoảng trang.` };
+    }
+    const ps = Number(d.pageStart);
+    const pe = Number(d.pageEnd);
+    if (ps < 1 || pe < 1) return { ok: false, message: 'Số trang phải >= 1.' };
+    if (pe < ps) return { ok: false, message: `"${d.lessonTitle}": pageEnd < pageStart.` };
+    const selectedBook = seriesBooks.find((b) => b.id === d.bookId);
+    const selectedFrom = selectedBook?.ocrPageFrom ?? ocrFrom;
+    const selectedTo = selectedBook?.ocrPageTo ?? ocrTo;
+    if (ps < selectedFrom || pe > selectedTo) {
+      return {
+        ok: false,
+        message: `"${d.lessonTitle}": ngoài khoảng OCR của sách đã chọn (${selectedFrom}–${selectedTo}).`,
+      };
+    }
+  }
+  return { ok: true };
+}
 
 const PageMappingStep: React.FC<Props> = ({ book }) => {
   const mappingQuery = useBookSeriesPageMapping(book.id);
@@ -44,8 +122,10 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
   const saveMapping = useSaveSeriesPageMapping(book.id);
   const [draft, setDraft] = useState<DraftItem[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<MappingMode>('single');
-  const seriesBooks = useMemo(() => seriesBooksQuery.data?.result?.content ?? [], [seriesBooksQuery.data]);
+  const seriesBooks = useMemo(
+    () => seriesBooksQuery.data?.result?.content ?? [],
+    [seriesBooksQuery.data]
+  );
   const seriesBookNameMap = useMemo(
     () => new Map(seriesBooks.map((b) => [b.id, b.title])),
     [seriesBooks]
@@ -61,6 +141,8 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         lessonTitle: m.lessonTitle,
         chapterId: m.chapterId,
         chapterTitle: m.chapterTitle,
+        chapterOrderIndex: m.chapterOrderIndex ?? null,
+        lessonOrderIndex: m.lessonOrderIndex ?? null,
         bookId: m.bookId,
         pageStart: m.pageStart,
         pageEnd: m.pageEnd,
@@ -82,14 +164,35 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     return m;
   }, [draft]);
 
-  const visibleDraft = useMemo(
-    () => (mode === 'single' ? draft.filter((d) => d.bookId === book.id) : draft),
-    [draft, mode, book.id]
-  );
+  const savedDraft = useMemo(() => {
+    return (mappingQuery.data?.result ?? []).map((m) => ({
+      lessonId: m.lessonId,
+      lessonTitle: m.lessonTitle,
+      chapterId: m.chapterId,
+      chapterTitle: m.chapterTitle,
+      chapterOrderIndex: m.chapterOrderIndex ?? null,
+      lessonOrderIndex: m.lessonOrderIndex ?? null,
+      bookId: m.bookId,
+      pageStart: m.pageStart,
+      pageEnd: m.pageEnd,
+    }));
+  }, [mappingQuery.data]);
+  const savedByLesson = useMemo(() => {
+    const m = new Map<string, DraftItem>();
+    savedDraft.forEach((item) => m.set(item.lessonId, item));
+    return m;
+  }, [savedDraft]);
 
   const mappedCountByChapter = useMemo(() => {
     const m = new Map<string, number>();
     for (const d of draft) {
+      const isMapped =
+        Boolean(d.bookId) &&
+        d.pageStart !== '' &&
+        d.pageEnd !== '' &&
+        Number(d.pageStart) >= 1 &&
+        Number(d.pageEnd) >= Number(d.pageStart);
+      if (!isMapped) continue;
       m.set(d.chapterId, (m.get(d.chapterId) ?? 0) + 1);
     }
     return m;
@@ -111,88 +214,82 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     setDraft((prev) => prev.filter((p) => p.lessonId !== lessonId));
   };
 
-  const currentDraft = mode === 'single' ? visibleDraft : draft;
+  const rotateLessonBook = (
+    lessonId: string,
+    lessonTitle: string,
+    chapterId: string,
+    chapterTitle: string,
+    chapterOrderIndex: number | null,
+    lessonOrderIndex: number | null
+  ) => {
+    if (seriesBooks.length === 0) return;
+    setDraft((prev) => {
+      const existing = prev.find((item) => item.lessonId === lessonId);
+      const currentBookId = existing?.bookId ?? savedByLesson.get(lessonId)?.bookId ?? book.id;
+      const currentIdx = seriesBooks.findIndex((seriesBook) => seriesBook.id === currentBookId);
+      const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % seriesBooks.length : 0;
+      const nextBookId = seriesBooks[nextIdx]?.id ?? book.id;
+      if (!existing) {
+        return [
+          ...prev,
+          {
+            lessonId,
+            lessonTitle,
+            chapterId,
+            chapterTitle,
+            chapterOrderIndex,
+            lessonOrderIndex,
+            bookId: nextBookId,
+            pageStart: '',
+            pageEnd: '',
+          },
+        ];
+      }
+      return prev.map((item) =>
+        item.lessonId === lessonId
+          ? {
+              ...item,
+              bookId: nextBookId,
+              chapterOrderIndex: chapterOrderIndex ?? item.chapterOrderIndex,
+              lessonOrderIndex: lessonOrderIndex ?? item.lessonOrderIndex,
+            }
+          : item
+      );
+    });
+  };
+
+  const editableDraft = draft;
 
   const seriesRangeRows = useMemo(() => {
     return toSeriesRangeRows(
       seriesBooks,
-      draft
-        .filter((d) => d.pageStart !== '' && d.pageEnd !== '')
-        .map((d) => ({ bookId: d.bookId, pageStart: Number(d.pageStart), pageEnd: Number(d.pageEnd) }))
+      savedDraft
+        .filter(
+          (d) =>
+            typeof d.pageStart === 'number' &&
+            typeof d.pageEnd === 'number' &&
+            Number.isFinite(d.pageStart) &&
+            Number.isFinite(d.pageEnd) &&
+            d.pageEnd >= d.pageStart
+        )
+        .map((d) => ({
+          bookId: d.bookId,
+          pageStart: d.pageStart,
+          pageEnd: d.pageEnd,
+        }))
     );
-  }, [seriesBooks, draft]);
+  }, [seriesBooks, savedDraft]);
 
-  const rangeConflicts = useMemo(() => {
-    const inputs: BookRangeInput[] = seriesRangeRows.map((r) => ({
-      bookId: r.bookId,
-      bookTitle: r.bookTitle,
-      from: r.from,
-      to: r.to,
-    }));
-    return detectBookRangeConflicts(inputs);
-  }, [seriesRangeRows]);
-
-  const conflictMessageByBookId = useMemo(() => {
-    const byId = new Map<string, Array<{ from: number; to: number; otherBookTitle: string }>>();
-    rangeConflicts.forEach((conflict) => {
-      const leftTitle = seriesBooks.find((s) => s.id === conflict.leftBookId)?.title ?? conflict.leftBookId;
-      const rightTitle = seriesBooks.find((s) => s.id === conflict.rightBookId)?.title ?? conflict.rightBookId;
-
-      const leftConflicts = byId.get(conflict.leftBookId) ?? [];
-      leftConflicts.push({
-        from: conflict.overlapFrom,
-        to: conflict.overlapTo,
-        otherBookTitle: rightTitle,
-      });
-      byId.set(conflict.leftBookId, leftConflicts);
-
-      const rightConflicts = byId.get(conflict.rightBookId) ?? [];
-      rightConflicts.push({
-        from: conflict.overlapFrom,
-        to: conflict.overlapTo,
-        otherBookTitle: leftTitle,
-      });
-      byId.set(conflict.rightBookId, rightConflicts);
-    });
-    return byId;
-  }, [rangeConflicts, seriesBooks]);
+  const conflictMessageByBookId = useMemo(
+    () => new Map<string, Array<{ from: number; to: number; otherBookTitle: string }>>(),
+    []
+  );
 
   const validate = (): { ok: boolean; message?: string } => {
-    if (currentDraft.length === 0) return { ok: false, message: 'Cần ít nhất 1 bài học được mapping.' };
-    const ocrFrom = book.ocrPageFrom ?? 1;
-    const ocrTo = book.ocrPageTo ?? Number.MAX_SAFE_INTEGER;
-    const knownBookIds = new Set(seriesBooks.map((b) => b.id));
-    for (const d of currentDraft) {
-      if (!d.bookId || !knownBookIds.has(d.bookId)) {
-        return { ok: false, message: `Lesson "${d.lessonTitle}" chưa chọn sách/tập.` };
-      }
-      if (d.pageStart === '' || d.pageEnd === '') {
-        return { ok: false, message: `Lesson "${d.lessonTitle}" thiếu khoảng trang.` };
-      }
-      const ps = Number(d.pageStart);
-      const pe = Number(d.pageEnd);
-      if (ps < 1 || pe < 1) return { ok: false, message: 'Số trang phải >= 1.' };
-      if (pe < ps) return { ok: false, message: `"${d.lessonTitle}": pageEnd < pageStart.` };
-      const selectedBook = seriesBooks.find((b) => b.id === d.bookId);
-      const selectedFrom = selectedBook?.ocrPageFrom ?? ocrFrom;
-      const selectedTo = selectedBook?.ocrPageTo ?? ocrTo;
-      if (ps < selectedFrom || pe > selectedTo) {
-        return {
-          ok: false,
-          message: `"${d.lessonTitle}": ngoài khoảng OCR của sách đã chọn (${selectedFrom}–${selectedTo}).`,
-        };
-      }
-    }
-    if (rangeConflicts.length > 0) {
-      const first = rangeConflicts[0];
-      const leftName = seriesBooks.find((s) => s.id === first.leftBookId)?.title ?? first.leftBookId;
-      const rightName = seriesBooks.find((s) => s.id === first.rightBookId)?.title ?? first.rightBookId;
-      return {
-        ok: false,
-        message: `Trang ${first.overlapFrom}-${first.overlapTo} bị trùng giữa "${leftName}" và "${rightName}".`,
-      };
-    }
-    return { ok: true };
+    if (draft.length === 0) return { ok: false, message: 'Cần ít nhất 1 bài học được mapping.' };
+    const shape = validateDraftRowsShape(draft, seriesBooks, book);
+    if (!shape.ok) return shape;
+    return validateSeriesOrderingPerBook(draft, seriesBookNameMap);
   };
 
   const handleSave = async () => {
@@ -202,7 +299,8 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
       setError(v.message ?? 'Mapping không hợp lệ.');
       return;
     }
-    const mappings: SeriesPageMappingItem[] = currentDraft.map((d) => ({
+    // Always submit full series mapping so switching books never wipes previous assignments.
+    const mappings: SeriesPageMappingItem[] = draft.map((d) => ({
       lessonId: d.lessonId,
       bookId: d.bookId,
       pageStart: Number(d.pageStart),
@@ -217,7 +315,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
 
   const isSaving = saveMapping.isPending;
   const lessonsList = lessons.data?.result ?? [];
-  const hasBlockingConflicts = rangeConflicts.length > 0;
+  const hasBlockingConflicts = false;
 
   return (
     <div className="space-y-5">
@@ -226,33 +324,13 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
           <ListTree size={18} /> Bước 2 · Mapping bài học
         </h2>
         <p className="text-sm text-slate-500">
-          Chọn chương → chọn tập sách + nhập khoảng trang cho từng bài. Khoảng OCR của sách hiện tại:{' '}
+          Chọn chương → chọn tập sách + nhập khoảng trang cho từng bài. Khoảng OCR của sách hiện
+          tại:{' '}
           <strong>
             {book.ocrPageFrom ?? '?'}–{book.ocrPageTo ?? '?'}
           </strong>{' '}
           Mỗi bài chỉ gán cho 1 tập trong cùng bộ sách.
         </p>
-        <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-          Đang mapping cho sách: <span className="font-semibold">{book.title}</span> · OCR sẽ chạy
-          theo PDF của chính sách
-          này ({book.pdfPath ? 'đã có PDF' : 'chưa có PDF'}).
-        </div>
-        <div className="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs">
-          <button
-            type="button"
-            onClick={() => setMode('single')}
-            className={`px-3 py-1 rounded ${mode === 'single' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
-          >
-            Mapping sách hiện tại
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('series')}
-            className={`px-3 py-1 rounded ${mode === 'series' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
-          >
-            Mapping toàn series
-          </button>
-        </div>
       </div>
 
       {error && (
@@ -322,41 +400,55 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
               <div className="px-3 py-3 text-xs text-slate-400">Chương này chưa có bài học.</div>
             )}
             {lessonsList.map((l) => {
+              const activeChapter = chapters.data?.result.find((c) => c.id === activeChapterId);
+              const chapterOrderIdx = activeChapter?.orderIndex ?? null;
+              const lessonOrderIdx = l.orderIndex ?? null;
               const current = draftByLesson.get(l.id);
+              const savedCurrent = savedByLesson.get(l.id);
+              const mappedBookTitle = savedCurrent?.bookId
+                ? seriesBookNameMap.get(savedCurrent.bookId)
+                : undefined;
+              const draftBookTitle = current?.bookId ? seriesBookNameMap.get(current.bookId) : undefined;
+              const isPendingBookChange = Boolean(
+                current?.bookId && savedCurrent?.bookId && current.bookId !== savedCurrent.bookId
+              );
               return (
                 <div key={l.id} className="px-3 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{l.title}</div>
+                    {savedCurrent?.bookId && (
+                      <div className="mt-1 text-[11px] text-emerald-700">
+                        Đã map:{' '}
+                        <span className="font-medium">{mappedBookTitle ?? savedCurrent.bookId}</span>
+                      </div>
+                    )}
+                    {isPendingBookChange && (
+                      <div className="mt-1 text-[11px] text-blue-700">
+                        Sẽ lưu thành:{' '}
+                        <span className="font-medium">{draftBookTitle ?? current?.bookId}</span>
+                      </div>
+                    )}
                   </div>
-                  {mode === 'series' ? (
-                    <select
-                      value={current?.bookId ?? ''}
-                      onChange={(e) =>
-                        upsertDraft({
-                          lessonId: l.id,
-                          lessonTitle: l.title ?? '',
-                          chapterId: activeChapterId,
-                          chapterTitle:
-                            chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                          bookId: e.target.value,
-                          pageStart: current?.pageStart ?? '',
-                          pageEnd: current?.pageEnd ?? '',
-                        })
-                      }
-                      className="w-44 px-2 py-1 text-sm rounded border border-slate-300"
-                    >
-                      <option value="">Chọn tập</option>
-                      {seriesBooks.map((seriesBook) => (
-                        <option key={seriesBook.id} value={seriesBook.id}>
-                          {seriesBook.title}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="w-44 px-2 py-1 text-xs rounded border border-slate-200 bg-slate-50 text-slate-600">
-                      {book.title}
-                    </div>
-                  )}
+                  <div className="w-44 px-2 py-1 text-xs rounded border border-slate-200 bg-slate-50 text-slate-700">
+                    {draftBookTitle ?? mappedBookTitle ?? 'Chưa map'}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      rotateLessonBook(
+                        l.id,
+                        l.title ?? '',
+                        activeChapterId,
+                        activeChapter?.title ?? '',
+                        chapterOrderIdx,
+                        lessonOrderIdx
+                      )
+                    }
+                    className="px-2 py-1 text-xs rounded border border-slate-300 text-slate-600 hover:bg-slate-50"
+                    title="Đổi bài này sang cuốn kế tiếp"
+                  >
+                    Đổi cuốn
+                  </button>
                   <input
                     type="number"
                     min={1}
@@ -367,9 +459,14 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         lessonId: l.id,
                         lessonTitle: l.title ?? '',
                         chapterId: activeChapterId,
-                        chapterTitle:
-                          chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                        bookId: mode === 'single' ? book.id : (current?.bookId ?? ''),
+                        chapterTitle: activeChapter?.title ?? '',
+                        chapterOrderIndex:
+                          current?.chapterOrderIndex ??
+                          savedCurrent?.chapterOrderIndex ??
+                          chapterOrderIdx,
+                        lessonOrderIndex:
+                          current?.lessonOrderIndex ?? savedCurrent?.lessonOrderIndex ?? lessonOrderIdx,
+                        bookId: current?.bookId ?? savedCurrent?.bookId ?? book.id,
                         pageStart: e.target.value === '' ? '' : Number(e.target.value),
                         pageEnd: current?.pageEnd ?? '',
                       })
@@ -387,9 +484,14 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         lessonId: l.id,
                         lessonTitle: l.title ?? '',
                         chapterId: activeChapterId,
-                        chapterTitle:
-                          chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                        bookId: mode === 'single' ? book.id : (current?.bookId ?? ''),
+                        chapterTitle: activeChapter?.title ?? '',
+                        chapterOrderIndex:
+                          current?.chapterOrderIndex ??
+                          savedCurrent?.chapterOrderIndex ??
+                          chapterOrderIdx,
+                        lessonOrderIndex:
+                          current?.lessonOrderIndex ?? savedCurrent?.lessonOrderIndex ?? lessonOrderIdx,
+                        bookId: current?.bookId ?? savedCurrent?.bookId ?? book.id,
                         pageStart: current?.pageStart ?? '',
                         pageEnd: e.target.value === '' ? '' : Number(e.target.value),
                       })
@@ -413,20 +515,18 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         </div>
       </div>
 
-      {mode === 'series' && (
-        <SeriesMappingGrid rows={seriesRangeRows} conflictsByBookId={conflictMessageByBookId} />
-      )}
+      <SeriesMappingGrid rows={seriesRangeRows} conflictsByBookId={conflictMessageByBookId} />
 
       {/* Mapped summary */}
       <div className="border border-slate-200 rounded-lg">
         <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
-          Tổng kết mapping ({draft.length})
+          Tổng kết mapping ({savedDraft.length})
         </div>
         <div className="max-h-[200px] overflow-y-auto divide-y divide-slate-100">
-          {visibleDraft.length === 0 && (
+          {savedDraft.length === 0 && (
             <div className="px-3 py-3 text-xs text-slate-400">Chưa có bài nào được mapping.</div>
           )}
-          {visibleDraft.map((d) => (
+          {savedDraft.map((d) => (
             <div key={d.lessonId} className="px-3 py-2 text-sm flex items-center justify-between">
               <span className="text-slate-700">
                 <span className="text-slate-400 mr-2">{d.chapterTitle}</span> {d.lessonTitle}
@@ -446,7 +546,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         <button
           type="button"
           onClick={handleSave}
-          disabled={isSaving || currentDraft.length === 0 || hasBlockingConflicts}
+          disabled={isSaving || editableDraft.length === 0 || hasBlockingConflicts}
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}

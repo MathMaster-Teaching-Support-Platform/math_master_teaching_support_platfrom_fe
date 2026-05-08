@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../../data/mockData';
-import { useBook } from '../../../hooks/useBooks';
+import { useBook, useBookList } from '../../../hooks/useBooks';
 import { BookVerifyContent } from './BookVerifyPage';
 import BookUploadStep from './steps/BookUploadStep';
 import PageMappingStep from './steps/PageMappingStep';
@@ -28,26 +28,62 @@ const STEPS: Array<{ key: StepIdx; title: string; icon: React.ReactNode }> = [
 ];
 
 const BookCreateWizard: React.FC = () => {
-  const { bookId: paramBookId } = useParams<{ bookId?: string }>();
+  const { bookId: routeId } = useParams<{ bookId?: string }>();
   const navigate = useNavigate();
-  const [bookId, setBookId] = useState<string | undefined>(paramBookId);
+  const [seriesId, setSeriesId] = useState<string | undefined>(routeId);
+  const [activeBookId, setActiveBookId] = useState<string | undefined>(undefined);
   const [stepIdx, setStepIdx] = useState<StepIdx>(0);
 
-  const { data: bookData } = useBook(bookId);
+  const fallbackBookQuery = useBook(routeId);
+  const seriesBooksQuery = useBookList({
+    bookSeriesId: seriesId || routeId || undefined,
+    page: 0,
+    size: 100,
+  });
+  const seriesBooks = useMemo(
+    () => (seriesBooksQuery.data?.result?.content ?? []).sort((a, b) => a.title.localeCompare(b.title, 'vi')),
+    [seriesBooksQuery.data]
+  );
+  const { data: bookData } = useBook(activeBookId);
   const book = bookData?.result;
+  const seriesHasAnyMapping = useMemo(() => {
+    if (seriesBooks.length > 0) {
+      return seriesBooks.some((seriesBook) => (seriesBook.mappedLessonCount ?? 0) > 0);
+    }
+    return (book?.mappedLessonCount ?? 0) > 0;
+  }, [seriesBooks, book?.mappedLessonCount]);
+
+  useEffect(() => {
+    if (!routeId) return;
+    if (seriesBooks.length > 0) {
+      setSeriesId(routeId);
+      if (!activeBookId || !seriesBooks.some((b) => b.id === activeBookId)) {
+        setActiveBookId(seriesBooks[0].id);
+      }
+      return;
+    }
+    const fallbackBook = fallbackBookQuery.data?.result;
+    if (!fallbackBook) return;
+    const resolvedSeriesId = fallbackBook.bookSeriesId ?? fallbackBook.id;
+    setSeriesId(resolvedSeriesId);
+    setActiveBookId(fallbackBook.id);
+    if (routeId !== resolvedSeriesId) {
+      navigate(`/admin/books/${resolvedSeriesId}/wizard`, { replace: true });
+    }
+  }, [routeId, seriesBooks, activeBookId, fallbackBookQuery.data, navigate]);
 
   const canGoNext = useMemo(() => {
     if (stepIdx === 0) return Boolean(book?.pdfPath);
-    if (stepIdx === 1) return (book?.mappedLessonCount ?? 0) > 0;
+    if (stepIdx === 1) return seriesHasAnyMapping;
     if (stepIdx === 2) return book?.status === 'OCR_DONE';
     return false;
-  }, [stepIdx, book]);
+  }, [stepIdx, book, seriesHasAnyMapping]);
 
   const canAccessStep = (targetStep: StepIdx) => {
     if (targetStep === 0) return true;
-    if (!bookId || !book) return false;
+    if (!activeBookId || !book) return false;
     if (targetStep >= 1 && !book.pdfPath) return false;
-    if (targetStep >= 2 && (book.mappedLessonCount ?? 0) <= 0) return false;
+    if (targetStep >= 2 && !seriesHasAnyMapping) return false;
     if (targetStep >= 3 && book.status !== 'OCR_DONE') return false;
     return true;
   };
@@ -58,27 +94,28 @@ const BookCreateWizard: React.FC = () => {
       setStepIdx(0);
       return;
     }
-    if (stepIdx > 1 && (book?.mappedLessonCount ?? 0) <= 0) {
+    if (stepIdx > 1 && !seriesHasAnyMapping) {
       setStepIdx(1);
       return;
     }
     if (stepIdx > 2 && book?.status !== 'OCR_DONE') {
       setStepIdx(2);
     }
-  }, [book, stepIdx]);
+  }, [book, stepIdx, seriesHasAnyMapping]);
 
-  const handleBookCreated = (newId: string) => {
-    setBookId(newId);
-    navigate(`/admin/books/${newId}/wizard`, { replace: true });
+  const handleBookCreated = ({ bookId, seriesId }: { bookId: string; seriesId: string }) => {
+    setSeriesId(seriesId);
+    setActiveBookId(bookId);
+    navigate(`/admin/books/${seriesId}/wizard`, { replace: true });
   };
 
   const handleSelectBook = (selectedId: string) => {
-    setBookId(selectedId);
-    navigate(`/admin/books/${selectedId}/wizard`, { replace: true });
+    setActiveBookId(selectedId);
   };
 
   const handleSwitchToNew = () => {
-    setBookId(undefined);
+    setSeriesId(undefined);
+    setActiveBookId(undefined);
     setStepIdx(0);
     navigate('/admin/books/new', { replace: true });
   };
@@ -101,11 +138,12 @@ const BookCreateWizard: React.FC = () => {
             <FileText size={20} />
           </div>
           <div>
-            <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
-              {paramBookId ? 'Tiếp tục thiết lập sách' : 'Thêm sách giáo khoa mới'}
+            <h1 className="font-[Playfair_Display] text-[22px] text-[#141413]">
+              {seriesId ? 'Thiết lập bộ sách giáo khoa' : 'Thêm sách giáo khoa mới'}
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-              Quy trình 4 bước: nhập metadata + upload PDF, mapping bài học, chạy OCR, sau đó xác
+              Quy trình 4 bước theo bộ sách: nhập metadata + upload PDF, mapping bài học, chạy OCR,
+              sau đó xác
               minh nội dung.
             </p>
           </div>
@@ -122,23 +160,27 @@ const BookCreateWizard: React.FC = () => {
             } else if (completed) {
               stepBadgeClass = 'bg-emerald-500 text-white';
             }
+            let stepButtonTone = 'border-slate-200 bg-white text-slate-500';
+            if (active) {
+              stepButtonTone = 'border-blue-500 bg-blue-50 text-blue-700';
+            } else if (completed) {
+              stepButtonTone = 'border-emerald-200 bg-emerald-50 text-emerald-700';
+            }
+            const stepIsAccessible = canAccessStep(s.key);
             return (
               <li key={s.key} className="flex-1 flex items-center gap-2">
                 <button
                   type="button"
-                  disabled={!canAccessStep(s.key)}
+                  disabled={!stepIsAccessible}
                   onClick={() => {
-                    if (!canAccessStep(s.key)) return;
-                    setStepIdx(s.key);
+                    if (stepIsAccessible) {
+                      setStepIdx(s.key);
+                    }
                   }}
                   className={[
                     'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border w-full transition',
-                    active
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : completed
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-500',
-                    !canAccessStep(s.key) ? 'opacity-50 cursor-not-allowed' : '',
+                    stepButtonTone,
+                    stepIsAccessible ? '' : 'opacity-50 cursor-not-allowed',
                   ].join(' ')}
                 >
                   <span
@@ -162,6 +204,7 @@ const BookCreateWizard: React.FC = () => {
           {stepIdx === 0 && (
             <BookUploadStep
               key={book?.id ?? 'new-book'}
+              seriesId={seriesId}
               book={book}
               onCreated={handleBookCreated}
               onSelectBook={handleSelectBook}
@@ -169,16 +212,17 @@ const BookCreateWizard: React.FC = () => {
               onUploaded={() => setStepIdx(1)}
             />
           )}
-          {stepIdx === 1 && bookId && book && (
+          {stepIdx === 1 && activeBookId && book && (
             <PageMappingStep book={book} />
           )}
-          {stepIdx === 2 && bookId && book && (
+          {stepIdx === 2 && activeBookId && book && (
             <OcrTriggerStep
               book={book}
+              onSelectSeriesBook={handleSelectBook}
               onComplete={() => setStepIdx(3)}
             />
           )}
-          {stepIdx === 3 && bookId && book && (
+          {stepIdx === 3 && activeBookId && book && (
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
@@ -188,7 +232,11 @@ const BookCreateWizard: React.FC = () => {
                   Xác minh trực tiếp tại đây: kiểm tra/chỉnh sửa block và đánh dấu theo từng trang.
                 </p>
               </div>
-              <BookVerifyContent bookId={bookId} embedded />
+              <BookVerifyContent
+                bookId={activeBookId}
+                embedded
+                onSelectSeriesBook={handleSelectBook}
+              />
             </div>
           )}
         </div>

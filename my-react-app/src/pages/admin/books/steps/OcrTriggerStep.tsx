@@ -3,6 +3,8 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  Eye,
+  EyeOff,
   Info,
   Loader2,
   OctagonAlert,
@@ -24,9 +26,12 @@ import type {
   BookResponse,
   LessonProgress,
 } from '../../../../types/book.types';
+import BookPdfPreview from '../BookPdfPreview';
 
 interface Props {
   book: BookResponse;
+  /** Khi có nhiều cuốn trong bộ: chọn cuốn để OCR / xem tiến độ (đồng bộ `activeBookId` ở wizard). */
+  onSelectSeriesBook?: (bookId: string) => void;
   onComplete: () => void;
 }
 
@@ -58,7 +63,7 @@ function formatViDateTime(iso: string): string {
   }
 }
 
-const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
+const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete }) => {
   const qc = useQueryClient();
   const triggerOcr = useTriggerOcr(book.id);
   const cancelOcrMutation = useCancelOcr(book.id);
@@ -79,6 +84,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
 
   const [error, setError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   const progress = progressQuery.data?.result;
   const uiStatus = (progress?.status ?? book.status) as BookResponse['status'];
@@ -87,6 +93,10 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
     if (!progress?.status || progress.status === book.status) return;
     void qc.invalidateQueries({ queryKey: bookKeys.detail(book.id) });
   }, [progress?.status, book.status, book.id, qc]);
+
+  useEffect(() => {
+    setShowPdfPreview(false);
+  }, [book.id]);
 
   const ocrConnectionIssue =
     uiStatus === 'OCR_RUNNING' &&
@@ -146,18 +156,28 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
   const lessonPct = totalLessons > 0 ? Math.round((verifiedLessons / totalLessons) * 100) : 0;
   const seriesBooks = seriesBooksQuery.data?.result?.content ?? [];
   const showSeriesPanel = Boolean(book.bookSeriesId) && seriesBooks.length > 1;
+  const activeBookIndex =
+    seriesBooks.length > 0 ? seriesBooks.findIndex((seriesBook) => seriesBook.id === book.id) : -1;
+  const activeBookOrderLabel =
+    activeBookIndex >= 0 && seriesBooks.length > 0
+      ? `Cuốn ${activeBookIndex + 1}/${seriesBooks.length}`
+      : null;
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-          <Rocket size={18} /> Bước 3 · Chạy OCR
+          <Rocket size={18} /> Bước 3 · Chạy OCR theo cuốn
         </h2>
         <p className="text-sm text-slate-500">
-          Kiểm tra lại thông tin rồi bấm chạy. Quá trình có thể vài phút — chỉ quét các{' '}
-          <strong>bài đã gán trang</strong> ở Bước 2. Bạn có thể đóng trình duyệt: tiến độ được lưu
-          và khi quay lại vẫn xem được (miễn là máy chủ đã nhận đường truyền trước đó).
+          Bạn đang chạy OCR cho <strong>cuốn đang chọn</strong>. Quá trình có thể vài phút và chỉ
+          quét các <strong>bài đã gán trang</strong> ở Bước 2 của cuốn này.
         </p>
+        {activeBookOrderLabel && (
+          <div className="mt-2 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+            {activeBookOrderLabel}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -175,6 +195,65 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
           </div>
         </div>
       )}
+
+      {showSeriesPanel && onSelectSeriesBook && (
+        <div className="border border-slate-200 rounded-lg">
+          <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b space-y-1">
+            <div>Trạng thái các cuốn trong bộ (OCR vẫn chạy theo từng cuốn)</div>
+            <p className="font-normal text-[11px] text-slate-500">
+              Bấm vào một cuốn để chọn — OCR, tiến độ và chi tiết theo bài bên dưới áp dụng cho cuốn
+              đó.
+            </p>
+          </div>
+          <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
+            {seriesBooks.map((seriesBook) => {
+              const isActive = seriesBook.id === book.id;
+              return (
+                <button
+                  key={seriesBook.id}
+                  type="button"
+                  onClick={() => onSelectSeriesBook(seriesBook.id)}
+                  className={[
+                    'w-full text-left px-3 py-2 flex items-center justify-between gap-3 text-sm transition',
+                    isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-slate-800 font-medium">{seriesBook.title}</div>
+                    <div className="text-[11px] text-slate-500">
+                      OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} ·
+                      mapped: {seriesBook.mappedLessonCount ?? 0}
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[seriesBook.status]}`}
+                  >
+                    {seriesBook.status === 'OCR_RUNNING' && (
+                      <Loader2 size={12} className="animate-spin" />
+                    )}
+                    {STATUS_LABEL[seriesBook.status]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {book.pdfPath ? (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowPdfPreview((prev) => !prev)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
+          >
+            {showPdfPreview ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showPdfPreview ? 'Ẩn preview PDF' : 'Xem preview PDF'}
+          </button>
+
+          {showPdfPreview ? <BookPdfPreview bookId={book.id} hasServerPdf /> : null}
+        </div>
+      ) : null}
 
       {/* Summary */}
       <div className="grid md:grid-cols-2 gap-4">
@@ -220,38 +299,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
 
       {(book.mappedLessonCount ?? 0) === 0 && (
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-700">
-          <Info size={16} className="mt-0.5" /> Chưa có bài học nào được mapping. Hãy quay lại Bước
-          2.
-        </div>
-      )}
-
-      {showSeriesPanel && (
-        <div className="border border-slate-200 rounded-lg">
-          <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
-            Trạng thái OCR toàn series
-          </div>
-          <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
-            {seriesBooks.map((seriesBook) => (
-              <div
-                key={seriesBook.id}
-                className="px-3 py-2 flex items-center justify-between gap-3 text-sm"
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-slate-800">{seriesBook.title}</div>
-                  <div className="text-[11px] text-slate-500">
-                    OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} · mapped:{' '}
-                    {seriesBook.mappedLessonCount ?? 0}
-                  </div>
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[seriesBook.status]}`}
-                >
-                  {seriesBook.status === 'OCR_RUNNING' && <Loader2 size={12} className="animate-spin" />}
-                  {STATUS_LABEL[seriesBook.status]}
-                </span>
-              </div>
-            ))}
-          </div>
+          <Info size={16} className="mt-0.5" /> Cuốn này chưa có mapping nên chưa thể OCR. Bạn vẫn
+          có thể ở Bước 3 để chuyển sang cuốn khác đã mapping và chạy OCR.
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types';
 import type {
   BookLessonPageResponse,
+  BookPageImageResponse,
   BookPdfPreviewUrlResponse,
   BookProgressResponse,
   BookResponse,
@@ -10,6 +11,8 @@ import type {
   BulkSeriesPageMappingRequest,
   CreateBookRequest,
   OcrTriggerResponse,
+  BookSeriesResponse,
+  UpdateBookSeriesNameRequest,
   UpdateBookRequest,
 } from '../../types/book.types';
 import type { Page } from '../../types/common.types';
@@ -82,6 +85,18 @@ export class BookService {
     return handle<BookResponse>(res, 'Failed to update book');
   }
 
+  static async renameSeries(
+    seriesId: string,
+    req: UpdateBookSeriesNameRequest
+  ): Promise<ApiResponse<BookSeriesResponse>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_SERIES_RENAME(seriesId)}`, {
+      method: 'PATCH',
+      headers: jsonHeaders(requireToken()),
+      body: JSON.stringify(req),
+    });
+    return handle<BookSeriesResponse>(res, 'Failed to rename book series');
+  }
+
   static async setPdfPath(bookId: string, pdfPath: string): Promise<ApiResponse<BookResponse>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PDF_PATH(bookId)}`, {
       method: 'PATCH',
@@ -109,6 +124,22 @@ export class BookService {
       body: form,
     });
     return handle<BookResponse>(res, 'Failed to upload PDF');
+  }
+
+  /** Upload an image asset to attach to an OCR content block (Step-4 verify wizard). */
+  static async uploadPageImage(
+    bookId: string,
+    file: File
+  ): Promise<ApiResponse<BookPageImageResponse>> {
+    const token = requireToken();
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PAGE_IMAGE_UPLOAD(bookId)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
+      body: form,
+    });
+    return handle<BookPageImageResponse>(res, 'Failed to upload image');
   }
 
   static async delete(bookId: string): Promise<ApiResponse<void>> {
