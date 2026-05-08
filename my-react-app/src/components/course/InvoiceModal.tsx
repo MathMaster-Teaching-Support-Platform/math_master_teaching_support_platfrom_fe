@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, X, Download, BookOpen, User, Mail, CreditCard } from 'lucide-react';
+import { CircleCheckBig, X, Download, BookOpen, User, ShoppingBag } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Order } from '../../types/order.types';
 import { formatCurrency } from '../../types/order.types';
@@ -84,69 +84,72 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         <div className="invoice-header">
           <div className="success-icon-wrapper">
-            <CheckCircle size={56} color="#10b981" />
+            <CircleCheckBig size={56} strokeWidth={2} />
           </div>
           <h2>Thanh toán thành công!</h2>
-          <p>Khóa học đã được thêm vào thư viện của bạn.</p>
+          <div className="invoice-header-id-pill">
+            <span className="invoice-header-id-label">Mã đơn hàng:</span>
+            <span className="invoice-header-id-value">{order.orderNumber}</span>
+          </div>
         </div>
 
         <div className="invoice-body">
-          {/* Buyer Info Section */}
-          <div className="invoice-section invoice-meta">
-            <h3>Thông tin khách hàng</h3>
+          {/* 1. COURSE Section (Primary) */}
+          <div className="invoice-section">
+            <div className="invoice-section-header">
+              <ShoppingBag size={14} />
+              <h3>KHÓA HỌC</h3>
+            </div>
+            <div className="invoice-product">
+              <div className="invoice-product-image-container">
+                {order.courseThumbnailUrl ? (
+                  <img
+                    src={order.courseThumbnailUrl}
+                    alt={order.courseTitle}
+                    className="invoice-product-img"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).parentElement?.classList.add('has-error');
+                    }}
+                  />
+                ) : null}
+                <div className="invoice-product-fallback">
+                  <BookOpen size={24} strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="invoice-product-info">
+                <h4>{order.courseTitle}</h4>
+                <div className="invoice-product-type-row">
+                  <span className="invoice-product-type">Khóa học online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. BUYER Section */}
+          <div className="invoice-section">
+            <div className="invoice-section-header">
+              <User size={14} />
+              <h3>THÔNG TIN NGƯỜI MUA</h3>
+            </div>
             <div className="invoice-meta-grid">
               <div className="invoice-meta-item">
-                <User size={14} className="invoice-meta-icon" />
                 <span className="invoice-label">Người mua:</span>
                 <span className="invoice-value">{user?.fullName || order.studentName || 'N/A'}</span>
               </div>
               <div className="invoice-meta-item">
-                <Mail size={14} className="invoice-meta-icon" />
                 <span className="invoice-label">Email:</span>
                 <span className="invoice-value">{user?.email || 'N/A'}</span>
               </div>
               <div className="invoice-meta-item">
-                <CreditCard size={14} className="invoice-meta-icon" />
                 <span className="invoice-label">Phương thức:</span>
                 <span className="invoice-value">{isFree ? 'Miễn phí' : 'Số dư ví MathMaster'}</span>
               </div>
             </div>
           </div>
 
-          <div className="invoice-section">
-            <h3>Chi tiết giao dịch</h3>
-            <div className="invoice-row">
-              <span className="invoice-label">Mã hóa đơn:</span>
-              <span className="invoice-value font-mono">{order.orderNumber}</span>
-            </div>
-            <div className="invoice-row">
-              <span className="invoice-label">Thời gian:</span>
-              <span className="invoice-value">
-                {formatDate(order.confirmedAt || order.createdAt)}
-              </span>
-            </div>
-          </div>
-
-          <div className="invoice-section">
-            <h3>KHÓA HỌC</h3>
-            <div className="invoice-product">
-              <img
-                src={order.courseThumbnailUrl || "/images/default-course.png"}
-                alt={order.courseTitle}
-                className="invoice-product-img"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Course+Thumbnail";
-                }}
-              />
-              <div className="invoice-product-info">
-                <h4>{order.courseTitle}</h4>
-                <span className="invoice-product-type">Khóa học online</span>
-              </div>
-            </div>
-          </div>
-
+          {/* 3. PAYMENT Section */}
           <div className="invoice-section invoice-summary">
-            <h3>Chi tiết thanh toán</h3>
             <div className="invoice-row">
               <span className="invoice-label">Giá gốc:</span>
               <span className="invoice-value">
@@ -168,6 +171,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
                 {isFree ? "Miễn phí" : formatCurrency(order.finalPrice ?? 0)}
               </span>
             </div>
+          </div>
+
+          <div className="invoice-meta-hint">
+             Ghi nhận lúc: {formatDate(order.confirmedAt || order.createdAt)}
           </div>
         </div>
 
@@ -203,6 +210,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
           overflow: hidden;
           animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          /* Flex-column layout: header + scrollable body + sticky footer */
+          display: flex;
+          flex-direction: column;
+          max-height: calc(100dvh - 2rem);
         }
 
         .invoice-modal-container.loading {
@@ -220,11 +231,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         .invoice-close-btn {
           position: absolute;
-          top: 1.25rem;
-          right: 1.25rem;
-          background: #f1f5f9;
+          top: 1rem;
+          right: 1rem;
+          background: rgba(15, 23, 42, 0.05);
           border: none;
-          color: #64748b;
+          color: #94a3b8;
           cursor: pointer;
           padding: 0.5rem;
           border-radius: 50%;
@@ -232,7 +243,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
           align-items: center;
           justify-content: center;
           transition: all 0.2s;
-          z-index: 10;
+          z-index: 20;
         }
 
         .invoice-close-btn:hover {
@@ -243,53 +254,85 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         .invoice-header {
           text-align: center;
-          padding: 3rem 2rem 2rem;
+          padding: 2.75rem 1.5rem 1.5rem;
           background: linear-gradient(to bottom, #f0fdf4, white);
           border-bottom: 1px dashed #e2e8f0;
+          position: relative;
+          flex-shrink: 0;  /* never compress the header */
         }
 
         .success-icon-wrapper {
           display: flex;
           justify-content: center;
-          margin-bottom: 1.25rem;
-          filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2));
+          margin-bottom: 1rem;
+          color: #10b981;
+          filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.28));
         }
 
         .invoice-header h2 {
-          color: #064e3b;
-          font-size: 1.75rem;
+          color: #0f172a;
+          font-size: 1.35rem;
           font-weight: 800;
-          margin: 0 0 0.5rem;
-          letter-spacing: -0.02em;
+          margin: 0 0 0.75rem;
+          letter-spacing: -0.03em;
         }
 
-        .invoice-header p {
+        .invoice-header-id-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+          background: #ffffff;
+          padding: 0.5rem 1rem;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .invoice-header-id-label {
+          font-size: 0.7rem;
+          font-weight: 700;
           color: #64748b;
-          margin: 0;
-          font-size: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .invoice-header-id-value {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #0f172a;
         }
 
         .invoice-body {
-          padding: 2rem;
-          max-height: 70vh;
-          overflow-y: auto;
+          padding: 1.5rem 1.75rem;
+          flex: 1;           /* body takes all remaining space */
+          overflow-y: auto;  /* ONLY the body scrolls, if needed */
+          max-height: none;  /* no artificial cap — container controls height */
         }
 
         .invoice-section {
-          margin-bottom: 2rem;
+          margin-bottom: 1.1rem;
         }
 
         .invoice-section:last-child {
           margin-bottom: 0;
         }
 
-        .invoice-section h3 {
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
+        .invoice-section-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
           color: #94a3b8;
-          font-weight: 800;
-          margin: 0 0 1rem;
+        }
+
+        .invoice-section h3 {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: inherit;
+          font-weight: 700;
+          margin: 0;
         }
 
         /* Meta Section Styles */
@@ -344,46 +387,82 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         .invoice-product {
           display: flex;
-          gap: 1.25rem;
+          gap: 1rem;
           align-items: center;
           background: #ffffff;
-          padding: 1rem;
-          border-radius: 16px;
+          padding: 0.75rem;
+          border-radius: 14px;
           border: 1px solid #e2e8f0;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .invoice-product-image-container {
+          position: relative;
+          width: 100px;
+          height: 56px;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #f1f5f9;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .invoice-product-img {
-          width: 128px;
-          height: 72px;
-          border-radius: 8px;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          background: #f1f5f9;
+          position: relative;
+          z-index: 2;
+        }
+
+        .invoice-product-fallback {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #eff6ff, #dbeafe);
+          color: #3b82f6;
+          z-index: 1;
         }
 
         .invoice-product-info h4 {
-          margin: 0 0 0.4rem;
-          font-size: 1.1rem;
+          margin: 0 0 0.15rem;
+          font-size: 0.95rem;
           color: #0f172a;
           font-weight: 700;
-          line-height: 1.4;
+          line-height: 1.3;
+        }
+
+        .invoice-product-type-row {
+          display: flex;
         }
 
         .invoice-product-type {
-          font-size: 0.75rem;
+          font-size: 0.65rem;
           color: #3b82f6;
           background: #eff6ff;
-          padding: 0.25rem 0.75rem;
-          border-radius: 999px;
-          display: inline-block;
-          font-weight: 600;
+          padding: 0.1rem 0.5rem;
+          border-radius: 4px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
         }
 
         .invoice-summary {
           background: #f8fafc;
-          padding: 1.5rem;
+          padding: 1.15rem 1.25rem;
           border-radius: 16px;
           border: 1px solid #e2e8f0;
+        }
+
+        .invoice-meta-hint {
+          margin-top: 1.25rem;
+          text-align: center;
+          font-size: 0.75rem;
+          color: #94a3b8;
+          font-weight: 500;
         }
 
         .text-discount {
@@ -412,15 +491,20 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         .invoice-total .invoice-value {
           font-weight: 800;
-          color: #2563eb;
+          color: #0f172a;
+        }
+
+        .text-primary {
+          color: #2563eb !important;
         }
 
         .invoice-footer {
-          padding: 1.5rem 2rem;
+          padding: 1rem 1.5rem 1.25rem;
           background: #ffffff;
           border-top: 1px solid #f1f5f9;
           display: flex;
-          gap: 1rem;
+          gap: 0.75rem;
+          flex-shrink: 0;  /* always pinned at the bottom, never squeezed out */
         }
 
         .invoice-footer .btn {
@@ -428,32 +512,35 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.6rem;
-          padding: 0.875rem 1rem;
-          border-radius: 14px;
+          gap: 0.5rem;
+          padding: 0.75rem 1rem;
+          border-radius: 12px;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-          font-size: 0.95rem;
+          font-size: 0.9rem;
         }
 
         .invoice-footer .btn.secondary {
-          background: #ffffff;
-          border: 1.5px solid #e2e8f0;
-          color: #475569;
+          flex: 1;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          color: #64748b;
+          font-weight: 600;
         }
 
         .invoice-footer .btn.secondary:hover {
-          background: #f8fafc;
+          background: #f1f5f9;
           border-color: #cbd5e1;
-          transform: translateY(-1px);
+          color: #0f172a;
         }
 
         .invoice-footer .btn.primary {
+          flex: 1.8;
           background: #2563eb;
-          border: 1.5px solid #2563eb;
+          border: none;
           color: white;
-          box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
         .invoice-footer .btn.primary:hover {
