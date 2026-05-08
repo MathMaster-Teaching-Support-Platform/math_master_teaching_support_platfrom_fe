@@ -167,7 +167,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                   type="button"
                   onClick={() => setActiveChapterId(c.id)}
                   className={[
-                    'w-full text-left px-3 py-2 text-sm border-l-4 transition',
+                    'w-full text-left px-3 py-2 text-sm border-l transition',
                     activeChapterId === c.id
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-transparent hover:bg-slate-50',

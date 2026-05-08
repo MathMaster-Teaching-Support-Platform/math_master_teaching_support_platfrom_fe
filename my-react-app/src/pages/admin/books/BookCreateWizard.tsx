@@ -81,6 +81,12 @@ const BookCreateWizard: React.FC = () => {
           {STEPS.map((s, i) => {
             const completed = i < stepIdx;
             const active = i === stepIdx;
+            let stepBadgeClass = 'bg-slate-200 text-slate-700';
+            if (active) {
+              stepBadgeClass = 'bg-blue-500 text-white';
+            } else if (completed) {
+              stepBadgeClass = 'bg-emerald-500 text-white';
+            }
             return (
               <li key={s.key} className="flex-1 flex items-center gap-2">
                 <button
@@ -100,7 +106,7 @@ const BookCreateWizard: React.FC = () => {
                   <span
                     className={[
                       'w-6 h-6 rounded-full inline-flex items-center justify-center text-xs',
-                      active ? 'bg-blue-500 text-white' : completed ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600',
+                      stepBadgeClass,
                     ].join(' ')}
                   >
                     {completed ? <Check size={12} /> : i + 1}

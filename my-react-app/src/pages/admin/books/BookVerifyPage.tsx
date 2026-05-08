@@ -949,7 +949,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
       {showHistoryModal && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40"
           role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowHistoryModal(false);
@@ -1555,11 +1555,11 @@ const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
 
     const kindAccent =
       parsed.kind === 'chapter'
-        ? 'border-l-4 border-slate-300 pl-2'
+        ? 'border-l border-slate-300 pl-2'
         : parsed.kind === 'lesson'
-          ? 'border-l-4 border-blue-200 pl-2'
+          ? 'border-l border-blue-200 pl-2'
           : parsed.kind === 'section'
-            ? 'border-l-4 border-amber-200 pl-2'
+            ? 'border-l border-amber-200 pl-2'
             : '';
 
     const headingClass = `${headingClassByLevel[level] ?? headingClassByLevel[4]} ${kindAccent}`;

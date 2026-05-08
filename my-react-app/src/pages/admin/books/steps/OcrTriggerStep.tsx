@@ -389,7 +389,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
 
       {showCancelConfirm && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40"
           role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget && !cancelOcrMutation.isPending) {
