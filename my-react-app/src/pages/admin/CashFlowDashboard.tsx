@@ -34,7 +34,6 @@ import {
   trendColor,
 } from '../../services/cash-flow.service';
 import type {
-  CashFlowCategory,
   CashFlowChartPoint,
   CashFlowEntry,
   CashFlowSummary,
@@ -295,8 +294,6 @@ const SummaryCard = ({
   );
 };
 
-const selectSurfaceCls =
-  'border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none bg-white focus:border-[#A3B6D4] focus:ring-1 focus:ring-[rgba(163,182,212,0.42)] transition-colors';
 
 const CashFlowDashboard: React.FC = () => {
   // ─── State ─────────────────────────────────────────────────────────────
@@ -313,7 +310,6 @@ const CashFlowDashboard: React.FC = () => {
   const [groupBy, setGroupBy] = useState<GroupBy>('day');
   const [summary, setSummary] = useState<CashFlowSummary | null>(null);
   const [chartData, setChartData] = useState<CashFlowChartPoint[]>([]);
-  const [categories, setCategories] = useState<CashFlowCategory[]>([]);
 
   // Transactions table state
   const [transactions, setTransactions] = useState<CashFlowEntry[]>([]);
@@ -324,7 +320,6 @@ const CashFlowDashboard: React.FC = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
   const [filterType, setFilterType] = useState<CashFlowType | ''>('');
-  const [filterCat, setFilterCat] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<CashFlowEntry | null>(null);
   const [pageSizeOpen, setPageSizeOpen] = useState(false);
@@ -432,9 +427,6 @@ const CashFlowDashboard: React.FC = () => {
   };
 
   // ─── Fetch data ────────────────────────────────────────────────────────
-  useEffect(() => {
-    cashFlowService.getCategories().then(setCategories).catch(console.error);
-  }, []);
 
   useEffect(() => {
     const loadOverview = async () => {
@@ -469,7 +461,7 @@ const CashFlowDashboard: React.FC = () => {
           size: pageSize,
           search: debouncedSearch,
           type: filterType,
-          categoryId: filterCat,
+          categoryId: undefined,
         });
         setTransactions(res.content);
         setTotalElements(res.totalElements);
@@ -481,11 +473,11 @@ const CashFlowDashboard: React.FC = () => {
       }
     };
     loadTransactions();
-  }, [dateRange, page, pageSize, debouncedSearch, filterType, filterCat]);
+  }, [dateRange, page, pageSize, debouncedSearch, filterType]);
 
   useEffect(() => {
     setPage(0);
-  }, [dateRange.from, dateRange.to, debouncedSearch, filterType, filterCat]);
+  }, [dateRange.from, dateRange.to, debouncedSearch, filterType]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
   const handleExport = async () => {
