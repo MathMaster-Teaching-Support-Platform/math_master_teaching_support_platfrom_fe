@@ -190,20 +190,7 @@ export function QuestionCard({
               <MathText text={question.solutionSteps} />
             </div>
           )}
-          {question.diagramData ? (
-            <div className="question-card__diagram">
-              <p className="question-card__detail-label">Diagram Data</p>
-              <pre className="question-card__diagram-code">
-                {((): string => {
-                  try {
-                    return JSON.stringify(question.diagramData as Record<string, unknown>, null, 2);
-                  } catch {
-                    return 'Unable to display diagram data';
-                  }
-                })()}
-              </pre>
-            </div>
-          ) : null}
+          
         </div>
       )}
 
