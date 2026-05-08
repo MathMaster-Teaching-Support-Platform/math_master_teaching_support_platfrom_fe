@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   bookKeys,
+  useBookList,
   useBookProgress,
   useCancelOcr,
   useRefreshVerification,
@@ -26,7 +27,6 @@ import type {
 
 interface Props {
   book: BookResponse;
-  onBack: () => void;
   onComplete: () => void;
 }
 
@@ -70,6 +70,11 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
       const effective = polled ?? book.status;
       return effective === 'OCR_RUNNING' ? 3000 : false;
     },
+  });
+  const seriesBooksQuery = useBookList({
+    bookSeriesId: book.bookSeriesId ?? undefined,
+    page: 0,
+    size: 100,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +144,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
 
   const pagePct = totalPages > 0 ? Math.round((verifiedPages / totalPages) * 100) : 0;
   const lessonPct = totalLessons > 0 ? Math.round((verifiedLessons / totalLessons) * 100) : 0;
+  const seriesBooks = seriesBooksQuery.data?.result?.content ?? [];
+  const showSeriesPanel = Boolean(book.bookSeriesId) && seriesBooks.length > 1;
 
   return (
     <div className="space-y-5">
@@ -215,6 +222,36 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-700">
           <Info size={16} className="mt-0.5" /> Chưa có bài học nào được mapping. Hãy quay lại Bước
           2.
+        </div>
+      )}
+
+      {showSeriesPanel && (
+        <div className="border border-slate-200 rounded-lg">
+          <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
+            Trạng thái OCR toàn series
+          </div>
+          <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
+            {seriesBooks.map((seriesBook) => (
+              <div
+                key={seriesBook.id}
+                className="px-3 py-2 flex items-center justify-between gap-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-slate-800">{seriesBook.title}</div>
+                  <div className="text-[11px] text-slate-500">
+                    OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} · mapped:{' '}
+                    {seriesBook.mappedLessonCount ?? 0}
+                  </div>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[seriesBook.status]}`}
+                >
+                  {seriesBook.status === 'OCR_RUNNING' && <Loader2 size={12} className="animate-spin" />}
+                  {STATUS_LABEL[seriesBook.status]}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -54,6 +54,7 @@ const BookCreateWizard: React.FC = () => {
 
   useEffect(() => {
     if (stepIdx > 0 && !book?.pdfPath) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStepIdx(0);
       return;
     }
@@ -174,7 +175,6 @@ const BookCreateWizard: React.FC = () => {
           {stepIdx === 2 && bookId && book && (
             <OcrTriggerStep
               book={book}
-              onBack={() => setStepIdx(1)}
               onComplete={() => setStepIdx(3)}
             />
           )}
