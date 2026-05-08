@@ -22,6 +22,7 @@ import DashboardLayout from '../../../components/layout/DashboardLayout/Dashboar
 import MathText from '../../../components/common/MathText';
 import { mockAdmin } from '../../../data/mockData';
 import { API_BASE_URL } from '../../../config/api.config';
+import { AuthService } from '../../../services/api/auth.service';
 import {
   useBook,
   useBookContent,
@@ -64,6 +65,70 @@ const resolveAssetUrl = (value?: string | null): string => {
     return raw;
   }
   return raw;
+};
+
+const shouldTryAuthImageFetch = (url: string): boolean => {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return false;
+  if (url.startsWith('/')) return true;
+  if (!ABSOLUTE_URL_REGEX.test(url)) return false;
+  try {
+    const target = new URL(url, globalThis.location.origin);
+    const appOrigin = globalThis.location.origin;
+    const apiOrigin = API_BASE_URL
+      ? new URL(API_BASE_URL, globalThis.location.origin).origin
+      : globalThis.location.origin;
+    return target.origin === appOrigin || target.origin === apiOrigin;
+  } catch {
+    return false;
+  }
+};
+
+const AuthenticatedImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+  onLoad?: () => void;
+  onError?: () => void;
+}> = ({ src, alt, className, onLoad, onError }) => {
+  const [resolvedSrc, setResolvedSrc] = useState(src);
+
+  useEffect(() => {
+    let revokedObjectUrl: string | null = null;
+    const controller = new AbortController();
+    const finalSrc = resolveAssetUrl(src);
+    setResolvedSrc(finalSrc);
+
+    const fetchProtectedImage = async () => {
+      if (!finalSrc || !shouldTryAuthImageFetch(finalSrc)) return;
+      const token = AuthService.getToken();
+      if (!token) return;
+      try {
+        const response = await fetch(finalSrc, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: 'image/*,*/*',
+          },
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/')) return;
+        revokedObjectUrl = URL.createObjectURL(blob);
+        setResolvedSrc(revokedObjectUrl);
+      } catch {
+        // Fallback to direct src when fetch fails.
+      }
+    };
+
+    void fetchProtectedImage();
+    return () => {
+      controller.abort();
+      if (revokedObjectUrl) URL.revokeObjectURL(revokedObjectUrl);
+    };
+  }, [src]);
+
+  return <img src={resolvedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />;
 };
 
 interface BookVerifyContentProps {
@@ -941,7 +1006,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             <div className="border border-slate-200 rounded p-2">
               <div className="text-[11px] text-slate-400 mb-1">Ảnh gốc OCR</div>
               {showRawPreviewImage ? (
-                <img
+                <AuthenticatedImage
                   src={resolvedRawPreviewImageSrc}
                   alt={`Trang ${page.pageNumber}`}
                   onError={() => setFailedRawImageSrc(resolvedRawPreviewImageSrc)}
@@ -1520,7 +1585,7 @@ const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
     return (
       <figure className="text-center">
         {src ? (
-          <img
+          <AuthenticatedImage
             src={src}
             alt={block.caption ?? 'figure'}
             className="max-h-[200px] inline-block rounded"
