@@ -1,21 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  AlertCircle,
   BookOpen,
   Calendar,
-  Clock,
   Download,
-  Eye,
-  EyeOff,
-  FileText,
   GraduationCap,
   Languages,
   Sparkles,
-  Star,
   Users,
 } from 'lucide-react';
 import React from 'react';
-import { UI_TEXT } from '../../../constants/uiText';
 import type { CourseResponse } from '../../../types';
 import './CourseOverviewTab.css';
 
@@ -51,78 +44,6 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       year: 'numeric',
     });
   };
-
-  const statusStat = (() => {
-    const s = course.status;
-    if (s === 'PENDING_REVIEW') {
-      return {
-        Icon: Clock,
-        value: 'Chờ duyệt',
-        sub: 'Đang chờ admin phê duyệt',
-      };
-    }
-    if (s === 'REJECTED') {
-      return {
-        Icon: AlertCircle,
-        value: 'Từ chối',
-        sub: 'Chưa được công khai',
-      };
-    }
-    if (s === 'PUBLISHED') {
-      return {
-        Icon: Eye,
-        value: 'Công khai',
-        sub: 'Học viên có thể đăng ký',
-      };
-    }
-    if (s === 'DRAFT') {
-      return {
-        Icon: EyeOff,
-        value: 'Nháp',
-        sub: 'Chưa Công khai',
-      };
-    }
-    return {
-      Icon: course.published ? Eye : EyeOff,
-      value: course.published ? 'Công khai' : 'Nháp',
-      sub: course.published ? 'Hiển thị cho học viên' : 'Chưa công khai',
-    };
-  })();
-
-  const statSets = [
-    {
-      key: 'lessons',
-      cardClass: 'stat-blue' as const,
-      Icon: BookOpen,
-      label: 'Bài học',
-      value: course.lessonsCount.toLocaleString('vi-VN'),
-      sub: `Trong ${UI_TEXT.COURSE.toLowerCase()}`,
-    },
-    {
-      key: 'students',
-      cardClass: 'stat-emerald' as const,
-      Icon: Users,
-      label: 'Học viên',
-      value: course.studentsCount.toLocaleString('vi-VN'),
-      sub: 'Đã ghi danh',
-    },
-    {
-      key: 'rating',
-      cardClass: 'stat-amber' as const,
-      Icon: Star,
-      label: 'Đánh giá',
-      value: Number(course.rating).toFixed(1),
-      sub: 'Điểm Trung Bình / 5',
-    },
-    {
-      key: 'status',
-      cardClass: 'stat-violet' as const,
-      Icon: statusStat.Icon,
-      label: 'Trạng thái',
-      value: statusStat.value,
-      sub: statusStat.sub,
-    },
-  ];
 
   const hasDesc = Boolean(course.description);
 
