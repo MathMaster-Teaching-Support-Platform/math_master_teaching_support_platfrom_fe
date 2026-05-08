@@ -8,7 +8,6 @@ import {
   Database,
   Edit3,
   FileQuestion,
-  FileSpreadsheet,
   FileText,
   Plus,
   RefreshCw,
@@ -27,6 +26,7 @@ import { useToast } from '../../context/ToastContext';
 import { mockTeacher } from '../../data/mockData';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
+  useApproveQuestion,
   useCreateQuestion,
   useDeleteQuestion,
   useGetMyQuestions,
@@ -39,7 +39,6 @@ import type {
   UpdateQuestionRequest,
 } from '../../types/question';
 import { EnhancedQuestionFormModal } from './EnhancedQuestionFormModal';
-import { QuestionBulkImportModal } from './QuestionBulkImportModal';
 
 type FormMode = 'create' | 'edit';
 
@@ -72,7 +71,6 @@ export default function TeacherQuestionManagementPage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
   const [pendingDelete, setPendingDelete] = useState<QuestionResponse | null>(null);
@@ -100,6 +98,7 @@ export default function TeacherQuestionManagementPage() {
   const createMutation = useCreateQuestion();
   const updateMutation = useUpdateQuestion();
   const deleteMutation = useDeleteQuestion();
+  const approveMutation = useApproveQuestion();
 
   const questions = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages =
@@ -183,6 +182,19 @@ export default function TeacherQuestionManagementPage() {
     }
   }
 
+  async function handleApprove(question: QuestionResponse) {
+    try {
+      await approveMutation.mutateAsync(question.id);
+      showToast({ type: 'success', message: 'Đã duyệt câu hỏi.' });
+      await refetch();
+    } catch (error_) {
+      showToast({
+        type: 'error',
+        message: error_ instanceof Error ? error_.message : 'Không thể duyệt câu hỏi.',
+      });
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!pendingDelete) return;
     try {
@@ -238,7 +250,7 @@ export default function TeacherQuestionManagementPage() {
       notificationCount={5}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="px-6 py-8 lg:px-8">
+      <div className="qb-scope px-6 py-8 lg:px-8">
         <div className="space-y-6">
           {/* ── Page header (TeacherMindmaps pattern) ── */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -264,14 +276,6 @@ export default function TeacherQuestionManagementPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setBulkImportOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5" />
-                Nhập từ Excel
-              </button>
               <button
                 type="button"
                 onClick={openingCreateModal}
@@ -503,6 +507,17 @@ export default function TeacherQuestionManagementPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0 lg:justify-end">
+                    {question.questionStatus !== 'APPROVED' && question.questionStatus !== 'ARCHIVED' && (
+                      <button
+                        type="button"
+                        className="px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 font-[Be_Vietnam_Pro] text-[12px] font-medium text-emerald-700 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                        onClick={() => void handleApprove(question)}
+                        disabled={approveMutation.isPending}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Duyệt
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors inline-flex items-center gap-1.5"
@@ -565,15 +580,6 @@ export default function TeacherQuestionManagementPage() {
         }
         onClose={closeModal}
         onSubmit={(data) => handleSubmitForm(data)}
-      />
-
-      <QuestionBulkImportModal
-        isOpen={bulkImportOpen}
-        onClose={() => setBulkImportOpen(false)}
-        onSuccess={() => {
-          setBulkImportOpen(false);
-          void refetch();
-        }}
       />
 
       <QbConfirmDialog

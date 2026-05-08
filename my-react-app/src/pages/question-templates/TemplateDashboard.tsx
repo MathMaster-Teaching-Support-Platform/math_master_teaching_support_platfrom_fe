@@ -451,21 +451,21 @@ export function TemplateDashboard() {
             {(
               [
                 {
-                  label: 'Tổng mẫu (khớp lọc)',
+                  label: 'Tổng mẫu',
                   value: stats.total,
                   Icon: FileText,
                   bg: 'bg-[#EEF2FF]',
                   color: 'text-[#4F7EF7]',
                 },
                 {
-                  label: 'Sẵn sàng (trang này)',
+                  label: 'Sẵn sàng',
                   value: stats.published,
                   Icon: CheckCircle2,
                   bg: 'bg-[#ECFDF5]',
                   color: 'text-[#2EAD7A]',
                 },
                 {
-                  label: 'Nháp (trang này)',
+                  label: 'Nháp',
                   value: stats.draft,
                   Icon: Network,
                   bg: 'bg-[#FFF7ED]',
