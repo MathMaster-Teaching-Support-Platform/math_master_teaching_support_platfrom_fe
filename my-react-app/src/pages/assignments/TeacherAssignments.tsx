@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { mockAssignments, mockTeacher } from '../../data/mockData';
 import '../../styles/module-refactor.css';
 import './TeacherAssignments.css';
@@ -270,9 +271,7 @@ const TeacherAssignments: React.FC = () => {
                   <div>
                     <h3>Tạo bài tập mới</h3>
                   </div>
-                  <button className="icon-btn" onClick={() => setShowCreateModal(false)}>
-                    <X size={16} />
-                  </button>
+                  <ModalCloseButton onClick={() => setShowCreateModal(false)} />
                 </div>
 
                 <div className="modal-body">

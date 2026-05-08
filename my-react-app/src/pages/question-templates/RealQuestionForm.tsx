@@ -1,4 +1,5 @@
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useEffect, useState } from 'react';
 import {
   CognitiveLevel,
@@ -301,9 +302,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
               biến số và ràng buộc cho bạn tạo mẫu câu hỏi.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

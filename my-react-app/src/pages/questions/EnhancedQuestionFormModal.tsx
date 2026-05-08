@@ -1,9 +1,10 @@
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { QuestionEditorSwitch } from '../../components/question';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import MathText from '../../components/common/MathText';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { questionService } from '../../services/questionService';
 import { useToast } from '../../context/ToastContext';
@@ -295,14 +296,7 @@ export function EnhancedQuestionFormModal({
                 : 'Cập nhật thông tin câu hỏi'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng"
-            className="flex-shrink-0 w-10 h-10 rounded-xl border border-[#E8E6DC] bg-white text-[#5E5D59] hover:bg-[#F5F4ED] hover:text-[#141413] transition-colors inline-flex items-center justify-center"
-          >
-            <X className="w-5 h-5" strokeWidth={2} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         {/* Body — chỉ khối này cuộn → scrollbar dính mép phải của modal, không “lệch gap” */}

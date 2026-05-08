@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import ModalCloseButton from '../../common/ModalCloseButton';
 import './QbModal.css';
 
 interface QbModalProps {
@@ -72,14 +72,7 @@ export function QbModal({
               {title && <h3 className="qb-modal__title">{title}</h3>}
               {description && <p className="qb-modal__desc">{description}</p>}
             </div>
-            <button
-              type="button"
-              className="qb-modal__close"
-              onClick={onClose}
-              aria-label="Đóng"
-            >
-              <X size={18} />
-            </button>
+            <ModalCloseButton onClick={onClose} />
           </header>
         )}
         <div className="qb-modal__body">{children}</div>

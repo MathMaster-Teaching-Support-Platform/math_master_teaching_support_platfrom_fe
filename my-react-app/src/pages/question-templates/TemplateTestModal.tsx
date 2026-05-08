@@ -1,8 +1,9 @@
-import { CheckCircle2, Play, X } from 'lucide-react';
+import { CheckCircle2, Play } from 'lucide-react';
 import { useState } from 'react';
 import { useTestTemplate } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 import MathText from '../../components/common/MathText';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import { extractOptionText } from '../../utils/optionText';
 
@@ -39,9 +40,7 @@ export function TemplateTestModal({ isOpen, onClose, template }: Props) {
             <h3>Kiểm thử mẫu câu hỏi</h3>
             <p className="muted" style={{ marginTop: 4 }}>{template.name}</p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <div className="modal-body">

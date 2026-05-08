@@ -1,5 +1,6 @@
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
@@ -63,9 +64,7 @@ export function TemplateGenerateModal({
               {template.name}
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Đóng">
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>
