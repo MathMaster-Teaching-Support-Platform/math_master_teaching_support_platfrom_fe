@@ -1,5 +1,6 @@
-import { FileText, LayoutGrid, Loader2, X } from 'lucide-react';
+import { FileText, LayoutGrid, Loader2 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
 import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
 
@@ -124,14 +125,7 @@ export function ExamMatrixFormModal({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng"
-            className="w-9 h-9 rounded-xl border border-[#E8E6DC] bg-white text-[#5E5D59] hover:bg-[#F5F4ED] flex items-center justify-center shrink-0 transition-colors"
-          >
-            <X size={15} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">

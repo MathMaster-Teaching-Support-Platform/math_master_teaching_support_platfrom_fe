@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
@@ -63,6 +64,7 @@ export function TemplateGenerateModal({
               {template.name}
             </p>
           </div>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

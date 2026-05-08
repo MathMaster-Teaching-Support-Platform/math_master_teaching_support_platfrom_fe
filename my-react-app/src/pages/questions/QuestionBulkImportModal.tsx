@@ -4,11 +4,11 @@ import {
   DownloadCloud,
   FileSpreadsheet,
   Upload,
-  X,
   XCircle,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import MathText from '../../components/common/MathText';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useSubjects } from '../../hooks/useSubjects';
 import { questionBulkImportService } from '../../services/questionBulkImportService';
@@ -230,9 +230,7 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 : `Xem trước: ${previewData?.validRows ?? 0} hợp lệ, ${previewData?.invalidRows ?? 0} lỗi / ${previewData?.totalRows ?? 0} tổng`}
             </p>
           </div>
-          <button className="icon-btn" onClick={handleClose}>
-            <X size={14} />
-          </button>
+          <ModalCloseButton onClick={handleClose} />
         </div>
 
         <div className="modal-body">

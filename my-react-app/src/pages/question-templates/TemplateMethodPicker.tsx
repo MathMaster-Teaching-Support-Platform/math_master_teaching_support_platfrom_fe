@@ -1,4 +1,5 @@
-import { Sparkles, Wand2, X } from 'lucide-react';
+import { Sparkles, Wand2 } from 'lucide-react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 
 /**
  * Lightweight chooser shown when the teacher clicks "Tạo mẫu mới" on the
@@ -31,16 +32,19 @@ export function TemplateMethodPicker({
     <div className="modal-layer">
       <div className="modal-card" style={{ width: 'min(880px, 96vw)' }}>
         <div className="modal-header">
-          <div>
-            <h3>Bạn muốn tạo mẫu theo cách nào?</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
+          <div className="modal-title-block">
+            <div className="modal-title-row">
+              <span className="modal-icon-badge">
+                <Wand2 size={16} />
+              </span>
+              <h3>Bạn muốn tạo mẫu theo cách nào?</h3>
+            </div>
+            <p className="modal-subtitle">
               Cả hai cách đều tạo ra cùng một Blueprint. Hãy chọn cách phù hợp
               với bạn.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <div

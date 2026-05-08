@@ -99,31 +99,40 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
             }}
           />
 
-          {/* Panel */}
-          <motion.div
-            key="pcm-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pcm-title"
-            initial={{ opacity: 0, scale: 0.94, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          {/* Centering Wrapper */}
+          <div
             style={{
               position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               zIndex: 1201,
-              width: '100%',
-              maxWidth: 480,
-              background: '#ffffff',
-              borderRadius: 20,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
-              overflow: 'hidden',
-              fontFamily: 'inherit',
+              pointerEvents: 'none',
+              padding: '1.5rem',
             }}
           >
+            {/* Panel */}
+            <motion.div
+              key="pcm-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pcm-title"
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 16 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                pointerEvents: 'auto',
+                width: '100%',
+                maxWidth: 480,
+                background: '#ffffff',
+                borderRadius: 20,
+                boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
+                overflow: 'hidden',
+                fontFamily: 'inherit',
+              }}
+            >
             {/* Header */}
             <div
               style={{
@@ -591,6 +600,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
               </button>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

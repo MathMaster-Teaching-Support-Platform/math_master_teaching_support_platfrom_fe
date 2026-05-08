@@ -1,6 +1,6 @@
-import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import MathText from '../../components/common/MathText';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import type {
   CanonicalCognitiveLevel,
   CanonicalQuestionRequest,
@@ -108,9 +108,7 @@ export function CanonicalQuestionModal({
               Bài toán gốc là nền tảng để AI tạo ra nhiều câu hỏi ngẫu nhiên cùng chủ đề.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

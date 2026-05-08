@@ -20,6 +20,7 @@ export interface SABlueprintData {
 interface SABlueprintProps {
   defaultChapterId: string;
   templateId?: string;
+  step?: 1 | 2 | 3 | 4;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
     templateText?: string;
@@ -40,7 +41,7 @@ export interface SABlueprintRef {
 }
 
 export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
-  ({ onFocusField, initialData, templateId }, ref) => {
+  ({ onFocusField, initialData, templateId, step = 2 }, ref) => {
     const [templateText, setTemplateText] = useState(initialData?.templateText ?? '');
     const [answerFormula, setAnswerFormula] = useState(initialData?.answerFormula ?? '');
     const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
@@ -104,199 +105,260 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
 
     return (
       <>
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Nội dung câu hỏi{' '}
-            <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
-              (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số)
-            </span>
-          </p>
-          <textarea
-            ref={templateTextRef}
-            className="textarea"
-            rows={3}
-            required
-            placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}} = ?"
-            value={templateText}
-            onFocus={() => onFocusField?.('templateText')}
-            onChange={(event) => setTemplateText(event.target.value)}
-          />
-          <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-            Học sinh sẽ nhập đáp án dạng text hoặc số. Dùng {'{{a}}'} để tạo biến động.
-          </p>
-          {templateText && (
-            <div className="preview-box">
-              <MathText text={renderTemplateWithSamples(templateText, parameters)} />
-            </div>
-          )}
-        </label>
+        {step === 2 && (
+          <>
+            <ParametersEditor
+              parameters={parameters}
+              onChange={setParameters}
+              globalConstraints={globalConstraints}
+              onGlobalConstraintsChange={setGlobalConstraints}
+              onFocusField={(kind, index) => onFocusField?.(kind, index)}
+              mathFieldRefs={{
+                nameRefs: parameterNameRefs,
+                constraintRefs: parameterConstraintRefs,
+                sampleRefs: parameterSampleRefs,
+              }}
+            />
 
-        <ParametersEditor
-          parameters={parameters}
-          onChange={setParameters}
-          globalConstraints={globalConstraints}
-          onGlobalConstraintsChange={setGlobalConstraints}
-          onFocusField={(kind, index) => onFocusField?.(kind, index)}
-          mathFieldRefs={{
-            nameRefs: parameterNameRefs,
-            constraintRefs: parameterConstraintRefs,
-            sampleRefs: parameterSampleRefs,
-          }}
-        />
-
-        {/* AI Parameter Panel — Feature 2 (legacy refinement helper) */}
-        {templateId && (
-          <AIParameterPanel
-            templateId={templateId}
-            templateText={templateText}
-            answerFormula={answerFormula}
-            solutionSteps={solutionStepsTemplate}
-            parameters={parameters.map((p) => p.name).filter(Boolean)}
-            onAccept={(accepted) => {
-              setParameters((prev) =>
-                prev.map((p) => {
-                  const val = accepted[p.name];
-                  if (val === undefined) return p;
-                  return { ...p, sampleValue: String(val) };
-                })
-              );
-            }}
-          />
-        )}
-
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Công thức tính đáp án đúng
-          </p>
-          <input
-            ref={answerFormulaRef}
-            className="input"
-            placeholder="Ví dụ: {{a}}/2 — dùng {{tên_biến}} cho tham số"
-            value={answerFormula}
-            onFocus={() => onFocusField?.('answerFormula')}
-            onChange={(event) => setAnswerFormula(event.target.value)}
-          />
-          <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-            Dùng <code>{'{{tên_biến}}'}</code> cho tham số. Biến phải khớp với tên đã khai báo ở
-            trước.
-          </p>
-          {answerFormula && (
-            <div className="preview-box">
-              <MathText text={renderTemplateWithSamples(answerFormula, parameters)} />
-            </div>
-          )}
-        </label>
-
-        <section className="data-card" style={{ minHeight: 0, border: '1px solid #dcfce7' }}>
-          <div>
-            <h3 style={{ color: '#166534' }}>Chế độ đánh giá đáp án</h3>
-            <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
-              Chọn cách hệ thống so sánh đáp án của học sinh với đáp án đúng.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <button
-              type="button"
-              className={`btn ${validationMode === 'EXACT' ? '' : 'secondary'}`}
-              style={{ flex: 1 }}
-              onClick={() => setValidationMode('EXACT')}
-            >
-              EXACT
-            </button>
-            <button
-              type="button"
-              className={`btn ${validationMode === 'NUMERIC' ? '' : 'secondary'}`}
-              style={{ flex: 1 }}
-              onClick={() => setValidationMode('NUMERIC')}
-            >
-              NUMERIC
-            </button>
-            <button
-              type="button"
-              className={`btn ${validationMode === 'REGEX' ? '' : 'secondary'}`}
-              style={{ flex: 1 }}
-              onClick={() => setValidationMode('REGEX')}
-            >
-              REGEX
-            </button>
-          </div>
-
-          <div
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#dbeafe',
-              borderRadius: 8,
-              fontSize: '0.875rem',
-            }}
-          >
-            <strong>Chế độ hiện tại: {validationMode}</strong>
-            <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
-              {validationMode === 'EXACT' && (
-                <li>So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
-              )}
-              {validationMode === 'NUMERIC' && (
-                <li>So sánh số với sai số cho phép (ví dụ: ±0.01)</li>
-              )}
-              {validationMode === 'REGEX' && <li>Kiểm tra theo biểu thức chính quy</li>}
-            </ul>
-          </div>
-
-          {validationMode === 'NUMERIC' && (
-            <label style={{ marginTop: 16 }}>
+            <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Sai số cho phép (tolerance)
+                Nội dung câu hỏi{' '}
+                <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
+                  (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số)
+                </span>
               </p>
-              <input
-                ref={toleranceRef}
-                className="input"
-                type="number"
-                step="0.001"
-                min="0"
-                placeholder="0.01"
-                value={tolerance}
-                onFocus={() => onFocusField?.('tolerance')}
-                onChange={(event) => setTolerance(event.target.value)}
+              <textarea
+                ref={templateTextRef}
+                className="textarea"
+                rows={3}
+                placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}} = ?"
+                value={templateText}
+                onFocus={() => onFocusField?.('templateText')}
+                onChange={(event) => setTemplateText(event.target.value)}
               />
               <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Đáp án được chấp nhận nếu sai lệch không quá giá trị này (ví dụ: 0.01 = ±1%)
+                Học sinh sẽ nhập đáp án dạng text hoặc số. Dùng {'{{a}}'} để tạo biến động.
               </p>
+              {templateText && (
+                <div className="preview-box">
+                  <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+                </div>
+              )}
             </label>
-          )}
-        </section>
 
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
-          </p>
-          <textarea
-            ref={diagramTemplateRef}
-            className="textarea"
-            rows={4}
-            value={diagramTemplateRaw}
-            onFocus={() => onFocusField?.('diagramTemplateRaw')}
-            onChange={(event) => setDiagramTemplateRaw(event.target.value)}
-            placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
-          />
-        </label>
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
+              </p>
+              <textarea
+                ref={diagramTemplateRef}
+                className="textarea"
+                rows={4}
+                value={diagramTemplateRaw}
+                onFocus={() => onFocusField?.('diagramTemplateRaw')}
+                onChange={(event) => setDiagramTemplateRaw(event.target.value)}
+                placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
+              />
+            </label>
+          </>
+        )}
 
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Hướng dẫn giải mẫu (cho AI tạo lời giải)
-          </p>
-          <textarea
-            className="textarea"
-            rows={3}
-            value={solutionStepsTemplate}
-            onChange={(e) => setSolutionStepsTemplate(e.target.value)}
-            placeholder="Ví dụ: Bước 1: Tính nguyên hàm. Bước 2: Thay cận. Bước 3: Tính kết quả = {{a}}/2"
-          />
-          {solutionStepsTemplate && (
-            <div className="preview-box">
-              <MathText text={solutionStepsTemplate} />
-            </div>
-          )}
-        </label>
+        {step === 3 && (
+          <>
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Công thức tính đáp án đúng
+              </p>
+              <input
+                ref={answerFormulaRef}
+                className="input"
+                placeholder="Ví dụ: {{a}}/2 — dùng {{tên_biến}} cho tham số"
+                value={answerFormula}
+                onFocus={() => onFocusField?.('answerFormula')}
+                onChange={(event) => setAnswerFormula(event.target.value)}
+              />
+              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                Dùng <code>{'{{tên_biến}}'}</code> cho tham số. Biến phải khớp với tên đã khai báo
+                ở bước trước.
+              </p>
+              {answerFormula && (
+                <div className="preview-box">
+                  <MathText text={renderTemplateWithSamples(answerFormula, parameters)} />
+                </div>
+              )}
+            </label>
+
+            <section className="data-card" style={{ minHeight: 0, border: '1px solid #dcfce7' }}>
+              <div>
+                <h3 style={{ color: '#166534' }}>Chế độ đánh giá đáp án</h3>
+                <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
+                  Chọn cách hệ thống so sánh đáp án của học sinh với đáp án đúng.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                <button
+                  type="button"
+                  className={`btn ${validationMode === 'EXACT' ? '' : 'secondary'}`}
+                  style={{ flex: 1 }}
+                  onClick={() => setValidationMode('EXACT')}
+                >
+                  EXACT
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${validationMode === 'NUMERIC' ? '' : 'secondary'}`}
+                  style={{ flex: 1 }}
+                  onClick={() => setValidationMode('NUMERIC')}
+                >
+                  NUMERIC
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${validationMode === 'REGEX' ? '' : 'secondary'}`}
+                  style={{ flex: 1 }}
+                  onClick={() => setValidationMode('REGEX')}
+                >
+                  REGEX
+                </button>
+              </div>
+
+              <div
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#dbeafe',
+                  borderRadius: 8,
+                  fontSize: '0.875rem',
+                }}
+              >
+                <strong>Chế độ hiện tại: {validationMode}</strong>
+                <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+                  {validationMode === 'EXACT' && (
+                    <li>So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
+                  )}
+                  {validationMode === 'NUMERIC' && (
+                    <li>So sánh số với sai số cho phép (ví dụ: ±0.01)</li>
+                  )}
+                  {validationMode === 'REGEX' && <li>Kiểm tra theo biểu thức chính quy</li>}
+                </ul>
+              </div>
+
+              {validationMode === 'NUMERIC' && (
+                <label style={{ marginTop: 16 }}>
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Sai số cho phép (tolerance)
+                  </p>
+                  <input
+                    ref={toleranceRef}
+                    className="input"
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    placeholder="0.01"
+                    value={tolerance}
+                    onFocus={() => onFocusField?.('tolerance')}
+                    onChange={(event) => setTolerance(event.target.value)}
+                  />
+                  <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                    Đáp án được chấp nhận nếu sai lệch không quá giá trị này (ví dụ: 0.01 = ±1%)
+                  </p>
+                </label>
+              )}
+            </section>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Hướng dẫn giải mẫu (cho AI tạo lời giải)
+              </p>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={solutionStepsTemplate}
+                onChange={(e) => setSolutionStepsTemplate(e.target.value)}
+                placeholder="Ví dụ: Bước 1: Tính nguyên hàm. Bước 2: Thay cận. Bước 3: Tính kết quả = {{a}}/2"
+              />
+              {solutionStepsTemplate && (
+                <div className="preview-box">
+                  <MathText
+                    text={renderTemplateWithSamples(solutionStepsTemplate, parameters)}
+                  />
+                </div>
+              )}
+            </label>
+
+            <section
+              className="data-card"
+              style={{ minHeight: 0, border: '1px solid #c7d2fe', background: '#eef2ff' }}
+            >
+              <h3 style={{ color: '#3730a3', marginTop: 0 }}>Xem trước câu hỏi (giá trị mẫu)</h3>
+              <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 12 }}>
+                Đề bài và đáp án dưới đây được render với <em>giá trị mẫu</em> của các hệ số.
+              </p>
+
+              <div style={{ marginBottom: 12 }}>
+                <strong>Đề bài:</strong>
+                <div className="preview-box">
+                  <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #10b981',
+                  background: '#ecfdf5',
+                  borderRadius: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <strong style={{ color: '#047857' }}>Đáp án đúng:</strong>
+                <div style={{ marginTop: 4 }}>
+                  <MathText text={renderTemplateWithSamples(answerFormula, parameters)} />
+                </div>
+              </div>
+
+              <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                <strong>Chế độ chấm:</strong> {validationMode}
+                {validationMode === 'NUMERIC' && tolerance && (
+                  <> &middot; sai số cho phép: ±{tolerance}</>
+                )}
+              </div>
+
+              {diagramTemplateRaw.trim() && (
+                <div style={{ marginTop: 12 }}>
+                  <strong>Sơ đồ:</strong>
+                  <div className="preview-box">
+                    <MathText text={renderTemplateWithSamples(diagramTemplateRaw, parameters)} />
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* AI Parameter Panel — refinement helper, edit mode only. */}
+            {templateId && (
+              <AIParameterPanel
+                templateId={templateId}
+                templateText={templateText}
+                answerFormula={answerFormula}
+                solutionSteps={solutionStepsTemplate}
+                parameters={parameters.map((p) => p.name).filter(Boolean)}
+                onAccept={(accepted) => {
+                  setParameters((prev) =>
+                    prev.map((p) => {
+                      const val = accepted[p.name];
+                      if (val === undefined) return p;
+                      return { ...p, sampleValue: String(val) };
+                    })
+                  );
+                }}
+              />
+            )}
+          </>
+        )}
       </>
     );
   }

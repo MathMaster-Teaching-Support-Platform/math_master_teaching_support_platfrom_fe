@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Globe2, Lock, Sparkles } from 'lucide-react';
+import { Lock, Sparkles } from 'lucide-react';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import type { SchoolGradeResponse, SubjectResponse } from '../../types/academic.types';
 import { AcademicStructureService } from '../../services/api/academic-structure.service';
@@ -337,8 +337,8 @@ export function QuestionBankFormModal({
                 <option value="">{loadingGrades ? 'Đang tải lớp…' : '— Chọn lớp —'}</option>
                 {grades.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.name}
-                    {g.gradeLevel ? ` (Lớp ${g.gradeLevel})` : ''}
+                   
+                    {g.gradeLevel ? ` Lớp ${g.gradeLevel}` : ''}
                   </option>
                 ))}
               </select>
@@ -383,30 +383,6 @@ export function QuestionBankFormModal({
               </p>
             </div>
           </div>
-        </fieldset>
-
-        {/* ─── Section: Sharing ─── */}
-        <fieldset className="qb-bank-form__section qb-bank-form__section--share">
-          <legend className="qb-bank-form__legend">Chia sẻ</legend>
-          <label className="qb-bank-form__share">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-              disabled={saving}
-            />
-            <span className="qb-bank-form__share-icon">
-              {isPublic ? <Globe2 size={16} /> : <Lock size={16} />}
-            </span>
-            <span className="qb-bank-form__share-text">
-              <strong>{isPublic ? 'Công khai' : 'Riêng tư'}</strong>
-              <span className="qb-text-muted">
-                {isPublic
-                  ? 'Mọi giáo viên trong hệ thống có thể xem ngân hàng này.'
-                  : 'Chỉ bạn nhìn thấy ngân hàng câu hỏi này.'}
-              </span>
-            </span>
-          </label>
         </fieldset>
 
         {submitError && <QbInlineNotice tone="danger">{submitError}</QbInlineNotice>}

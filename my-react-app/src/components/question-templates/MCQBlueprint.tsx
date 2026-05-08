@@ -7,6 +7,7 @@ import { AIParameterPanel } from './AIParameterPanel';
 type OptionInput = {
   key: string;
   formula: string;
+  isCorrect: boolean;
 };
 
 export interface MCQBlueprintData {
@@ -22,6 +23,7 @@ export interface MCQBlueprintData {
 interface MCQBlueprintProps {
   defaultChapterId: string;
   templateId?: string;
+  step?: 1 | 2 | 3 | 4;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
     templateText?: string;
@@ -41,9 +43,9 @@ export interface MCQBlueprintRef {
 }
 
 export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
-  ({ onFocusField, initialData, templateId }, ref) => {
+  ({ onFocusField, initialData, templateId, step = 2 }, ref) => {
     const [templateText, setTemplateText] = useState(initialData?.templateText ?? '');
-    const [answerFormula, setAnswerFormula] = useState(initialData?.answerFormula ?? '');
+    const initialAnswerFormula = initialData?.answerFormula ?? '';
     const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
       initialData?.diagramTemplateRaw ?? ''
     );
@@ -56,17 +58,26 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
     const [globalConstraints, setGlobalConstraints] = useState<string[]>(
       initialData?.globalConstraints ?? []
     );
-    const [options, setOptions] = useState<OptionInput[]>(
-      initialData?.options ?? [
+    const [options, setOptions] = useState<OptionInput[]>(() => {
+      const seed = initialData?.options ?? [
         { key: 'A', formula: '' },
         { key: 'B', formula: '' },
         { key: 'C', formula: '' },
         { key: 'D', formula: '' },
-      ]
-    );
+      ];
+      const matchIdx = initialAnswerFormula
+        ? seed.findIndex((o) => o.formula.trim() === initialAnswerFormula.trim())
+        : -1;
+      const correctIdx = matchIdx >= 0 ? matchIdx : 0;
+      return seed.map((o, i) => ({
+        key: o.key,
+        formula: o.formula,
+        isCorrect: i === correctIdx,
+      }));
+    });
+    const answerFormula = options.find((o) => o.isCorrect)?.formula ?? '';
 
     const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
-    const answerFormulaRef = useRef<HTMLInputElement | null>(null);
     const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
     const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const parameterConstraintRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
@@ -89,7 +100,7 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
           case 'templateText':
             return templateTextRef.current;
           case 'answerFormula':
-            return answerFormulaRef.current;
+            return null;
           case 'diagramTemplateRaw':
             return diagramTemplateRef.current;
           case 'parameterName':
@@ -115,114 +126,115 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
       setOptions(updated);
     };
 
+    const markOptionCorrect = (index: number) => {
+      setOptions((prev) => prev.map((o, i) => ({ ...o, isCorrect: i === index })));
+    };
+
     return (
       <>
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Nội dung câu hỏi{' '}
-            <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
-              (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số. Ví dụ: "Giải: x + {'{{a}}'} = {'{{b}}'}")
-            </span>
-          </p>
-          <textarea
-            ref={templateTextRef}
-            className="textarea"
-            rows={3}
-            required
-            placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}}?"
-            value={templateText}
-            onFocus={() => onFocusField?.('templateText')}
-            onChange={(event) => setTemplateText(event.target.value)}
-          />
-          {templateText && (
-            <div className="preview-box">
-              <MathText text={renderTemplateWithSamples(templateText, parameters)} />
-            </div>
-          )}
-          <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-            Dùng {'{{a}}'} để tạo biến động. Bôi đen nội dung cần công thức rồi bấm Insert Math.
-          </p>
-        </label>
+        {step === 2 && (
+          <>
+            <ParametersEditor
+              parameters={parameters}
+              onChange={setParameters}
+              globalConstraints={globalConstraints}
+              onGlobalConstraintsChange={setGlobalConstraints}
+              onFocusField={(kind, index) => onFocusField?.(kind, index)}
+              mathFieldRefs={{
+                nameRefs: parameterNameRefs,
+                constraintRefs: parameterConstraintRefs,
+                sampleRefs: parameterSampleRefs,
+              }}
+            />
 
-        <ParametersEditor
-          parameters={parameters}
-          onChange={setParameters}
-          globalConstraints={globalConstraints}
-          onGlobalConstraintsChange={setGlobalConstraints}
-          onFocusField={(kind, index) => onFocusField?.(kind, index)}
-          mathFieldRefs={{
-            nameRefs: parameterNameRefs,
-            constraintRefs: parameterConstraintRefs,
-            sampleRefs: parameterSampleRefs,
-          }}
-        />
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Nội dung câu hỏi{' '}
+                <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
+                  (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số. Ví dụ: "Giải: x + {'{{a}}'} ={' '}
+                  {'{{b}}'}")
+                </span>
+              </p>
+              <textarea
+                ref={templateTextRef}
+                className="textarea"
+                rows={3}
+                placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}}?"
+                value={templateText}
+                onFocus={() => onFocusField?.('templateText')}
+                onChange={(event) => setTemplateText(event.target.value)}
+              />
+              {templateText && (
+                <div className="preview-box">
+                  <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+                </div>
+              )}
+              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                Dùng {'{{a}}'} để tạo biến động. Bôi đen nội dung cần công thức rồi bấm Insert Math.
+              </p>
+            </label>
 
-        {/* AI Parameter Panel — Feature 2 (legacy refinement helper) */}
-        {templateId && (
-          <AIParameterPanel
-            templateId={templateId}
-            templateText={templateText}
-            answerFormula={answerFormula}
-            solutionSteps={solutionStepsTemplate}
-            options={Object.fromEntries(options.map((o) => [o.key, o.formula]))}
-            parameters={parameters.map((p) => p.name).filter(Boolean)}
-            onAccept={(accepted) => {
-              // Use the AI-suggested values as the new sampleValue for each parameter.
-              setParameters((prev) =>
-                prev.map((p) => {
-                  const val = accepted[p.name];
-                  if (val === undefined) return p;
-                  return { ...p, sampleValue: String(val) };
-                })
-              );
-            }}
-          />
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
+              </p>
+              <textarea
+                ref={diagramTemplateRef}
+                className="textarea"
+                rows={4}
+                value={diagramTemplateRaw}
+                onFocus={() => onFocusField?.('diagramTemplateRaw')}
+                onChange={(event) => setDiagramTemplateRaw(event.target.value)}
+                placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
+              />
+            </label>
+          </>
         )}
 
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Công thức tính đáp án đúng
-          </p>
-          <input
-            ref={answerFormulaRef}
-            className="input"
-            placeholder="Ví dụ: (-{{b}})/{{a}}) — dùng {{tên_biến}} cho tham số"
-            value={answerFormula}
-            onFocus={() => onFocusField?.('answerFormula')}
-            onChange={(event) => setAnswerFormula(event.target.value)}
-          />
-          <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-            Dùng <code>{'{{tên_biến}}'}</code> cho tham số (ví dụ: <code>{'(-{{b}})/{{a}})'}</code>
-            ). Biến phải khớp với tên đã khai báo ở trước.
-          </p>
-          {answerFormula && (
-            <div className="preview-box">
-              <MathText text={answerFormula} />
+        {step === 3 && (
+          <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
+            <div>
+              <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm A, B, C, D</h3>
+              <p className="muted" style={{ fontSize: '0.8rem' }}>
+                Viết công thức cho từng phương án, rồi chọn nút bên trái để đánh dấu
+                <strong> đáp án đúng</strong>. Công thức tính đáp án đúng sẽ tự lấy theo lựa chọn
+                này.
+              </p>
             </div>
-          )}
-        </label>
 
-        <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
-          <div>
-            <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm A, B, C, D</h3>
-            <p className="muted" style={{ fontSize: '0.8rem' }}>
-              Viết công thức để máy tính tự tính ra kết quả cho 4 lựa chọn A, B, C, D.
-            </p>
-          </div>
-
-          {options.map((item, index) => (
-            <div key={item.key} className="form-grid">
-              <input
-                ref={(node) => {
-                  optionKeyRefs.current[index] = node;
+            {options.map((item, index) => (
+              <div
+                key={item.key}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto auto 1fr',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '6px 10px',
+                  border: item.isCorrect ? '1px solid #10b981' : '1px solid #e5e7eb',
+                  background: item.isCorrect ? '#ecfdf5' : '#fff',
+                  borderRadius: 8,
+                  marginBottom: 8,
                 }}
-                className="input"
-                value={item.key}
-                readOnly
-                disabled
-                onFocus={() => onFocusField?.('optionKey', index)}
-              />
-              <div className="row" style={{ gridColumn: 'span 3' }}>
+              >
+                <input
+                  type="radio"
+                  name="mcq-blueprint-correct"
+                  checked={item.isCorrect}
+                  onChange={() => markOptionCorrect(index)}
+                  title="Đánh dấu là đáp án đúng"
+                />
+                <input
+                  ref={(node) => {
+                    optionKeyRefs.current[index] = node;
+                  }}
+                  className="input"
+                  style={{ width: 56 }}
+                  value={item.key}
+                  readOnly
+                  disabled
+                  onFocus={() => onFocusField?.('optionKey', index)}
+                />
                 <div style={{ width: '100%' }}>
                   <input
                     ref={(node) => {
@@ -242,42 +254,121 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </section>
+            ))}
 
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
-          </p>
-          <textarea
-            ref={diagramTemplateRef}
-            className="textarea"
-            rows={4}
-            value={diagramTemplateRaw}
-            onFocus={() => onFocusField?.('diagramTemplateRaw')}
-            onChange={(event) => setDiagramTemplateRaw(event.target.value)}
-            placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
-          />
-        </label>
-
-        <label>
-          <p className="muted" style={{ marginBottom: 6 }}>
-            Hướng dẫn giải mẫu (cho AI tạo lời giải)
-          </p>
-          <textarea
-            className="textarea"
-            rows={3}
-            value={solutionStepsTemplate}
-            onChange={(e) => setSolutionStepsTemplate(e.target.value)}
-            placeholder="Ví dụ: Bước 1: Chuyển {{b}} sang vế phải. Bước 2: Chia hai vế cho {{a}}. Bước 3: x = (-{{b}})/{{a}}"
-          />
-          {solutionStepsTemplate && (
-            <div className="preview-box">
-              <MathText text={solutionStepsTemplate} />
+            <div style={{ marginTop: 8 }}>
+              <p className="muted" style={{ marginBottom: 4, fontSize: '0.78rem' }}>
+                Công thức đáp án đúng (tự lấy từ phương án đã chọn)
+              </p>
+              {answerFormula ? (
+                <div className="preview-box">
+                  <MathText text={answerFormula} />
+                </div>
+              ) : (
+                <p className="muted" style={{ fontSize: '0.78rem', color: '#b91c1c' }}>
+                  Chưa nhập công thức cho phương án được đánh dấu là đáp án đúng.
+                </p>
+              )}
             </div>
-          )}
-        </label>
+          </section>
+        )}
+
+        {step === 4 && (
+          <>
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Hướng dẫn giải mẫu (cho AI tạo lời giải)
+              </p>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={solutionStepsTemplate}
+                onChange={(e) => setSolutionStepsTemplate(e.target.value)}
+                placeholder="Ví dụ: Bước 1: Chuyển {{b}} sang vế phải. Bước 2: Chia hai vế cho {{a}}. Bước 3: x = (-{{b}})/{{a}}"
+              />
+              {solutionStepsTemplate && (
+                <div className="preview-box">
+                  <MathText
+                    text={renderTemplateWithSamples(solutionStepsTemplate, parameters)}
+                  />
+                </div>
+              )}
+            </label>
+
+            <section
+              className="data-card"
+              style={{ minHeight: 0, border: '1px solid #c7d2fe', background: '#eef2ff' }}
+            >
+              <h3 style={{ color: '#3730a3', marginTop: 0 }}>Xem trước câu hỏi (giá trị mẫu)</h3>
+              <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 12 }}>
+                Đề bài và phương án dưới đây được render với{' '}
+                <em>giá trị mẫu</em> của các hệ số. Đây là cách học sinh sẽ thấy.
+              </p>
+
+              <div style={{ marginBottom: 12 }}>
+                <strong>Đề bài:</strong>
+                <div className="preview-box">
+                  <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 6 }}>
+                {options
+                  .filter((o) => o.formula.trim())
+                  .map((o) => (
+                    <div
+                      key={o.key}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr',
+                        gap: 8,
+                        alignItems: 'center',
+                        padding: '6px 10px',
+                        border: o.isCorrect ? '1px solid #10b981' : '1px solid #e5e7eb',
+                        background: o.isCorrect ? '#ecfdf5' : '#fff',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <strong style={{ color: o.isCorrect ? '#047857' : '#475569' }}>
+                        {o.key}.
+                      </strong>
+                      <MathText text={renderTemplateWithSamples(o.formula, parameters)} />
+                    </div>
+                  ))}
+              </div>
+
+              {diagramTemplateRaw.trim() && (
+                <div style={{ marginTop: 12 }}>
+                  <strong>Sơ đồ:</strong>
+                  <div className="preview-box">
+                    <MathText text={renderTemplateWithSamples(diagramTemplateRaw, parameters)} />
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* AI Parameter Panel — refinement helper, edit mode only. */}
+            {templateId && (
+              <AIParameterPanel
+                templateId={templateId}
+                templateText={templateText}
+                answerFormula={answerFormula}
+                solutionSteps={solutionStepsTemplate}
+                options={Object.fromEntries(options.map((o) => [o.key, o.formula]))}
+                parameters={parameters.map((p) => p.name).filter(Boolean)}
+                onAccept={(accepted) => {
+                  setParameters((prev) =>
+                    prev.map((p) => {
+                      const val = accepted[p.name];
+                      if (val === undefined) return p;
+                      return { ...p, sampleValue: String(val) };
+                    })
+                  );
+                }}
+              />
+            )}
+          </>
+        )}
       </>
     );
   }

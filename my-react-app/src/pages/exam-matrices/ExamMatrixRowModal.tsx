@@ -1,5 +1,6 @@
-import { Database, X } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
@@ -133,9 +134,7 @@ export function ExamMatrixRowModal({
               Chọn chủ đề cho dòng ma trận. Số câu sẽ được chỉnh sửa trực tiếp trong bảng ma trận.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

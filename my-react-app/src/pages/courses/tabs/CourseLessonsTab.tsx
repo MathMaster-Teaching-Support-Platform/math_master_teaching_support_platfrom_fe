@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import LessonDiscussionPanel from '../../../components/course/LessonDiscussionPanel';
 import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
 import {
@@ -1599,6 +1600,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 </p>
               )}
             </div>
+
+            <LessonDiscussionPanel courseId={courseId} lessonId={playingLessonId} />
 
             <button
               className="btn secondary"
