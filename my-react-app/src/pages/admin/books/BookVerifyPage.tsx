@@ -55,7 +55,8 @@ const ABSOLUTE_URL_REGEX = /^(https?:)?\/\//i;
 const resolveAssetUrl = (value?: string | null): string => {
   const raw = value?.trim();
   if (!raw) return '';
-  if (raw.startsWith('data:') || raw.startsWith('blob:') || ABSOLUTE_URL_REGEX.test(raw)) return raw;
+  if (raw.startsWith('data:') || raw.startsWith('blob:') || ABSOLUTE_URL_REGEX.test(raw))
+    return raw;
   if (raw.startsWith('/')) {
     if (!API_BASE_URL) return raw;
     if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
@@ -87,6 +88,19 @@ const shouldTryAuthImageFetch = (url: string): boolean => {
   }
 };
 
+const buildAssetCandidates = (url: string): string[] => {
+  if (!url) return [];
+  const candidates = [url];
+  const booksPathRegex = /\/api\/v1\/crawl-data\/static\/books\/([^/]+)\/pages\/([^/?#]+)$/i;
+  const match = booksPathRegex.exec(url);
+  if (match) {
+    const bookId = match[1];
+    const fileName = match[2];
+    candidates.push(`${globalThis.location.origin}/api/v1/crawl-data/static/images/${bookId}/${fileName}`);
+  }
+  return Array.from(new Set(candidates));
+};
+
 const AuthenticatedImage: React.FC<{
   src: string;
   alt: string;
@@ -100,43 +114,48 @@ const AuthenticatedImage: React.FC<{
     let revokedObjectUrl: string | null = null;
     const controller = new AbortController();
     const finalSrc = resolveAssetUrl(src);
+    const candidateSrcs = buildAssetCandidates(finalSrc);
     setResolvedSrc('');
 
     const fetchProtectedImage = async () => {
-      if (!finalSrc) return;
-      if (!shouldTryAuthImageFetch(finalSrc)) {
-        setResolvedSrc(finalSrc);
-        return;
-      }
+      if (!finalSrc || candidateSrcs.length === 0) return;
       const token = AuthService.getToken();
-      if (!token) {
-        setResolvedSrc(finalSrc);
-        return;
-      }
-      try {
-        const response = await fetch(finalSrc, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: 'image/*,*/*',
-          },
-          credentials: 'include',
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          setResolvedSrc(finalSrc);
+
+      for (const candidateSrc of candidateSrcs) {
+        if (!shouldTryAuthImageFetch(candidateSrc)) {
+          setResolvedSrc(candidateSrc);
           return;
         }
-        const blob = await response.blob();
-        if (!blob.type.startsWith('image/')) {
-          setResolvedSrc(finalSrc);
+        if (!token) {
+          setResolvedSrc(candidateSrc);
           return;
         }
-        revokedObjectUrl = URL.createObjectURL(blob);
-        setResolvedSrc(revokedObjectUrl);
-      } catch {
-        setResolvedSrc(finalSrc);
+        try {
+          const response = await fetch(candidateSrc, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              accept: 'image/*,*/*',
+            },
+            credentials: 'include',
+            signal: controller.signal,
+          });
+          if (!response.ok) {
+            continue;
+          }
+          const blob = await response.blob();
+          if (!blob.type.startsWith('image/')) {
+            continue;
+          }
+          revokedObjectUrl = URL.createObjectURL(blob);
+          setResolvedSrc(revokedObjectUrl);
+          return;
+        } catch {
+          // Try next candidate URL.
+        }
       }
+
+      setResolvedSrc(candidateSrcs[0] ?? finalSrc);
     };
 
     void fetchProtectedImage();
@@ -155,7 +174,9 @@ const AuthenticatedImage: React.FC<{
     );
   }
 
-  return <img src={resolvedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />;
+  return (
+    <img src={resolvedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />
+  );
 };
 
 interface BookVerifyContentProps {
@@ -175,10 +196,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   const refreshVerification = useRefreshVerification(bookId ?? '');
 
   const book = bookData?.result;
-  const lessons: LessonContentResponse[] = useMemo(
-    () => contentData?.result ?? [],
-    [contentData]
-  );
+  const lessons: LessonContentResponse[] = useMemo(() => contentData?.result ?? [], [contentData]);
 
   const [activeLessonId, setActiveLessonId] = useState<string>('');
   const [activePageNumber, setActivePageNumber] = useState<number | null>(null);
@@ -242,238 +260,246 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   };
 
   return (
-      <div className={embedded ? '' : 'p-6 max-w-7xl mx-auto'}>
-        {!embedded && onBack && (
-          <div className="flex items-center gap-3 mb-4">
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
-            >
-              <ArrowLeft size={16} /> Danh sách sách
-            </button>
-          </div>
-        )}
-
-        <div className="flex items-start justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
-              {bookLoading ? 'Đang tải…' : book?.title ?? 'Sách không tồn tại'}
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {book ? (
-                <>
-                  {book.schoolGradeName} · {book.subjectName} · {book.curriculumName}
-                </>
-              ) : null}
-            </p>
-            {book && (
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <StatusPill verified={book.verified} />
-                <span className="text-slate-400">·</span>
-                <span className="text-slate-500">
-                  {book.mappedLessonCount} bài đã mapping
-                </span>
-              </div>
-            )}
-          </div>
+    <div className={embedded ? '' : 'p-6 max-w-7xl mx-auto'}>
+      {!embedded && onBack && (
+        <div className="flex items-center gap-3 mb-4">
           <button
             type="button"
-            onClick={handleRefresh}
-            disabled={refreshVerification.isPending}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 disabled:opacity-50"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
           >
-            {refreshVerification.isPending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <RefreshCw size={14} />
-            )}
-            Đồng bộ trạng thái
+            <ArrowLeft size={16} /> Danh sách sách
           </button>
         </div>
+      )}
 
-        {contentLoading ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
-            <Loader2 size={20} className="animate-spin inline mr-2" /> Đang tải nội dung…
-          </div>
-        ) : lessons.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
-            Chưa có nội dung OCR nào. Hãy chạy OCR trước.
-          </div>
-        ) : (
-          <div
-            className={[
-              'grid gap-4',
-              sidebarCollapsed ? 'lg:grid-cols-[54px_1fr]' : 'lg:grid-cols-[340px_1fr]',
-            ].join(' ')}
-          >
-            {/* Lesson + page sidebar */}
-            <aside className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b flex items-center gap-1 justify-between">
-                <span className="inline-flex items-center gap-1">
-                  <ListTree size={14} />
-                  {!sidebarCollapsed && 'Danh sách bài học'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSidebarCollapsed((s) => !s)}
-                  className="inline-flex items-center justify-center h-7 px-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 gap-0.5"
-                  title={sidebarCollapsed ? 'Mở danh sách bài học' : 'Thu danh sách bài học'}
-                >
-                  {sidebarCollapsed ? (
-                    <>
-                      <PanelLeftOpen size={13} />
-                      <ChevronsRight size={12} />
-                    </>
-                  ) : (
-                    <>
-                      <PanelLeftClose size={13} />
-                      <ChevronsLeft size={12} />
-                    </>
-                  )}
-                </button>
-              </div>
-              {!sidebarCollapsed && (
-                <div className="max-h-[70vh] overflow-y-auto divide-y divide-slate-100">
-                  {lessonsByChapter.map((chapter) => {
-                    const chapterCollapsed = collapsedChapters[chapter.chapterId] ?? false;
-                    const chapterTotal = chapter.lessons.reduce((acc, l) => acc + l.pages.length, 0);
-                    const chapterVerified = chapter.lessons.reduce(
-                      (acc, l) => acc + l.pages.filter((p) => p.verified).length,
-                      0
-                    );
-
-                    return (
-                      <div key={chapter.chapterId}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setCollapsedChapters((s) => ({
-                              ...s,
-                              [chapter.chapterId]: !chapterCollapsed,
-                            }))
-                          }
-                          className="w-full text-left px-3 py-2 flex items-center gap-2 border-b border-slate-100 bg-slate-50 hover:bg-slate-100 transition"
-                        >
-                          <span className="text-slate-400">
-                            {chapterCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xs font-bold uppercase tracking-wide text-slate-700 truncate">
-                              {chapter.chapterTitle}
-                            </div>
-                            <div className="text-[11px] text-slate-400">
-                              {chapterVerified}/{chapterTotal} trang đã verify
-                            </div>
-                          </div>
-                        </button>
-
-                        {!chapterCollapsed &&
-                          chapter.lessons.map((l) => {
-                            const total = l.pages.length;
-                            const verified = l.pages.filter((p) => p.verified).length;
-                            const collapsed =
-                              collapsedLessons[l.lessonId] ?? l.lessonId !== resolvedLessonId;
-                            return (
-                              <div key={l.lessonId}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveLessonId(l.lessonId);
-                                    setActivePageNumber(l.pages[0]?.pageNumber ?? null);
-                                    setCollapsedLessons((s) => ({ ...s, [l.lessonId]: false }));
-                                  }}
-                                  className={[
-                                    'w-full text-left pl-8 pr-3 py-2 flex items-center gap-2 transition',
-                                    resolvedLessonId === l.lessonId
-                                      ? 'bg-blue-50 text-blue-700'
-                                      : 'hover:bg-slate-50 text-slate-700',
-                                  ].join(' ')}
-                                >
-                                  <span
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setCollapsedLessons((s) => ({
-                                        ...s,
-                                        [l.lessonId]: !collapsed,
-                                      }));
-                                    }}
-                                    className="text-slate-400 hover:text-slate-700"
-                                  >
-                                    {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-medium truncate">{l.lessonTitle}</div>
-                                    <div className="text-[11px] text-slate-400">
-                                      {verified}/{total} trang đã verify
-                                    </div>
-                                  </div>
-                                  {l.lessonVerified && (
-                                    <CheckCircle2 size={14} className="text-emerald-500" />
-                                  )}
-                                </button>
-                                {!collapsed && (
-                                  <ul className="bg-slate-50/50">
-                                    {l.pages.map((p) => (
-                                      <li key={p.pageNumber}>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setActiveLessonId(l.lessonId);
-                                            setActivePageNumber(p.pageNumber);
-                                          }}
-                                          className={[
-                                            'w-full text-left pl-14 pr-3 py-1.5 text-xs flex items-center justify-between gap-2',
-                                            resolvedLessonId === l.lessonId &&
-                                            resolvedPageNumber === p.pageNumber
-                                              ? 'bg-blue-100 text-blue-800 font-semibold'
-                                              : 'text-slate-600 hover:bg-slate-100',
-                                          ].join(' ')}
-                                        >
-                                          <span className="inline-flex items-center gap-1">
-                                            <FileText size={12} />
-                                            Trang {p.pageNumber}
-                                          </span>
-                                          {p.verified ? (
-                                            <CheckCircle2 size={12} className="text-emerald-500" />
-                                          ) : (
-                                            <span className="w-2 h-2 rounded-full bg-amber-400" />
-                                          )}
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </aside>
-
-            {/* Page editor */}
-            <div className="bg-white border border-slate-200 rounded-xl">
-              {activePage && bookId && resolvedLessonId ? (
-                <PageEditor
-                  key={`${resolvedLessonId}-${resolvedPageNumber ?? 'none'}`}
-                  bookId={bookId}
-                  lessonId={resolvedLessonId}
-                  lessonTitle={activeLesson?.lessonTitle ?? ''}
-                  chapterTitle={lessonChapterMeta.get(resolvedLessonId)?.chapterTitle ?? ''}
-                  page={activePage}
-                />
-              ) : (
-                <div className="p-10 text-center text-sm text-slate-500">
-                  Chọn một trang ở thanh bên để bắt đầu xác minh.
-                </div>
-              )}
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            {bookLoading ? 'Đang tải…' : (book?.title ?? 'Sách không tồn tại')}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {book ? (
+              <>
+                {book.schoolGradeName} · {book.subjectName} · {book.curriculumName}
+              </>
+            ) : null}
+          </p>
+          {book && (
+            <div className="mt-2 flex items-center gap-2 text-xs">
+              <StatusPill verified={book.verified} />
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">{book.mappedLessonCount} bài đã mapping</span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshVerification.isPending}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 disabled:opacity-50"
+        >
+          {refreshVerification.isPending ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <RefreshCw size={14} />
+          )}
+          Đồng bộ trạng thái
+        </button>
       </div>
+
+      {contentLoading ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+          <Loader2 size={20} className="animate-spin inline mr-2" /> Đang tải nội dung…
+        </div>
+      ) : lessons.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+          Chưa có nội dung OCR nào. Hãy chạy OCR trước.
+        </div>
+      ) : (
+        <div
+          className={[
+            'grid gap-4',
+            sidebarCollapsed ? 'lg:grid-cols-[54px_1fr]' : 'lg:grid-cols-[340px_1fr]',
+          ].join(' ')}
+        >
+          {/* Lesson + page sidebar */}
+          <aside className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b flex items-center gap-1 justify-between">
+              <span className="inline-flex items-center gap-1">
+                <ListTree size={14} />
+                {!sidebarCollapsed && 'Danh sách bài học'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed((s) => !s)}
+                className="inline-flex items-center justify-center h-7 px-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 gap-0.5"
+                title={sidebarCollapsed ? 'Mở danh sách bài học' : 'Thu danh sách bài học'}
+              >
+                {sidebarCollapsed ? (
+                  <>
+                    <PanelLeftOpen size={13} />
+                    <ChevronsRight size={12} />
+                  </>
+                ) : (
+                  <>
+                    <PanelLeftClose size={13} />
+                    <ChevronsLeft size={12} />
+                  </>
+                )}
+              </button>
+            </div>
+            {!sidebarCollapsed && (
+              <div className="max-h-[70vh] overflow-y-auto divide-y divide-slate-100">
+                {lessonsByChapter.map((chapter) => {
+                  const chapterCollapsed = collapsedChapters[chapter.chapterId] ?? false;
+                  const chapterTotal = chapter.lessons.reduce((acc, l) => acc + l.pages.length, 0);
+                  const chapterVerified = chapter.lessons.reduce(
+                    (acc, l) => acc + l.pages.filter((p) => p.verified).length,
+                    0
+                  );
+
+                  return (
+                    <div key={chapter.chapterId}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCollapsedChapters((s) => ({
+                            ...s,
+                            [chapter.chapterId]: !chapterCollapsed,
+                          }))
+                        }
+                        className="w-full text-left px-3 py-2 flex items-center gap-2 border-b border-slate-100 bg-slate-50 hover:bg-slate-100 transition"
+                      >
+                        <span className="text-slate-400">
+                          {chapterCollapsed ? (
+                            <ChevronRight size={14} />
+                          ) : (
+                            <ChevronDown size={14} />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-bold uppercase tracking-wide text-slate-700 truncate">
+                            {chapter.chapterTitle}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {chapterVerified}/{chapterTotal} trang đã verify
+                          </div>
+                        </div>
+                      </button>
+
+                      {!chapterCollapsed &&
+                        chapter.lessons.map((l) => {
+                          const total = l.pages.length;
+                          const verified = l.pages.filter((p) => p.verified).length;
+                          const collapsed =
+                            collapsedLessons[l.lessonId] ?? l.lessonId !== resolvedLessonId;
+                          return (
+                            <div key={l.lessonId}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveLessonId(l.lessonId);
+                                  setActivePageNumber(l.pages[0]?.pageNumber ?? null);
+                                  setCollapsedLessons((s) => ({ ...s, [l.lessonId]: false }));
+                                }}
+                                className={[
+                                  'w-full text-left pl-8 pr-3 py-2 flex items-center gap-2 transition',
+                                  resolvedLessonId === l.lessonId
+                                    ? 'bg-blue-50 text-blue-700'
+                                    : 'hover:bg-slate-50 text-slate-700',
+                                ].join(' ')}
+                              >
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCollapsedLessons((s) => ({
+                                      ...s,
+                                      [l.lessonId]: !collapsed,
+                                    }));
+                                  }}
+                                  className="text-slate-400 hover:text-slate-700"
+                                >
+                                  {collapsed ? (
+                                    <ChevronRight size={14} />
+                                  ) : (
+                                    <ChevronDown size={14} />
+                                  )}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-medium truncate">
+                                    {l.lessonTitle}
+                                  </div>
+                                  <div className="text-[11px] text-slate-400">
+                                    {verified}/{total} trang đã verify
+                                  </div>
+                                </div>
+                                {l.lessonVerified && (
+                                  <CheckCircle2 size={14} className="text-emerald-500" />
+                                )}
+                              </button>
+                              {!collapsed && (
+                                <ul className="bg-slate-50/50">
+                                  {l.pages.map((p) => (
+                                    <li key={p.pageNumber}>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveLessonId(l.lessonId);
+                                          setActivePageNumber(p.pageNumber);
+                                        }}
+                                        className={[
+                                          'w-full text-left pl-14 pr-3 py-1.5 text-xs flex items-center justify-between gap-2',
+                                          resolvedLessonId === l.lessonId &&
+                                          resolvedPageNumber === p.pageNumber
+                                            ? 'bg-blue-100 text-blue-800 font-semibold'
+                                            : 'text-slate-600 hover:bg-slate-100',
+                                        ].join(' ')}
+                                      >
+                                        <span className="inline-flex items-center gap-1">
+                                          <FileText size={12} />
+                                          Trang {p.pageNumber}
+                                        </span>
+                                        {p.verified ? (
+                                          <CheckCircle2 size={12} className="text-emerald-500" />
+                                        ) : (
+                                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                                        )}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </aside>
+
+          {/* Page editor */}
+          <div className="bg-white border border-slate-200 rounded-xl">
+            {activePage && bookId && resolvedLessonId ? (
+              <PageEditor
+                key={`${resolvedLessonId}-${resolvedPageNumber ?? 'none'}`}
+                bookId={bookId}
+                lessonId={resolvedLessonId}
+                lessonTitle={activeLesson?.lessonTitle ?? ''}
+                chapterTitle={lessonChapterMeta.get(resolvedLessonId)?.chapterTitle ?? ''}
+                page={activePage}
+              />
+            ) : (
+              <div className="p-10 text-center text-sm text-slate-500">
+                Chọn một trang ở thanh bên để bắt đầu xác minh.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -629,7 +655,9 @@ function buildUserFriendlyHistoryDetails(entry: PageVersionEntry): string[] {
 
   if (entry.beforeVerified !== undefined && entry.afterVerified !== undefined) {
     if (entry.beforeVerified !== entry.afterVerified) {
-      details.push(entry.afterVerified ? 'Đã đánh dấu trang là đã xác minh.' : 'Đã bỏ đánh dấu xác minh.');
+      details.push(
+        entry.afterVerified ? 'Đã đánh dấu trang là đã xác minh.' : 'Đã bỏ đánh dấu xác minh.'
+      );
     }
   }
 
@@ -680,7 +708,9 @@ function compareTwoVersions(a: PageVersionEntry, b: PageVersionEntry): string[] 
 
   if (a.verified !== b.verified) {
     details.push(
-      b.verified ? 'Trạng thái xác minh: Chưa xác minh -> Đã xác minh' : 'Trạng thái xác minh: Đã xác minh -> Chưa xác minh'
+      b.verified
+        ? 'Trạng thái xác minh: Chưa xác minh -> Đã xác minh'
+        : 'Trạng thái xác minh: Đã xác minh -> Chưa xác minh'
     );
   }
 
@@ -781,8 +811,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   }, [pageHistoryData]);
 
   const isDirty =
-    verified !== lastSavedVerified ||
-    JSON.stringify(blocks) !== JSON.stringify(lastSavedBlocks);
+    verified !== lastSavedVerified || JSON.stringify(blocks) !== JSON.stringify(lastSavedBlocks);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -1085,9 +1114,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             {pageHistoryLoading ? (
               <div className="text-sm text-slate-500">Đang tải lịch sử thay đổi...</div>
             ) : historyEntries.length === 0 ? (
-              <div className="text-sm text-slate-500">
-                Chưa có version nào cho trang này.
-              </div>
+              <div className="text-sm text-slate-500">Chưa có version nào cho trang này.</div>
             ) : (
               <>
                 <div className="max-h-[280px] overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-lg">
@@ -1118,8 +1145,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
                           </div>
                         </div>
                         <div className="mt-1 text-xs text-slate-500">
-                          Người sửa: Quản trị viên ·{' '}
-                          {h.verified ? 'Đã xác minh' : 'Chưa xác minh'}
+                          Người sửa: Quản trị viên · {h.verified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </div>
                       </div>
                     );
@@ -1153,7 +1179,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     <div className="text-xs text-amber-800 mb-2">
                       {new Date(selectedVersion.ts).toLocaleString()} · Quản trị viên
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide text-amber-700/80 mb-1">Tóm tắt thay đổi</div>
+                    <div className="text-[11px] uppercase tracking-wide text-amber-700/80 mb-1">
+                      Tóm tắt thay đổi
+                    </div>
                     <ul className="text-xs text-amber-900 list-disc pl-5 space-y-1">
                       {buildUserFriendlyHistoryDetails(selectedVersion).map((c, i) => (
                         <li key={`${c}-${i}`}>{c}</li>
@@ -1166,9 +1194,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
                   <div className="border border-blue-200 bg-gradient-to-b from-blue-50 to-white rounded-xl p-4 text-sm shadow-sm">
                     <div className="font-semibold text-blue-900 mb-1">So sánh 2 version</div>
                     <div className="text-xs text-blue-800 mb-1">
-                      Version {comparisonPair.from.versionNo} · {new Date(comparisonPair.from.ts).toLocaleString()} (Quản trị viên)
+                      Version {comparisonPair.from.versionNo} ·{' '}
+                      {new Date(comparisonPair.from.ts).toLocaleString()} (Quản trị viên)
                       {' -> '}
-                      Version {comparisonPair.to.versionNo} · {new Date(comparisonPair.to.ts).toLocaleString()} (Quản trị viên)
+                      Version {comparisonPair.to.versionNo} ·{' '}
+                      {new Date(comparisonPair.to.ts).toLocaleString()} (Quản trị viên)
                     </div>
                     <ul className="text-xs text-blue-900 list-disc pl-4">
                       {compareTwoVersions(comparisonPair.from, comparisonPair.to).map((c, i) => (
@@ -1455,9 +1485,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={headingKind}
-                onChange={(e) =>
-                  onChange({ label: `${e.target.value}:${headingLevel}` })
-                }
+                onChange={(e) => onChange({ label: `${e.target.value}:${headingLevel}` })}
                 className="text-xs px-2 py-1 border border-slate-200 rounded bg-white"
               >
                 <option value="chapter">Chương</option>
@@ -1580,7 +1608,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
               className="w-full text-sm px-2 py-1 border border-slate-200 rounded font-mono"
             />
           )}
-          {(type === 'exercise') && (
+          {type === 'exercise' && (
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
@@ -1648,7 +1676,9 @@ const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
       if (parts.length !== 2) return defaultHeadingMeta;
       const kindRaw = parts[0]?.toLowerCase();
       const levelRaw = Number(parts[1]);
-      const level = Number.isFinite(levelRaw) ? Math.min(6, Math.max(1, levelRaw)) : defaultHeadingMeta.level;
+      const level = Number.isFinite(levelRaw)
+        ? Math.min(6, Math.max(1, levelRaw))
+        : defaultHeadingMeta.level;
       const allowedKinds = new Set(['chapter', 'lesson', 'section', 'other']);
       const kind = allowedKinds.has(kindRaw)
         ? (kindRaw as 'chapter' | 'lesson' | 'section' | 'other')
