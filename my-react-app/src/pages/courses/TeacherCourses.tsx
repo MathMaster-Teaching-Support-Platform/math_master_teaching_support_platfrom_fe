@@ -308,7 +308,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                             <option value="">-- Chọn lớp --</option>
                             {grades.map((g) => (
                               <option key={g.id} value={g.id}>
-                                Lớp {g.gradeLevel} – {g.name}
+                                {g.name}
                               </option>
                             ))}
                           </select>

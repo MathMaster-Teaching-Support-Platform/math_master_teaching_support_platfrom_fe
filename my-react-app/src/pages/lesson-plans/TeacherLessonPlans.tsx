@@ -266,7 +266,7 @@ function CreateLessonPlanModal({
                     <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn lớp --'}</option>
                     {grades.map((g) => (
                       <option key={g.id} value={g.id}>
-                        Lớp {g.gradeLevel} – {g.name}
+                        {g.name}
                       </option>
                     ))}
                   </select>
