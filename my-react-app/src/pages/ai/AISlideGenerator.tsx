@@ -989,6 +989,18 @@ const AISlideGenerator: React.FC = () => {
     setGeneratedPage((prev) => Math.min(prev, totalManagedGeneratedPages));
   }, [totalManagedGeneratedPages]);
 
+  // Hide navbar & sidebar when preview modal is open
+  useEffect(() => {
+    if (isGeneratedPreviewOpen) {
+      document.body.classList.add('slide-preview-open');
+    } else {
+      document.body.classList.remove('slide-preview-open');
+    }
+    return () => {
+      document.body.classList.remove('slide-preview-open');
+    };
+  }, [isGeneratedPreviewOpen]);
+
   useEffect(() => {
     const previewsToLoad = templates;
 
@@ -2453,7 +2465,7 @@ const AISlideGenerator: React.FC = () => {
                             void handleDownloadGeneratedFile(file.id);
                           }}
                           disabled={downloadingGeneratedFileId === file.id}
-                          className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                          className="w-9 h-9 p-0 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                         >
                           {downloadingGeneratedFileId === file.id ? (
                             <RefreshCw
@@ -2471,7 +2483,7 @@ const AISlideGenerator: React.FC = () => {
                             e.stopPropagation();
                             openMetadataModal(file);
                           }}
-                          className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                          className="w-9 h-9 p-0 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
                         >
                           <Pencil className="w-4 h-4 text-[#5E5D59]" strokeWidth={2.25} />
                         </button>
@@ -2483,7 +2495,7 @@ const AISlideGenerator: React.FC = () => {
                             handleRequestDeleteGeneratedFile(file.id);
                           }}
                           disabled={deletingGeneratedFileId === file.id}
-                          className="w-9 h-9 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                          className="w-9 h-9 p-0 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" strokeWidth={2.25} />
                         </button>
@@ -2578,11 +2590,11 @@ const AISlideGenerator: React.FC = () => {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isGeneratedPreviewOpen && (
         <div
-          className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-[#141413]/60 backdrop-blur-sm flex items-center justify-center p-6"
           onClick={() => setIsGeneratedPreviewOpen(false)}
         >
           <div
-            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-4xl flex flex-col max-h-[90vh]"
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.30)_0px_24px_80px] w-full max-w-5xl flex flex-col max-h-[96vh]"
             role="dialog"
             aria-modal="true"
             aria-label="Xem trước slide"
@@ -2597,7 +2609,7 @@ const AISlideGenerator: React.FC = () => {
                 type="button"
                 onClick={() => setIsGeneratedPreviewOpen(false)}
                 aria-label="Đóng xem trước"
-                className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
+                className="w-8 h-8 p-0 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2743,7 +2755,7 @@ const AISlideGenerator: React.FC = () => {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isMetadataModalOpen && editingMetadataFile && (
         <div
-          className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={closeMetadataModal}
         >
           <div
@@ -2761,7 +2773,7 @@ const AISlideGenerator: React.FC = () => {
                 type="button"
                 onClick={closeMetadataModal}
                 aria-label="Đóng"
-                className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
+                className="w-8 h-8 p-0 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2890,7 +2902,7 @@ const AISlideGenerator: React.FC = () => {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {deletingGeneratedFile && (
         <div
-          className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={closeDeleteGeneratedModal}
         >
           <div
