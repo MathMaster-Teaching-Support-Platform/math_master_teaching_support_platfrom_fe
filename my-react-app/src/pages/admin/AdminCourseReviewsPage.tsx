@@ -22,6 +22,7 @@ import {
   usePendingReviewCourses,
   useRejectCourseReview,
 } from '../../hooks/useCourses';
+import { Link } from 'react-router-dom';
 import type { CourseResponse } from '../../types';
 
 const PAGE_SIZE = 10;
@@ -207,15 +208,13 @@ function PendingTab({
                 course={course}
                 actions={
                   <div className="flex flex-wrap justify-end gap-2">
-                    <a
+                    <Link
                       className={secondaryBtn}
-                      href={`/admin/courses/${course.id}/review`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      to={`/admin/courses/${course.id}/review`}
                     >
                       <Eye size={14} strokeWidth={2} />
                       Xem nội dung
-                    </a>
+                    </Link>
                     <button
                       type="button"
                       className={primaryApproveBtn}
@@ -397,15 +396,13 @@ function HistoryTabBody({
                 showStatus
                 actions={
                   <div className="flex justify-end">
-                    <a
+                    <Link
                       className={secondaryBtn}
-                      href={`/admin/courses/${course.id}/review`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      to={`/admin/courses/${course.id}/review`}
                     >
                       <Eye size={14} strokeWidth={2} />
                       Xem nội dung
-                    </a>
+                    </Link>
                   </div>
                 }
               />
@@ -744,7 +741,7 @@ const AdminCourseReviewsPage: React.FC = () => {
                 <span className="text-[#87867F] uppercase tracking-wide font-semibold text-[11px] block mb-0.5">
                   Gợi ý
                 </span>{' '}
-                Xem nội dung mở tab mới để đối chiếu trước khi phê duyệt.
+                Xem nội dung để điều hướng trực tiếp sang trang duyệt khóa học.
               </p>
             </div>
           </div>

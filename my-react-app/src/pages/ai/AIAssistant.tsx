@@ -513,14 +513,9 @@ const AIAssistant: React.FC = () => {
                 <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
                   Trợ lý AI Toán học
                 </h1>
-                {sessions.length > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
-                    {sessions.length}
-                  </span>
-                )}
               </div>
               <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                Giải bài, chứng minh, tạo đề thi — hỗ trợ bởi Gemini AI
+                Giải bài, chứng minh, tạo đề thi
               </p>
             </div>
           </div>

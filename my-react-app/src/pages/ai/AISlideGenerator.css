@@ -1058,6 +1058,12 @@
   padding: 1rem;
 }
 
+/* Hide navbar and sidebar when slide preview modal is open */
+body.slide-preview-open .navbar-top,
+body.slide-preview-open .sidebar {
+  display: none !important;
+}
+
 .ai-slide-generating-overlay {
   position: fixed;
   inset: 0;
