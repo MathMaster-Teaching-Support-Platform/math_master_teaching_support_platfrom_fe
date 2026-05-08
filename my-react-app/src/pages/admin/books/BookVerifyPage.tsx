@@ -563,34 +563,6 @@ function formatHistoryAction(action: string): string {
   return 'Cập nhật';
 }
 
-function summarizeVersionChanges(
-  prevBlocks: ContentBlockDto[],
-  prevVerified: boolean,
-  nextBlocks: ContentBlockDto[],
-  nextVerified: boolean
-): string[] {
-  const changes: string[] = [];
-  if (prevVerified !== nextVerified) {
-    changes.push(nextVerified ? 'Đánh dấu đã xác minh' : 'Bỏ xác minh');
-  }
-  if (prevBlocks.length !== nextBlocks.length) {
-    changes.push(`Số block: ${prevBlocks.length} -> ${nextBlocks.length}`);
-  }
-
-  const prevTypes = prevBlocks.map((b) => b.type ?? 'text').join('|');
-  const nextTypes = nextBlocks.map((b) => b.type ?? 'text').join('|');
-  if (prevTypes !== nextTypes) {
-    changes.push('Thay đổi cấu trúc/thứ tự block');
-  }
-
-  const prevText = JSON.stringify(prevBlocks);
-  const nextText = JSON.stringify(nextBlocks);
-  if (prevText !== nextText) {
-    changes.push('Cập nhật nội dung block');
-  }
-  return changes.length > 0 ? changes : ['Không thay đổi nội dung'];
-}
-
 function compareTwoVersions(a: PageVersionEntry, b: PageVersionEntry): string[] {
   const details: string[] = [];
   const beforeBlocks = a.snapshot ?? [];

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -55,7 +56,7 @@ function renderInlineFormattedText(value: string) {
   ];
 
   let remaining = value;
-  const nodes: Array<string | JSX.Element> = [];
+  const nodes: ReactNode[] = [];
   let keySeq = 0;
 
   while (remaining.length > 0) {
