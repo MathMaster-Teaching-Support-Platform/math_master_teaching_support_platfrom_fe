@@ -8,10 +8,18 @@ import {
   Eye,
   EyeOff,
   Plus,
+  Trash2,
 } from 'lucide-react';
-import { useBookList, useCreateBook, useUpdateBook, useUploadBookPdf } from '../../../../hooks/useBooks';
+import {
+  useBookList,
+  useCreateBook,
+  useDeleteBook,
+  useUpdateBook,
+  useUploadBookPdf,
+} from '../../../../hooks/useBooks';
 import { useGrades } from '../../../../hooks/useGrades';
 import { useSubjectsByGrade } from '../../../../hooks/useSubjects';
+import { QbConfirmDialog } from '../../../../components/question-banks/qb-ui';
 import type { BookResponse, CreateBookRequest } from '../../../../types/book.types';
 import BookPdfPreview from '../BookPdfPreview';
 
@@ -19,10 +27,17 @@ interface Props {
   book?: BookResponse;
   onCreated: (bookId: string) => void;
   onSelectBook: (bookId: string) => void;
+  onSwitchToNew: () => void;
   onUploaded: () => void;
 }
 
-const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUploaded }) => {
+const BookUploadStep: React.FC<Props> = ({
+  book,
+  onCreated,
+  onSelectBook,
+  onSwitchToNew,
+  onUploaded,
+}) => {
   const [schoolGradeId, setSchoolGradeId] = useState(book?.schoolGradeId ?? '');
   const [subjectId, setSubjectId] = useState(book?.subjectId ?? '');
   const [title, setTitle] = useState(book?.title ?? '');
@@ -35,6 +50,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isAddingAnother, setIsAddingAnother] = useState(false);
+  const [pendingDeleteBook, setPendingDeleteBook] = useState<BookResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const localPdfObjectUrl = useMemo(() => {
@@ -57,6 +73,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
 
   const createBook = useCreateBook();
   const updateBook = useUpdateBook(book?.id ?? '');
+  const deleteBook = useDeleteBook();
   const uploadPdf = useUploadBookPdf(isAddingAnother ? '' : (book?.id ?? ''));
   const relatedBooksQuery = useBookList({
     schoolGradeId: schoolGradeId || undefined,
@@ -141,7 +158,6 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
       setPdfFile(null);
       setShowPreview(true);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      onUploaded();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Lỗi khi upload PDF.');
     }
@@ -149,6 +165,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
 
   const isSavingMetadata = createBook.isPending || updateBook.isPending;
   const isUploading = uploadPdf.isPending;
+  const isDeletingBook = deleteBook.isPending;
 
   const startAddAnotherBook = () => {
     setError(null);
@@ -177,6 +194,25 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
     setPdfFile(null);
     setShowPreview(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleConfirmDeleteBook = async () => {
+    if (!pendingDeleteBook) return;
+    const deletingBook = pendingDeleteBook;
+    const fallback = relatedBooks.find((candidate) => candidate.id !== deletingBook.id);
+    try {
+      await deleteBook.mutateAsync(deletingBook.id);
+      setPendingDeleteBook(null);
+      if (book?.id === deletingBook.id) {
+        if (fallback) {
+          onSelectBook(fallback.id);
+        } else {
+          onSwitchToNew();
+        }
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Lỗi khi xóa sách.');
+    }
   };
 
   return (
@@ -212,25 +248,44 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
           <div className="flex flex-wrap gap-2">
             {relatedBooks.map((item) => {
               const isActive = !isAddingAnother && item.id === book?.id;
+              const hasPdf = Boolean(item.pdfPath);
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => onSelectBook(item.id)}
                   className={[
-                    'inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition',
+                    'inline-flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition',
                     isActive
                       ? 'border-blue-300 bg-blue-50 text-blue-700'
                       : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
                   ].join(' ')}
                 >
-                  <span className="max-w-[300px] truncate">{item.title}</span>
-                  {item.pdfPath ? (
-                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
-                      PDF
-                    </span>
-                  ) : null}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectBook(item.id)}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <span className="max-w-[260px] truncate">{item.title}</span>
+                    {hasPdf ? (
+                      <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
+                        PDF
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
+                        Chưa có PDF
+                      </span>
+                    )}
+                  </button>
+                  {hasPdf ? null : (
+                    <button
+                      type="button"
+                      onClick={() => setPendingDeleteBook(item)}
+                      title="Xóa sách chưa upload PDF"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -420,6 +475,23 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUplo
           </div>
         ) : null}
       </div>
+      <QbConfirmDialog
+        isOpen={pendingDeleteBook !== null}
+        tone="danger"
+        title="Xóa sách khỏi danh sách?"
+        message={
+          pendingDeleteBook && (
+            <>
+              Bạn sắp xóa <strong>&quot;{pendingDeleteBook.title}&quot;</strong>. Chỉ sách chưa upload
+              PDF mới được xóa.
+            </>
+          )
+        }
+        confirmLabel="Xóa sách"
+        busy={isDeletingBook}
+        onConfirm={handleConfirmDeleteBook}
+        onCancel={() => setPendingDeleteBook(null)}
+      />
     </div>
   );
 };

@@ -7,8 +7,6 @@ import type { BookResponse, PageMappingItem } from '../../../../types/book.types
 
 interface Props {
   book: BookResponse;
-  onNext: () => void;
-  onBack: () => void;
 }
 
 interface DraftItem {
@@ -138,6 +136,10 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
           </strong>
           . Chỉ những bài bạn nhập trang mới thuộc sách này và được OCR.
         </p>
+        <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+          Đang mapping cho sách: <strong>{book.title}</strong>{' '}· OCR sẽ chạy theo PDF của chính sách
+          này ({book.pdfPath ? 'đã có PDF' : 'chưa có PDF'}).
+        </div>
       </div>
 
       {error && (
