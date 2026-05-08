@@ -318,6 +318,13 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_PREFERENCES: '/v1/notifications/preferences',
   NOTIFICATIONS_PREFERENCES_RESET: '/v1/notifications/preferences/reset',
 
+  // Feedbacks / reports
+  FEEDBACKS: '/v1/feedbacks',
+  FEEDBACKS_MY: '/v1/feedbacks/my',
+  FEEDBACKS_MARK_READ: (feedbackId: string) => `/v1/feedbacks/${feedbackId}/read`,
+  ADMIN_FEEDBACKS: '/admin/feedbacks',
+  ADMIN_FEEDBACKS_RESPOND: (feedbackId: string) => `/admin/feedbacks/${feedbackId}/respond`,
+
   // Chat sessions
   CHAT_SESSIONS: '/chat-sessions',
   CHAT_SESSION_DETAIL: (sessionId: string) => `/chat-sessions/${sessionId}`,

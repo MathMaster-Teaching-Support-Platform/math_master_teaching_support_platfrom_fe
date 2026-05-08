@@ -77,6 +77,8 @@ const NotificationCenter: React.FC = () => {
         return MessageSquare;
       case 'profile_verification':
         return ShieldCheck;
+      case 'feedback':
+        return MessageSquare;
       default:
         return Bell;
     }
@@ -98,6 +100,8 @@ const NotificationCenter: React.FC = () => {
         return 'Tin nhắn';
       case 'profile_verification':
         return 'Kiểm duyệt';
+      case 'feedback':
+        return 'Góp ý';
       default:
         return 'Thông báo';
     }
@@ -117,6 +121,8 @@ const NotificationCenter: React.FC = () => {
         return 'bg-[#F0EEE6] text-[#4D4C48]';
       case 'profile_verification':
         return 'bg-[#FAF9F5] text-[#5E5D59] border border-[#E8E6DC]';
+      case 'feedback':
+        return 'bg-[#F0EEE6] text-[#4D4C48]';
       default:
         return 'bg-[#FAF9F5] text-[#87867F] border border-[#E8E6DC]';
     }
@@ -240,6 +246,7 @@ const NotificationCenter: React.FC = () => {
               <option value="payment">Thanh toán</option>
               <option value="message">Tin nhắn</option>
               <option value="PROFILE_VERIFICATION">Kiểm duyệt hồ sơ</option>
+              <option value="feedback">Góp ý</option>
             </select>
           </div>
 

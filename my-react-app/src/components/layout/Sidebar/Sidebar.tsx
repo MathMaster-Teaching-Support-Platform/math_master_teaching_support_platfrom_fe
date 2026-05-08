@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   Library,
   LogOut,
+  MessageSquareWarning,
   Percent,
   Presentation,
   Ruler,
@@ -91,6 +92,10 @@ const teacherGroups: MenuGroup[] = [
       { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
+  {
+    label: 'Báo cáo',
+    items: [{ path: '/teacher/reports/feedback', icon: MessageSquareWarning, label: 'Góp ý' }],
+  },
 ];
 
 const studentGroups: MenuGroup[] = [
@@ -118,6 +123,10 @@ const studentGroups: MenuGroup[] = [
   {
     label: 'Nâng cấp',
     items: [{ path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }],
+  },
+  {
+    label: 'Báo cáo',
+    items: [{ path: '/student/reports/feedback', icon: MessageSquareWarning, label: 'Góp ý' }],
   },
 ];
 
@@ -161,6 +170,7 @@ const adminGroups: MenuGroup[] = [
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
       { path: '/admin/token-config', icon: Coins, label: 'Cấu hình Token' },
       { path: '/admin/system-config', icon: ShieldCheck, label: 'Chính sách' },
+      { path: '/admin/feedbacks', icon: MessageSquareWarning, label: 'Góp ý người dùng' },
     ],
   },
   {
