@@ -8,6 +8,12 @@ import {
 import { useChaptersBySubject } from '../../../../hooks/useChapters';
 import { useLessonsByChapter } from '../../../../hooks/useLessons';
 import type { BookResponse, SeriesPageMappingItem } from '../../../../types/book.types';
+import {
+  detectBookRangeConflicts,
+  type BookRangeInput,
+  toSeriesRangeRows,
+} from '../../../../utils/seriesMappingOverlap';
+import SeriesMappingGrid from './SeriesMappingGrid';
 
 interface Props {
   book: BookResponse;
@@ -23,6 +29,8 @@ interface DraftItem {
   pageEnd: number | '';
 }
 
+type MappingMode = 'single' | 'series';
+
 const PageMappingStep: React.FC<Props> = ({ book }) => {
   const mappingQuery = useBookSeriesPageMapping(book.id);
   const seriesBooksQuery = useBookList({
@@ -36,6 +44,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
   const saveMapping = useSaveSeriesPageMapping(book.id);
   const [draft, setDraft] = useState<DraftItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<MappingMode>('single');
   const seriesBooks = useMemo(() => seriesBooksQuery.data?.result?.content ?? [], [seriesBooksQuery.data]);
   const seriesBookNameMap = useMemo(
     () => new Map(seriesBooks.map((b) => [b.id, b.title])),
@@ -45,6 +54,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
   // Hydrate draft from server-side mapping
   useEffect(() => {
     if (!mappingQuery.data?.result) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(
       mappingQuery.data.result.map((m) => ({
         lessonId: m.lessonId,
@@ -61,6 +71,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
   // Default activeChapter to the first chapter once loaded
   useEffect(() => {
     if (!activeChapterId && chapters.data?.result?.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveChapterId(chapters.data.result[0].id);
     }
   }, [chapters.data, activeChapterId]);
@@ -70,6 +81,11 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     draft.forEach((d) => m.set(d.lessonId, d));
     return m;
   }, [draft]);
+
+  const visibleDraft = useMemo(
+    () => (mode === 'single' ? draft.filter((d) => d.bookId === book.id) : draft),
+    [draft, mode, book.id]
+  );
 
   const mappedCountByChapter = useMemo(() => {
     const m = new Map<string, number>();
@@ -95,12 +111,58 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     setDraft((prev) => prev.filter((p) => p.lessonId !== lessonId));
   };
 
+  const currentDraft = mode === 'single' ? visibleDraft : draft;
+
+  const seriesRangeRows = useMemo(() => {
+    return toSeriesRangeRows(
+      seriesBooks,
+      draft
+        .filter((d) => d.pageStart !== '' && d.pageEnd !== '')
+        .map((d) => ({ bookId: d.bookId, pageStart: Number(d.pageStart), pageEnd: Number(d.pageEnd) }))
+    );
+  }, [seriesBooks, draft]);
+
+  const rangeConflicts = useMemo(() => {
+    const inputs: BookRangeInput[] = seriesRangeRows.map((r) => ({
+      bookId: r.bookId,
+      bookTitle: r.bookTitle,
+      from: r.from,
+      to: r.to,
+    }));
+    return detectBookRangeConflicts(inputs);
+  }, [seriesRangeRows]);
+
+  const conflictMessageByBookId = useMemo(() => {
+    const byId = new Map<string, Array<{ from: number; to: number; otherBookTitle: string }>>();
+    rangeConflicts.forEach((conflict) => {
+      const leftTitle = seriesBooks.find((s) => s.id === conflict.leftBookId)?.title ?? conflict.leftBookId;
+      const rightTitle = seriesBooks.find((s) => s.id === conflict.rightBookId)?.title ?? conflict.rightBookId;
+
+      const leftConflicts = byId.get(conflict.leftBookId) ?? [];
+      leftConflicts.push({
+        from: conflict.overlapFrom,
+        to: conflict.overlapTo,
+        otherBookTitle: rightTitle,
+      });
+      byId.set(conflict.leftBookId, leftConflicts);
+
+      const rightConflicts = byId.get(conflict.rightBookId) ?? [];
+      rightConflicts.push({
+        from: conflict.overlapFrom,
+        to: conflict.overlapTo,
+        otherBookTitle: leftTitle,
+      });
+      byId.set(conflict.rightBookId, rightConflicts);
+    });
+    return byId;
+  }, [rangeConflicts, seriesBooks]);
+
   const validate = (): { ok: boolean; message?: string } => {
-    if (draft.length === 0) return { ok: false, message: 'Cần ít nhất 1 bài học được mapping.' };
+    if (currentDraft.length === 0) return { ok: false, message: 'Cần ít nhất 1 bài học được mapping.' };
     const ocrFrom = book.ocrPageFrom ?? 1;
     const ocrTo = book.ocrPageTo ?? Number.MAX_SAFE_INTEGER;
     const knownBookIds = new Set(seriesBooks.map((b) => b.id));
-    for (const d of draft) {
+    for (const d of currentDraft) {
       if (!d.bookId || !knownBookIds.has(d.bookId)) {
         return { ok: false, message: `Lesson "${d.lessonTitle}" chưa chọn sách/tập.` };
       }
@@ -121,6 +183,15 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         };
       }
     }
+    if (rangeConflicts.length > 0) {
+      const first = rangeConflicts[0];
+      const leftName = seriesBooks.find((s) => s.id === first.leftBookId)?.title ?? first.leftBookId;
+      const rightName = seriesBooks.find((s) => s.id === first.rightBookId)?.title ?? first.rightBookId;
+      return {
+        ok: false,
+        message: `Trang ${first.overlapFrom}-${first.overlapTo} bị trùng giữa "${leftName}" và "${rightName}".`,
+      };
+    }
     return { ok: true };
   };
 
@@ -131,7 +202,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
       setError(v.message ?? 'Mapping không hợp lệ.');
       return;
     }
-    const mappings: SeriesPageMappingItem[] = draft.map((d) => ({
+    const mappings: SeriesPageMappingItem[] = currentDraft.map((d) => ({
       lessonId: d.lessonId,
       bookId: d.bookId,
       pageStart: Number(d.pageStart),
@@ -146,6 +217,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
 
   const isSaving = saveMapping.isPending;
   const lessonsList = lessons.data?.result ?? [];
+  const hasBlockingConflicts = rangeConflicts.length > 0;
 
   return (
     <div className="space-y-5">
@@ -164,6 +236,22 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
           Đang mapping cho sách: <span className="font-semibold">{book.title}</span> · OCR sẽ chạy
           theo PDF của chính sách
           này ({book.pdfPath ? 'đã có PDF' : 'chưa có PDF'}).
+        </div>
+        <div className="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setMode('single')}
+            className={`px-3 py-1 rounded ${mode === 'single' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+          >
+            Mapping sách hiện tại
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('series')}
+            className={`px-3 py-1 rounded ${mode === 'series' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+          >
+            Mapping toàn series
+          </button>
         </div>
       </div>
 
@@ -240,29 +328,35 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{l.title}</div>
                   </div>
-                  <select
-                    value={current?.bookId ?? ''}
-                    onChange={(e) =>
-                      upsertDraft({
-                        lessonId: l.id,
-                        lessonTitle: l.title ?? '',
-                        chapterId: activeChapterId,
-                        chapterTitle:
-                          chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                        bookId: e.target.value,
-                        pageStart: current?.pageStart ?? '',
-                        pageEnd: current?.pageEnd ?? '',
-                      })
-                    }
-                    className="w-44 px-2 py-1 text-sm rounded border border-slate-300"
-                  >
-                    <option value="">Chọn tập</option>
-                    {seriesBooks.map((seriesBook) => (
-                      <option key={seriesBook.id} value={seriesBook.id}>
-                        {seriesBook.title}
-                      </option>
-                    ))}
-                  </select>
+                  {mode === 'series' ? (
+                    <select
+                      value={current?.bookId ?? ''}
+                      onChange={(e) =>
+                        upsertDraft({
+                          lessonId: l.id,
+                          lessonTitle: l.title ?? '',
+                          chapterId: activeChapterId,
+                          chapterTitle:
+                            chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
+                          bookId: e.target.value,
+                          pageStart: current?.pageStart ?? '',
+                          pageEnd: current?.pageEnd ?? '',
+                        })
+                      }
+                      className="w-44 px-2 py-1 text-sm rounded border border-slate-300"
+                    >
+                      <option value="">Chọn tập</option>
+                      {seriesBooks.map((seriesBook) => (
+                        <option key={seriesBook.id} value={seriesBook.id}>
+                          {seriesBook.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="w-44 px-2 py-1 text-xs rounded border border-slate-200 bg-slate-50 text-slate-600">
+                      {book.title}
+                    </div>
+                  )}
                   <input
                     type="number"
                     min={1}
@@ -275,7 +369,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         chapterId: activeChapterId,
                         chapterTitle:
                           chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                        bookId: current?.bookId ?? '',
+                        bookId: mode === 'single' ? book.id : (current?.bookId ?? ''),
                         pageStart: e.target.value === '' ? '' : Number(e.target.value),
                         pageEnd: current?.pageEnd ?? '',
                       })
@@ -295,7 +389,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         chapterId: activeChapterId,
                         chapterTitle:
                           chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
-                        bookId: current?.bookId ?? '',
+                        bookId: mode === 'single' ? book.id : (current?.bookId ?? ''),
                         pageStart: current?.pageStart ?? '',
                         pageEnd: e.target.value === '' ? '' : Number(e.target.value),
                       })
@@ -319,16 +413,20 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         </div>
       </div>
 
+      {mode === 'series' && (
+        <SeriesMappingGrid rows={seriesRangeRows} conflictsByBookId={conflictMessageByBookId} />
+      )}
+
       {/* Mapped summary */}
       <div className="border border-slate-200 rounded-lg">
         <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
           Tổng kết mapping ({draft.length})
         </div>
         <div className="max-h-[200px] overflow-y-auto divide-y divide-slate-100">
-          {draft.length === 0 && (
+          {visibleDraft.length === 0 && (
             <div className="px-3 py-3 text-xs text-slate-400">Chưa có bài nào được mapping.</div>
           )}
-          {draft.map((d) => (
+          {visibleDraft.map((d) => (
             <div key={d.lessonId} className="px-3 py-2 text-sm flex items-center justify-between">
               <span className="text-slate-700">
                 <span className="text-slate-400 mr-2">{d.chapterTitle}</span> {d.lessonTitle}
@@ -348,7 +446,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         <button
           type="button"
           onClick={handleSave}
-          disabled={isSaving || draft.length === 0}
+          disabled={isSaving || currentDraft.length === 0 || hasBlockingConflicts}
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
