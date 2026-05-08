@@ -21,6 +21,7 @@ import {
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../../components/common/MathText';
 import { mockAdmin } from '../../../data/mockData';
+import { API_BASE_URL } from '../../../config/api.config';
 import {
   useBook,
   useBookContent,
@@ -47,6 +48,23 @@ const BLOCK_TYPES = [
   'list',
   'table',
 ];
+
+const ABSOLUTE_URL_REGEX = /^(https?:)?\/\//i;
+
+const resolveAssetUrl = (value?: string | null): string => {
+  const raw = value?.trim();
+  if (!raw) return '';
+  if (raw.startsWith('data:') || raw.startsWith('blob:') || ABSOLUTE_URL_REGEX.test(raw)) return raw;
+  if (raw.startsWith('/')) {
+    if (!API_BASE_URL) return raw;
+    if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+      const base = API_BASE_URL.replace(/\/$/, '');
+      return `${base}${raw}`;
+    }
+    return raw;
+  }
+  return raw;
+};
 
 interface BookVerifyContentProps {
   bookId: string;
@@ -769,14 +787,17 @@ const PageEditor: React.FC<PageEditorProps> = ({
     blocks.find((b) => b.type === 'image' || b.type === 'figure')?.thumbnailUrl ??
     blocks.find((b) => b.type === 'image' || b.type === 'figure')?.imagePath ??
     '';
+  const resolvedRawPreviewImageSrc = resolveAssetUrl(rawPreviewImageSrc);
   const [failedRawImageSrc, setFailedRawImageSrc] = useState<string | null>(null);
   const isLikelyObjectKey =
     Boolean(rawPreviewImageSrc) &&
     !rawPreviewImageSrc.startsWith('http://') &&
     !rawPreviewImageSrc.startsWith('https://') &&
-    !rawPreviewImageSrc.startsWith('data:');
+    !rawPreviewImageSrc.startsWith('data:') &&
+    !rawPreviewImageSrc.startsWith('blob:') &&
+    !rawPreviewImageSrc.startsWith('/');
   const showRawPreviewImage =
-    Boolean(rawPreviewImageSrc) && failedRawImageSrc !== rawPreviewImageSrc;
+    Boolean(resolvedRawPreviewImageSrc) && failedRawImageSrc !== resolvedRawPreviewImageSrc;
 
   return (
     <div className="flex flex-col h-full">
@@ -921,9 +942,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
               <div className="text-[11px] text-slate-400 mb-1">Ảnh gốc OCR</div>
               {showRawPreviewImage ? (
                 <img
-                  src={rawPreviewImageSrc}
+                  src={resolvedRawPreviewImageSrc}
                   alt={`Trang ${page.pageNumber}`}
-                  onError={() => setFailedRawImageSrc(rawPreviewImageSrc)}
+                  onError={() => setFailedRawImageSrc(resolvedRawPreviewImageSrc)}
                   onLoad={() => setFailedRawImageSrc(null)}
                   className="w-full max-h-[300px] object-contain rounded"
                 />
@@ -1495,7 +1516,7 @@ const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
   const type = block.type ?? 'text';
 
   if (type === 'image' || type === 'figure') {
-    const src = block.imageUrl ?? block.thumbnailUrl ?? block.imagePath ?? '';
+    const src = resolveAssetUrl(block.imageUrl ?? block.thumbnailUrl ?? block.imagePath ?? '');
     return (
       <figure className="text-center">
         {src ? (
