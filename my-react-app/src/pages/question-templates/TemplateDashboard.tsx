@@ -308,11 +308,11 @@ export function TemplateDashboard() {
 
   const stats = useMemo(
     () => ({
-      total: totalElements,
+      total: effectiveTotalElements,
       published: templates.filter((t) => t.status === TemplateStatus.PUBLISHED).length,
       draft: templates.filter((t) => t.status === TemplateStatus.DRAFT).length,
     }),
-    [templates, totalElements]
+    [templates, effectiveTotalElements]
   );
 
   const activeDiagramLatexCode = extractPrimaryDiagramLatex(activeDiagram);
@@ -417,13 +417,10 @@ export function TemplateDashboard() {
                   </h1>
                   {!isLoading && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
-                      {totalElements}
+                      {effectiveTotalElements}
                     </span>
                   )}
                 </div>
-                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                  {stats.published} sẵn sàng • {stats.draft} nháp trên trang này
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">

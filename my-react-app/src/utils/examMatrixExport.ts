@@ -223,7 +223,7 @@ function buildExportTableHtml(
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">STT</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Chương</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Chủ đề</th>
-        <th colspan="4" style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Mức độ nhận thức (số câu)</th>
+        <th colspan="4" style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Mức độ câu hỏi (số câu)</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Tổng câu</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Tổng điểm</th>
       </tr>

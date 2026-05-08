@@ -102,7 +102,7 @@ export function QuestionBankTreeSection({
     <section className="qbts">
       <header className="qbts__header">
         <div className="qbts__header-text">
-          <h3 className="qbts__title">Theo chương và mức độ nhận thức</h3>
+          <h3 className="qbts__title">Theo chương và mức độ câu hỏi</h3>
           {tree && (
             <p className="qbts__subtitle">
               {tree.schoolGradeName ?? 'Chưa gắn lớp'}
@@ -230,7 +230,7 @@ function ChapterRow({
       </header>
 
       {expanded && (
-        <section className="qbts-levels" aria-label="Mức độ nhận thức theo chương">
+        <section className="qbts-levels" aria-label="Mức độ câu hỏi theo chương">
           {LEVEL_ORDER.map((level) => {
             const bucket = chapter.buckets[level];
             const count = bucket?.count ?? 0;

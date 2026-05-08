@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import MathText from '../../components/common/MathText';
+import { useToast } from '../../context/ToastContext';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { templateImportService } from '../../services/templateImportService';
 import type { ExcelPreviewResponse } from '../../types/bulkImport';
@@ -58,6 +59,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   // Per-row chapter override: rowNumber -> chapterId. Empty/missing means use batch default.
   const [rowChapters, setRowChapters] = useState<Record<number, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   // Chapters available for per-row override — comes from the batch-selected subject.
   const { data: subjectChaptersData } = useChaptersBySubject(subjectId, !!subjectId);
@@ -89,13 +91,17 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const handleFileSelect = async (selectedFile: File) => {
     // Validate file type
     if (!selectedFile.name.endsWith('.xlsx')) {
-      setError('Chỉ hỗ trợ file định dạng .xlsx');
+      const msg = 'Chỉ hỗ trợ file định dạng .xlsx';
+      setError(msg);
+      showToast({ type: 'error', message: msg });
       return;
     }
 
     // Validate file size (10MB limit)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File vượt quá giới hạn 10MB');
+      const msg = 'File vượt quá giới hạn 10MB';
+      setError(msg);
+      showToast({ type: 'error', message: msg });
       return;
     }
 
@@ -106,12 +112,26 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
       const preview = await templateImportService.previewExcel(selectedFile);
       setPreviewData(preview);
       setStep('preview');
+      const okRows = preview.validRows ?? 0;
+      const badRows = preview.invalidRows ?? 0;
+      if (badRows === 0 && okRows > 0) {
+        showToast({
+          type: 'success',
+          message: `Đã đọc file: ${okRows} dòng hợp lệ, sẵn sàng nhập.`,
+        });
+      } else if (badRows > 0) {
+        showToast({
+          type: 'warning',
+          message: `Đã đọc file: ${okRows} hợp lệ, ${badRows} lỗi. Hãy sửa các dòng lỗi trong file rồi tải lại.`,
+        });
+      }
     } catch (err) {
-      setError(
+      const msg =
         err instanceof Error
           ? err.message
-          : 'Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.'
-      );
+          : 'Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.';
+      setError(msg);
+      showToast({ type: 'error', message: msg });
     } finally {
       setLoading(false);
     }
@@ -568,18 +588,17 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
         </div>
 
         {successMessage && (
-          <dialog
+          <div
+            role="dialog"
             aria-label="Nhập thành công"
-            open
             style={{
-              position: 'absolute',
+              position: 'fixed',
               inset: 0,
               background: 'rgba(15, 23, 42, 0.45)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 5,
-              borderRadius: 12,
+              zIndex: 1300,
             }}
           >
             <div
@@ -603,7 +622,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 </button>
               </div>
             </div>
-          </dialog>
+          </div>
         )}
       </div>
     </div>

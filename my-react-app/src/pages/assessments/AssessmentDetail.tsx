@@ -995,7 +995,7 @@ export default function AssessmentDetail() {
                 {/* Auto distribute */}
                 <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
                   <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] m-0 mb-2">
-                    Tự động phân điểm theo mức độ nhận thức
+                    Tự động phân điểm theo mức độ câu hỏi
                   </p>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mb-3 leading-relaxed">
                     💡 Câu hỏi Đúng/Sai (TF): mỗi mệnh đề đúng = tổng điểm câu ÷ số mệnh đề.

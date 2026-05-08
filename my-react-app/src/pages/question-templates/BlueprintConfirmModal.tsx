@@ -9,6 +9,38 @@ import {
   type QuestionTemplateRequest,
 } from '../../types/questionTemplate';
 
+const QUESTION_TYPE_LABEL: Record<string, string> = {
+  MULTIPLE_CHOICE: 'Trắc nghiệm',
+  TRUE_FALSE: 'Đúng/Sai',
+  SHORT_ANSWER: 'Trả lời ngắn',
+};
+
+const typeLabel = (type: string) => QUESTION_TYPE_LABEL[type] ?? type;
+
+const DIFF_FIELD_LABEL: Record<string, string> = {
+  templateText: 'Đề bài',
+  questionText: 'Đề bài',
+  answerFormula: 'Công thức đáp án',
+  correctAnswer: 'Đáp án đúng',
+  solutionStepsTemplate: 'Lời giải mẫu',
+  solutionSteps: 'Lời giải',
+  diagramTemplate: 'Sơ đồ (LaTeX)',
+  diagramLatex: 'Sơ đồ (LaTeX)',
+  optionsGenerator: 'Đáp án trắc nghiệm',
+  options: 'Đáp án trắc nghiệm',
+  clauseTemplates: 'Mệnh đề Đúng/Sai',
+  clauses: 'Mệnh đề Đúng/Sai',
+};
+
+const fieldLabel = (field: string) =>
+  DIFF_FIELD_LABEL[field] ??
+  // Fallback for nested keys like "options.A" → "Đáp án trắc nghiệm — A"
+  (() => {
+    const [head, ...rest] = field.split('.');
+    const headLabel = DIFF_FIELD_LABEL[head];
+    return headLabel && rest.length ? `${headLabel} — ${rest.join('.')}` : field;
+  })();
+
 /**
  * Renders the AI's Blueprint draft for the teacher to review. The teacher can
  * edit the constraintText / sampleValue per parameter, the global constraints,
@@ -43,7 +75,7 @@ export function BlueprintConfirmModal({
 
   useEffect(() => {
     if (!isOpen || !blueprint || !request) return;
-    setName(`[${request.questionType}] ${request.questionText.slice(0, 50)}`);
+    setName(`[${typeLabel(request.questionType)}] ${request.questionText.slice(0, 50)}`);
     setParams(blueprint.parameters ?? []);
     setGlobals(blueprint.globalConstraints ?? []);
     setTemplateText(blueprint.templateText ?? '');
@@ -87,7 +119,7 @@ export function BlueprintConfirmModal({
       return;
     }
     if (!templateText.trim()) {
-      setError('Template text trống — vui lòng kiểm tra.');
+      setError('Mẫu câu hỏi đang trống — vui lòng kiểm tra lại.');
       return;
     }
     setSaving(true);
@@ -108,8 +140,8 @@ export function BlueprintConfirmModal({
       });
 
       const payload: QuestionTemplateRequest = {
-        name: name.trim() || `[${req.questionType}] Untitled`,
-        description: 'Auto-generated from Method 1',
+        name: name.trim() || `[${typeLabel(req.questionType)}] Chưa đặt tên`,
+        description: 'Tự động tạo từ câu hỏi thật',
         gradeLevel: req.gradeLevel,
         subjectId: req.subjectId,
         chapterId: req.chapterId,
@@ -156,9 +188,9 @@ export function BlueprintConfirmModal({
       <div className="modal-card" style={{ width: 'min(1080px, 96vw)' }}>
         <div className="modal-header">
           <div>
-            <h3>Xác nhận Blueprint</h3>
+            <h3>Xác nhận Mẫu Câu Hỏi</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              AI đã chuyển câu hỏi thật của bạn thành template. Hãy xem lại và chỉnh
+              AI đã chuyển câu hỏi thật của bạn thành mẫu câu hỏi. Hãy xem lại và chỉnh
               sửa nếu cần. Độ tin cậy:{' '}
               <strong>{Math.round((blueprint.confidence ?? 0) * 100)}%</strong>
             </p>
@@ -189,7 +221,7 @@ export function BlueprintConfirmModal({
 
           <label>
             <p className="muted" style={{ marginBottom: 6 }}>
-              Tên template <span style={{ color: '#ef4444' }}>*</span>
+              Tên mẫu câu hỏi <span style={{ color: '#ef4444' }}>*</span>
             </p>
             <input
               className="input"
@@ -214,9 +246,17 @@ export function BlueprintConfirmModal({
                     alignItems: 'flex-start',
                   }}
                 >
-                  <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>
-                    {d.field}
-                  </code>
+                  <span
+                    style={{
+                      background: '#f1f5f9',
+                      padding: '2px 8px',
+                      borderRadius: 6,
+                      fontWeight: 600,
+                      color: '#334155',
+                    }}
+                  >
+                    {fieldLabel(d.field)}
+                  </span>
                   <div
                     style={{
                       background: '#fef2f2',
@@ -298,7 +338,7 @@ export function BlueprintConfirmModal({
           {/* Editable templated artifacts */}
           <label>
             <p className="muted" style={{ marginBottom: 6 }}>
-              Template text
+              Mẫu câu hỏi
             </p>
             <textarea
               className="textarea"
@@ -344,7 +384,7 @@ export function BlueprintConfirmModal({
 
           <label>
             <p className="muted" style={{ marginBottom: 6 }}>
-              Lời giải template
+              Lời giải mẫu câu hỏi
             </p>
             <textarea
               className="textarea"
@@ -356,7 +396,7 @@ export function BlueprintConfirmModal({
 
           <label>
             <p className="muted" style={{ marginBottom: 6 }}>
-              Sơ đồ template (LaTeX)
+              Sơ đồ mẫu câu hỏi (LaTeX)
             </p>
             <textarea
               className="textarea"

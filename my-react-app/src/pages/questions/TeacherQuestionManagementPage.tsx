@@ -116,8 +116,7 @@ export default function TeacherQuestionManagementPage() {
       (q) => q.questionStatus === 'UNDER_REVIEW' || q.questionStatus === 'AI_DRAFT'
     ).length;
     const mcq = questions.filter((q) => q.questionType === 'MULTIPLE_CHOICE').length;
-    const aiCount = questions.filter((q) => q.questionSourceType === 'AI_GENERATED').length;
-    return { approved, pendingOrDraft, mcq, aiCount };
+    return { approved, pendingOrDraft, mcq };
   }, [questions]);
 
   const openingCreateModal = () => {
@@ -269,10 +268,6 @@ export default function TeacherQuestionManagementPage() {
                     </span>
                   )}
                 </div>
-                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                  {pageStats.approved} đã duyệt • {pageStats.aiCount} AI • {pageStats.pendingOrDraft} chờ /
-                  nháp <span className="text-[#B0AEA5]">(trang hiện tại)</span>
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">

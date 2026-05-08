@@ -254,9 +254,6 @@ export function ExamMatrixDashboard() {
                     </span>
                   )}
                 </div>
-                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                  {stats.approved} đã phê duyệt • {stats.locked} đã khóa
-                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -372,7 +369,7 @@ export function ExamMatrixDashboard() {
                     </p>
                   </div>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 leading-relaxed">
-                    Định nghĩa mức nhận thức, chương, số câu và điểm.
+                    Định nghĩa mức độ câu hỏi, chương, số câu và điểm.
                   </p>
                 </div>
                 <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4 flex flex-col gap-2 hover:border-[#D1CFC5] transition-colors">

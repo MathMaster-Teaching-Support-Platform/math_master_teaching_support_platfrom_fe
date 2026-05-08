@@ -262,7 +262,7 @@ export function QuestionBankDashboard() {
                   </h1>
                   {!isLoading && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
-                      {totalElements.toLocaleString('vi-VN')}
+                      {effectiveTotalElements.toLocaleString('vi-VN')}
                     </span>
                   )}
                 </div>
@@ -292,7 +292,7 @@ export function QuestionBankDashboard() {
               [
                 {
                   label: 'Tổng ngân hàng',
-                  value: totalElements,
+                  value: effectiveTotalElements,
                   Icon: Database,
                   bg: 'bg-[#EEF2FF]',
                   color: 'text-[#4F7EF7]',
@@ -434,7 +434,7 @@ export function QuestionBankDashboard() {
                 Hiển thị
               </span>
               <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
-                {banks.length} / {totalElements.toLocaleString('vi-VN')}
+                {banks.length}
               </strong>
               <div className="hidden sm:block w-px h-4 bg-[#E8E6DC]" />
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">

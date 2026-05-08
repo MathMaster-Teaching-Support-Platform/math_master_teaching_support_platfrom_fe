@@ -237,7 +237,7 @@ export function AssessmentBuilderFlowBody() {
     {
       path: '/teacher/question-templates',
       title: 'Mẫu câu hỏi',
-      subtitle: 'Định dạng & ma trận nhận thức',
+      subtitle: 'Định dạng & ma trận mức độ câu hỏi',
       Icon: LayoutTemplate,
       iconClass:
         'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-amber-200/70',
@@ -245,7 +245,7 @@ export function AssessmentBuilderFlowBody() {
     {
       path: '/teacher/question-banks',
       title: 'Ngân hàng câu hỏi',
-      subtitle: 'Pool câu để ghép với ma trận',
+      subtitle: 'Bộ câu hỏi để ghép với ma trận',
       Icon: Library,
       iconClass:
         'bg-gradient-to-br from-teal-100 to-emerald-50 text-teal-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-teal-200/70',
