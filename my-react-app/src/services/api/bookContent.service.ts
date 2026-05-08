@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types';
 import type {
+  LessonPageHistoryEntryResponse,
   LessonContentResponse,
   LessonPageResponse,
   UpdateLessonPageRequest,
@@ -77,6 +78,20 @@ export class BookContentService {
       }
     );
     return handle<LessonPageResponse>(res, 'Failed to update page');
+  }
+
+  static async getPageHistory(
+    bookId: string,
+    lessonId: string,
+    pageNumber: number,
+    limit = 50
+  ): Promise<ApiResponse<LessonPageHistoryEntryResponse[]>> {
+    const path = API_ENDPOINTS.BOOK_LESSON_PAGE_HISTORY(bookId, lessonId, pageNumber);
+    const res = await fetch(`${API_BASE_URL}${path}?limit=${limit}`, {
+      method: 'GET',
+      headers: jsonHeaders(requireToken()),
+    });
+    return handle<LessonPageHistoryEntryResponse[]>(res, 'Failed to fetch page history');
   }
 
   static async getLessonContent(

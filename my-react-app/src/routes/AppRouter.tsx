@@ -1,5 +1,5 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import ServiceWorkerNavigationHandler from '../components/common/ServiceWorkerNavigationHandler';
 import { ToastProvider } from '../context/ToastProvider';
 import About from '../pages/About';
@@ -48,8 +48,8 @@ import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePag
 import AdminCourseReviewDetail from '../pages/admin/AdminCourseReviewDetail';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
 
-import AdminOCRBooks from '../pages/admin/AdminOCRBooks';
-import AdminOCRContent from '../pages/admin/AdminOCRContent';
+import BookListPage from '../pages/admin/books/BookListPage';
+import BookCreateWizard from '../pages/admin/books/BookCreateWizard';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
@@ -92,6 +92,12 @@ import {
 import MathTextTest from '../components/common/MathTextTest';
 import NotFound from '../pages/NotFound';
 import PrivateRoute from './PrivateRoute';
+
+const BookVerifyRedirect = () => {
+  const { bookId } = useParams<{ bookId: string }>();
+  if (!bookId) return <Navigate to="/admin/books" replace />;
+  return <Navigate to={`/admin/books/${bookId}/wizard`} replace />;
+};
 
 export const router = createBrowserRouter([
   {
@@ -772,28 +778,32 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/ocr/books',
+    path: '/admin/books',
     element: (
       <PrivateRoute>
-        <AdminOCRBooks />
+        <BookListPage />
       </PrivateRoute>
     ),
   },
   {
-    path: '/admin/ocr/books/:bookId',
+    path: '/admin/books/new',
     element: (
       <PrivateRoute>
-        <AdminOCRContent />
+        <BookCreateWizard />
       </PrivateRoute>
     ),
   },
   {
-    path: '/admin/ocr/content',
+    path: '/admin/books/:bookId/wizard',
     element: (
       <PrivateRoute>
-        <AdminOCRContent />
+        <BookCreateWizard />
       </PrivateRoute>
     ),
+  },
+  {
+    path: '/admin/books/:bookId/verify',
+    element: <BookVerifyRedirect />,
   },
   {
     path: '/admin/*',

@@ -10,14 +10,18 @@ export type BookStatus =
   | 'OCR_DONE'
   | 'OCR_FAILED';
 
+export interface BookPdfPreviewUrlResponse {
+  url: string;
+}
+
 export interface BookResponse {
   id: string;
   schoolGradeId: string;
   schoolGradeName: string;
   subjectId: string;
   subjectName: string;
-  curriculumId: string;
-  curriculumName: string;
+  curriculumId: string | null;
+  curriculumName: string | null;
   title: string;
   publisher: string | null;
   academicYear: string | null;
@@ -38,7 +42,7 @@ export interface BookResponse {
 export interface CreateBookRequest {
   schoolGradeId: string;
   subjectId: string;
-  curriculumId: string;
+  curriculumId?: string | null;
   title: string;
   publisher?: string | null;
   academicYear?: string | null;
@@ -107,6 +111,18 @@ export interface BookProgressResponse {
   verifiedLessons: number;
   totalPages: number;
   verifiedPages: number;
+  /** Mongo/Python runner status while status === OCR_RUNNING (pending | processing | done | error). */
+  ocrRunnerStatus?: string | null;
+  ocrJobProgressPercent?: number | null;
+  ocrJobPhase?: string | null;
+  ocrJobProcessedPages?: number | null;
+  ocrJobTotalPages?: number | null;
+  ocrJobErrorMessage?: string | null;
+  /** false = Java BE could not call Python /ocr-status while book was OCR_RUNNING. */
+  ocrCrawlerReachable?: boolean | null;
+  /** Progress fields filled from Postgres snapshot (BE previously polled crawler successfully). */
+  ocrProgressFromCache?: boolean | null;
+  ocrProgressCachedAt?: string | null;
   lessons: LessonProgress[];
 }
 
@@ -156,10 +172,23 @@ export interface UpdateLessonPageRequest {
   verified?: boolean | null;
 }
 
+export interface LessonPageHistoryEntryResponse {
+  id: string;
+  action: string;
+  changedBy: string;
+  changedAt: string;
+  summary: string;
+  summaryItems?: string[];
+  before?: LessonPageResponse | null;
+  after?: LessonPageResponse | null;
+}
+
 export interface BookSearchParams {
   schoolGradeId?: string;
   subjectId?: string;
   curriculumId?: string;
+  chapterId?: string;
+  lessonId?: string;
   status?: BookStatus;
   page?: number;
   size?: number;

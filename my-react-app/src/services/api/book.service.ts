@@ -3,6 +3,7 @@ import type { ApiResponse } from '../../types';
 import type { Page } from '../../types/common.types';
 import type {
   BookLessonPageResponse,
+  BookPdfPreviewUrlResponse,
   BookProgressResponse,
   BookResponse,
   BookSearchParams,
@@ -59,6 +60,8 @@ export class BookService {
     if (params.schoolGradeId) query.set('schoolGradeId', params.schoolGradeId);
     if (params.subjectId) query.set('subjectId', params.subjectId);
     if (params.curriculumId) query.set('curriculumId', params.curriculumId);
+    if (params.chapterId) query.set('chapterId', params.chapterId);
+    if (params.lessonId) query.set('lessonId', params.lessonId);
     if (params.status) query.set('status', params.status);
     query.set('page', String(params.page ?? 0));
     query.set('size', String(params.size ?? 20));
@@ -92,6 +95,16 @@ export class BookService {
       body: JSON.stringify({ pdfPath }),
     });
     return handle<BookResponse>(res, 'Failed to set PDF path');
+  }
+
+  static async getPdfPreviewUrl(
+    bookId: string
+  ): Promise<ApiResponse<BookPdfPreviewUrlResponse>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PDF_PREVIEW_URL(bookId)}`, {
+      method: 'GET',
+      headers: jsonHeaders(requireToken()),
+    });
+    return handle<BookPdfPreviewUrlResponse>(res, 'Failed to get PDF preview URL');
   }
 
   static async uploadPdf(
@@ -145,6 +158,14 @@ export class BookService {
       headers: jsonHeaders(requireToken()),
     });
     return handle<OcrTriggerResponse>(res, 'Failed to trigger OCR');
+  }
+
+  static async cancelOcr(bookId: string): Promise<ApiResponse<BookResponse>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_OCR_CANCEL(bookId)}`, {
+      method: 'POST',
+      headers: jsonHeaders(requireToken()),
+    });
+    return handle<BookResponse>(res, 'Failed to cancel OCR');
   }
 
   static async getProgress(bookId: string): Promise<ApiResponse<BookProgressResponse>> {

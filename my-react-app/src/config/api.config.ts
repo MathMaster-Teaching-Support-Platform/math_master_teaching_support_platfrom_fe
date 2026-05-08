@@ -501,15 +501,19 @@ export const API_ENDPOINTS = {
   BOOK_PDF_PATH: (bookId: string) => `/v1/books/${bookId}/pdf-path`,
   BOOK_PAGE_MAPPING: (bookId: string) => `/v1/books/${bookId}/page-mapping`,
   BOOK_OCR_TRIGGER: (bookId: string) => `/v1/books/${bookId}/ocr`,
+  BOOK_OCR_CANCEL: (bookId: string) => `/v1/books/${bookId}/ocr/cancel`,
   BOOK_PROGRESS: (bookId: string) => `/v1/books/${bookId}/progress`,
   BOOK_REFRESH_VERIFICATION: (bookId: string) => `/v1/books/${bookId}/refresh-verification`,
   BOOK_THUMBNAIL: (bookId: string) => `/v1/books/${bookId}/thumbnail`,
   BOOK_PDF_UPLOAD: (bookId: string) => `/v1/books/${bookId}/pdf-upload`,
+  BOOK_PDF_PREVIEW_URL: (bookId: string) => `/v1/books/${bookId}/pdf-preview-url`,
   BOOK_CONTENT: (bookId: string) => `/v1/books/${bookId}/content`,
   BOOK_LESSON_CONTENT: (bookId: string, lessonId: string) =>
     `/v1/books/${bookId}/lessons/${lessonId}/content`,
   BOOK_LESSON_PAGE: (bookId: string, lessonId: string, pageNumber: number) =>
     `/v1/books/${bookId}/lessons/${lessonId}/pages/${pageNumber}`,
+  BOOK_LESSON_PAGE_HISTORY: (bookId: string, lessonId: string, pageNumber: number) =>
+    `/v1/books/${bookId}/lessons/${lessonId}/pages/${pageNumber}/history`,
   LESSON_OCR_CONTENT: (lessonId: string) => `/v1/lessons/${lessonId}/content`,
 
   // Commission Proposals (dynamic revenue split)

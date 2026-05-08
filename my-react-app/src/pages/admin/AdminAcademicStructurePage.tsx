@@ -18,8 +18,6 @@ import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import { useDebounce } from '../../hooks/useDebounce';
 import { AcademicStructureService } from '../../services/api/academic-structure.service';
-import { AcademicNodeModal } from './AcademicNodeModal';
-import type { ModalTarget } from './AcademicNodeModal';
 import type {
   ChapterResponse,
   CreateChapterRequest,
@@ -36,6 +34,8 @@ import type {
   UpdateSchoolGradeRequest,
   UpdateSubjectRequest,
 } from '../../types/academic.types';
+import type { ModalTarget } from './AcademicNodeModal';
+import { AcademicNodeModal } from './AcademicNodeModal';
 import './admin-academic-structure-page.css';
 
 type EditorMode = 'program' | 'subject' | 'chapter' | 'lesson';
@@ -185,11 +185,14 @@ export default function AdminAcademicStructurePage() {
     enabled: Boolean(selectedChapterId),
   });
 
-  const grades = gradesQuery.data?.result ?? [];
-  const subjects = subjectsQuery.data?.result ?? [];
-  const chapters = chaptersQuery.data?.result ?? [];
-  const lessons = lessonsQuery.data?.result ?? [];
-  const allChapterLessons = lessonsForDeleteQuery.data?.result ?? [];
+  const grades = useMemo(() => gradesQuery.data?.result ?? [], [gradesQuery.data]);
+  const subjects = useMemo(() => subjectsQuery.data?.result ?? [], [subjectsQuery.data]);
+  const chapters = useMemo(() => chaptersQuery.data?.result ?? [], [chaptersQuery.data]);
+  const lessons = useMemo(() => lessonsQuery.data?.result ?? [], [lessonsQuery.data]);
+  const allChapterLessons = useMemo(
+    () => lessonsForDeleteQuery.data?.result ?? [],
+    [lessonsForDeleteQuery.data]
+  );
 
   const hasActiveSubjects = subjects.some((subject) => subject.isActive !== false);
   const hasChapters = chapters.some((chapter) => !chapter.deleted);

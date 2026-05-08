@@ -199,6 +199,8 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Failed to fetch all lessons': 'Không thể tải tất cả bài học.',
   'Failed to fetch lesson detail': 'Không thể tải chi tiết bài học.',
   'Failed to fetch chapter lessons': 'Không thể tải bài học theo chương.',
+  'Page ranges must be non-decreasing across consecutive lessons (overlap allowed only on a single page)':
+    'Khoảng trang giữa các bài phải theo thứ tự tăng dần. Chỉ được phép trùng tối đa 1 trang giữa hai bài liên tiếp.',
   'Failed to fetch student dashboard': 'Không thể tải tổng quan học viên.',
   'Failed to fetch subjects by grade': 'Không thể tải môn học theo lớp.',
   'Invalid grade level': 'Cấp độ lớp không hợp lệ.',
