@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
@@ -32,6 +33,7 @@ import {
   useSubmitCourseForReview,
   useTeacherCourses,
 } from '../../hooks/useCourses';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type { CourseLevel, CourseResponse, CreateCourseRequest } from '../../types';
@@ -58,8 +60,6 @@ type CourseFilterStatus =
   | 'archived';
 const languageOptions = ['Tiếng Việt', 'English'] as const;
 
-const tcSelectCls =
-  'w-full sm:w-auto border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors min-h-[42px] flex-shrink-0';
 const tcSecondaryBtn =
   'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-45 disabled:pointer-events-none';
 const tcPrimaryBtn =
@@ -658,12 +658,18 @@ const TeacherCourses: React.FC = () => {
   const { showToast } = useToast();
   const [viewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<CourseFilterStatus>('all');
-  const [filterGrade, setFilterGrade] = useState<string>('all');
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: coursesData, isLoading, error } = useTeacherCourses();
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: '',
+  });
   const createMutation = useCreateCourse();
   const deleteMutation = useDeleteCourse();
   const publishMutation = usePublishCourse();
@@ -681,34 +687,9 @@ const TeacherCourses: React.FC = () => {
     return 'draft';
   };
 
-  const getGradeMeta = (course: CourseResponse) => {
-    if (course.schoolGradeId) {
-      return {
-        value: course.schoolGradeId,
-        label: course.gradeLevel ? `Lớp ${course.gradeLevel}` : 'Có phân lớp',
-      };
-    }
-    if (course.gradeLevel) {
-      return {
-        value: `grade-${course.gradeLevel}`,
-        label: `Lớp ${course.gradeLevel}`,
-      };
-    }
-    return { value: 'unassigned', label: 'Chưa phân lớp' };
-  };
-
-  const gradeOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    courses.forEach((course) => {
-      const meta = getGradeMeta(course);
-      map.set(meta.value, meta.label);
-    });
-    return Array.from(map.entries())
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'vi'));
-  }, [courses]);
-
   const filteredCourses = useMemo(() => {
+    const selectedLevel =
+      filterGradeId && schoolGrades.find((g) => g.id === filterGradeId)?.gradeLevel;
     return courses.filter((course) => {
       const normalizedStatus = getNormalizedStatus(course);
       let statusMatch = true;
@@ -719,10 +700,17 @@ const TeacherCourses: React.FC = () => {
       else if (filterStatus === 'rejected') statusMatch = normalizedStatus === 'rejected';
       else if (filterStatus === 'archived') statusMatch = normalizedStatus === 'archived';
       const searchMatch = course.title.toLowerCase().includes(search.toLowerCase());
-      const gradeMatch = filterGrade === 'all' || getGradeMeta(course).value === filterGrade;
-      return statusMatch && searchMatch && gradeMatch;
+      const gradeMatch =
+        !filterGradeId ||
+        course.schoolGradeId === filterGradeId ||
+        (course.schoolGradeId == null &&
+          selectedLevel != null &&
+          course.gradeLevel != null &&
+          course.gradeLevel === selectedLevel);
+      const subjectMatch = !filterSubjectId || course.subjectId === filterSubjectId;
+      return statusMatch && searchMatch && gradeMatch && subjectMatch;
     });
-  }, [courses, filterStatus, filterGrade, search]);
+  }, [courses, filterStatus, filterGradeId, filterSubjectId, search, schoolGrades]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -914,22 +902,26 @@ const TeacherCourses: React.FC = () => {
                   )}
                 </label>
 
-                <select
-                  className={tcSelectCls}
-                  value={filterGrade}
-                  onChange={(e) => {
-                    setFilterGrade(e.target.value);
+                <CurriculumHierarchyFilter
+                  depth="subject"
+                  className="lg:flex-1 lg:min-w-0 !p-4"
+                  gradeId={filterGradeId}
+                  subjectId={filterSubjectId}
+                  chapterId=""
+                  lessonId=""
+                  onGradeChange={(id) => {
+                    setFilterGradeId(id);
+                    setFilterSubjectId('');
                     setCurrentPage(1);
                   }}
-                  aria-label="Lọc theo lớp"
-                >
-                  <option value="all">Tất cả lớp</option>
-                  {gradeOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  onSubjectChange={(id) => {
+                    setFilterSubjectId(id);
+                    setCurrentPage(1);
+                  }}
+                  onChapterChange={() => {}}
+                  onLessonChange={() => {}}
+                  hideTitle
+                />
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">

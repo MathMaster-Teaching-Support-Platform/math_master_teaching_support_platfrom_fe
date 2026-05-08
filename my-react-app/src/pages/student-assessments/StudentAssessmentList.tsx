@@ -17,8 +17,9 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
@@ -61,11 +62,23 @@ export default function StudentAssessmentList() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [cfGradeId, setCfGradeId] = useState('');
+  const [cfSubjectId, setCfSubjectId] = useState('');
+  const [cfChapterId, setCfChapterId] = useState('');
+  const [cfLessonId, setCfLessonId] = useState('');
+
+  useEffect(() => {
+    setPage(0);
+  }, [statusFilter, cfGradeId, cfSubjectId, cfChapterId, cfLessonId]);
 
   const { data, isLoading, isError, error, refetch } = useMyAssessments({
     status: statusFilter === 'ALL' ? undefined : statusFilter,
     page,
     size: 20,
+    schoolGradeId: cfGradeId || undefined,
+    subjectId: cfSubjectId || undefined,
+    chapterId: cfChapterId || undefined,
+    lessonId: cfLessonId || undefined,
   });
 
   const totalPages = data?.result?.totalPages ?? 0;
@@ -192,6 +205,34 @@ export default function StudentAssessmentList() {
               </div>
             ))}
           </div>
+
+          <CurriculumHierarchyFilter
+            gradeId={cfGradeId}
+            subjectId={cfSubjectId}
+            chapterId={cfChapterId}
+            lessonId={cfLessonId}
+            onGradeChange={(id) => {
+              setCfGradeId(id);
+              setCfSubjectId('');
+              setCfChapterId('');
+              setCfLessonId('');
+            }}
+            onSubjectChange={(id) => {
+              setCfSubjectId(id);
+              setCfChapterId('');
+              setCfLessonId('');
+            }}
+            onChapterChange={(id) => {
+              setCfChapterId(id);
+              setCfLessonId('');
+            }}
+            onLessonChange={setCfLessonId}
+            footnote={
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                Lọc chương/bài dựa trên các bài đã gắn với đề trong khóa học của bạn.
+              </p>
+            }
+          />
 
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

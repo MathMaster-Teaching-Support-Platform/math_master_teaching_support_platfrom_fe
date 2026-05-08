@@ -1,31 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  BookMarked,
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Eye,
-  FileText,
-  Filter,
-  GraduationCap,
-  Search,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Eye, FileText, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { API_BASE_URL } from '../../config/api.config';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
-import type {
-  ChapterBySubject,
-  LessonByChapter,
-  LessonSlideGeneratedFile,
-  PageResult,
-  SchoolGrade,
-  SubjectByGrade,
-} from '../../types/lessonSlide.types';
+import type { LessonSlideGeneratedFile, PageResult } from '../../types/lessonSlide.types';
 
 const DEFAULT_PAGE_SIZE = 9;
 type SortDirection = 'ASC' | 'DESC';
@@ -101,28 +84,10 @@ export default function StudentPublicSlides() {
   const previewPdfObjectUrlRef = useRef<string | null>(null);
   const [slidesError, setSlidesError] = useState('');
 
-  const gradesQuery = useQuery({
-    queryKey: ['school-grades', 'active'],
-    queryFn: () => LessonSlideService.getSchoolGrades(true),
-    staleTime: 5 * 60 * 1000,
-  });
-  const subjectsQuery = useQuery({
-    queryKey: ['subjects', 'by-school-grade', gradeId],
-    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(gradeId),
-    enabled: !!gradeId,
-    staleTime: 5 * 60 * 1000,
-  });
-  const chaptersQuery = useQuery({
-    queryKey: ['chapters', 'by-subject', subjectId],
-    queryFn: () => LessonSlideService.getChaptersBySubject(subjectId),
-    enabled: !!subjectId,
-    staleTime: 5 * 60 * 1000,
-  });
-  const lessonsQuery = useQuery({
-    queryKey: ['lessons', 'by-chapter', chapterId],
-    queryFn: () => LessonSlideService.getLessonsByChapter(chapterId),
-    enabled: !!chapterId,
-    staleTime: 5 * 60 * 1000,
+  const { lessons, loadingCatalog, catalogError } = useCurriculumHierarchyCatalog({
+    gradeId,
+    subjectId,
+    chapterId,
   });
   const slidesQuery = useQuery({
     queryKey: [
@@ -148,15 +113,6 @@ export default function StudentPublicSlides() {
     staleTime: 30_000,
   });
 
-  const schoolGrades: SchoolGrade[] = gradesQuery.data?.result ?? [];
-  const subjects: SubjectByGrade[] = subjectsQuery.data?.result ?? [];
-  const chapters: ChapterBySubject[] = chaptersQuery.data?.result ?? [];
-  const lessons: LessonByChapter[] = lessonsQuery.data?.result ?? [];
-  const loadingCatalog =
-    gradesQuery.isFetching ||
-    subjectsQuery.isFetching ||
-    chaptersQuery.isFetching ||
-    lessonsQuery.isFetching;
   const loadingSlides = slidesQuery.isLoading || slidesQuery.isFetching;
 
   const selectedLesson = useMemo(
@@ -246,8 +202,6 @@ export default function StudentPublicSlides() {
   }, [slidesQuery.data]);
 
   useEffect(() => {
-    const catalogError =
-      gradesQuery.error || subjectsQuery.error || chaptersQuery.error || lessonsQuery.error;
     if (catalogError instanceof Error) {
       setSlidesError(catalogError.message);
       return;
@@ -260,10 +214,7 @@ export default function StudentPublicSlides() {
       setSlidesError('');
     }
   }, [
-    gradesQuery.error,
-    subjectsQuery.error,
-    chaptersQuery.error,
-    lessonsQuery.error,
+    catalogError,
     slidesQuery.error,
     loadingCatalog,
     loadingSlides,
@@ -317,9 +268,6 @@ export default function StudentPublicSlides() {
     }
   };
 
-  const selectCls =
-    'w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]';
-
   return (
     <DashboardLayout
       user={mockStudent}
@@ -350,96 +298,16 @@ export default function StudentPublicSlides() {
             </div>
           </div>
 
-          {/* ── Filter panel ── */}
-          <div className="bg-white rounded-2xl border border-[#E8E6DC] p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#87867F]" />
-              <h2 className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] uppercase tracking-wide">
-                Bộ lọc tìm kiếm
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
-                  <GraduationCap className="w-3.5 h-3.5" />
-                  Lớp
-                </label>
-                <select
-                  className={selectCls}
-                  value={gradeId}
-                  onChange={(e) => handleGradeChange(e.target.value)}
-                  disabled={loadingCatalog}
-                >
-                  <option value="">Tất cả lớp</option>
-                  {schoolGrades.map((grade) => (
-                    <option key={grade.id} value={grade.id}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Môn học
-                </label>
-                <select
-                  className={selectCls}
-                  value={subjectId}
-                  onChange={(e) => handleSubjectChange(e.target.value)}
-                  disabled={!gradeId || loadingCatalog}
-                >
-                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn lớp trước'}</option>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
-                  <BookMarked className="w-3.5 h-3.5" />
-                  Chương
-                </label>
-                <select
-                  className={selectCls}
-                  value={chapterId}
-                  onChange={(e) => handleChapterChange(e.target.value)}
-                  disabled={!subjectId || loadingCatalog}
-                >
-                  <option value="">{subjectId ? 'Tất cả chương' : 'Chọn môn trước'}</option>
-                  {chapters.map((chapter) => (
-                    <option key={chapter.id} value={chapter.id}>
-                      {chapter.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
-                  <FileText className="w-3.5 h-3.5" />
-                  Bài học
-                </label>
-                <select
-                  className={selectCls}
-                  value={lessonId}
-                  onChange={(e) => handleLessonChange(e.target.value)}
-                  disabled={!chapterId || loadingCatalog}
-                >
-                  <option value="">{chapterId ? 'Tất cả bài học' : 'Chọn chương trước'}</option>
-                  {lessons.map((lesson) => (
-                    <option key={lesson.id} value={lesson.id}>
-                      {lesson.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          <CurriculumHierarchyFilter
+            gradeId={gradeId}
+            subjectId={subjectId}
+            chapterId={chapterId}
+            lessonId={lessonId}
+            onGradeChange={handleGradeChange}
+            onSubjectChange={handleSubjectChange}
+            onChapterChange={handleChapterChange}
+            onLessonChange={handleLessonChange}
+          />
 
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

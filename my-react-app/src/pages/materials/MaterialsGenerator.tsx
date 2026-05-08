@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from '../../services/api/auth.service';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import '../../styles/module-refactor.css';
@@ -34,6 +36,7 @@ type MaterialRow =
       fileSizeBytes: number;
       isPublic: boolean;
       contentType: string;
+      lessonId: string;
     }
   | {
       kind: 'mindmap';
@@ -41,6 +44,7 @@ type MaterialRow =
       title: string;
       createdAt: string;
       status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+      lessonId: string | null;
     };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -87,6 +91,15 @@ const MaterialsGenerator: React.FC = () => {
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [listGradeId, setListGradeId] = useState('');
+  const [listSubjectId, setListSubjectId] = useState('');
+  const [listChapterId, setListChapterId] = useState('');
+  const [listLessonId, setListLessonId] = useState('');
+  const { lessons: listLessons } = useCurriculumHierarchyCatalog({
+    gradeId: listGradeId,
+    subjectId: listSubjectId,
+    chapterId: listChapterId,
+  });
 
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
     const objectUrl = window.URL.createObjectURL(blob);
@@ -154,7 +167,7 @@ const MaterialsGenerator: React.FC = () => {
       try {
         const res = await MindmapService.getMyMindmaps({
           page: 0,
-          size: 10,
+          size: 80,
           sortBy: 'createdAt',
           direction: 'DESC',
         });
@@ -267,6 +280,7 @@ const MaterialsGenerator: React.FC = () => {
       fileSizeBytes: s.fileSizeBytes,
       isPublic: s.isPublic,
       contentType: s.contentType,
+      lessonId: s.lessonId,
     }));
 
     const mindmapRows: MaterialRow[] = mindmaps
@@ -277,6 +291,7 @@ const MaterialsGenerator: React.FC = () => {
         title: m.title,
         createdAt: m.createdAt,
         status: m.status,
+        lessonId: m.lessonId,
       }));
 
     return [...slideRows, ...mindmapRows].sort(
@@ -284,10 +299,23 @@ const MaterialsGenerator: React.FC = () => {
     );
   }, [slides, mindmaps]);
 
+  const lessonFilterIds = useMemo(() => {
+    if (listLessonId) return new Set([listLessonId]);
+    if (listChapterId) return new Set(listLessons.map((l) => l.id));
+    return null;
+  }, [listLessonId, listChapterId, listLessons]);
+
+  const curriculumRows = useMemo(() => {
+    if (lessonFilterIds === null) return allRows;
+    return allRows.filter(
+      (r) => r.lessonId != null && r.lessonId !== '' && lessonFilterIds.has(r.lessonId)
+    );
+  }, [allRows, lessonFilterIds]);
+
   const rows = useMemo(() => {
     const q = searchValue.toLowerCase();
-    return allRows.filter((r) => r.title.toLowerCase().includes(q)).slice(0, 12);
-  }, [allRows, searchValue]);
+    return curriculumRows.filter((r) => r.title.toLowerCase().includes(q)).slice(0, 12);
+  }, [curriculumRows, searchValue]);
 
   type ToolCard = {
     Icon: React.FC<{ size?: number }>;
@@ -450,6 +478,34 @@ const MaterialsGenerator: React.FC = () => {
             })}
           </div>
 
+          <CurriculumHierarchyFilter
+            gradeId={listGradeId}
+            subjectId={listSubjectId}
+            chapterId={listChapterId}
+            lessonId={listLessonId}
+            onGradeChange={(id) => {
+              setListGradeId(id);
+              setListSubjectId('');
+              setListChapterId('');
+              setListLessonId('');
+            }}
+            onSubjectChange={(id) => {
+              setListSubjectId(id);
+              setListChapterId('');
+              setListLessonId('');
+            }}
+            onChapterChange={(id) => {
+              setListChapterId(id);
+              setListLessonId('');
+            }}
+            onLessonChange={setListLessonId}
+            footnote={
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                Chọn chương hoặc bài để lọc slide và mindmap theo bài học đã gắn.
+              </p>
+            }
+          />
+
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
@@ -474,13 +530,13 @@ const MaterialsGenerator: React.FC = () => {
           </div>
 
           {/* ── Summary bar ── */}
-          {!loading && !error && allRows.length > 0 && (
+          {!loading && !error && curriculumRows.length > 0 && (
             <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
               <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
                 Hiển thị
               </span>
               <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                {rows.length} / {allRows.length}
+                {rows.length} / {curriculumRows.length}
               </strong>
               <div className="w-px h-4 bg-[#E8E6DC]" />
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -626,13 +682,24 @@ const MaterialsGenerator: React.FC = () => {
           )}
 
           {/* ── Empty: filtered ── */}
-          {!loading && !error && rows.length === 0 && allRows.length > 0 && (
+          {!loading && !error && curriculumRows.length > 0 && rows.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
                 <Search className="w-6 h-6" />
               </div>
               <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
                 Không tìm thấy tài liệu nào phù hợp.
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && curriculumRows.length === 0 && allRows.length > 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+                <Search className="w-6 h-6" />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center px-4">
+                Không có tài liệu khớp chương/bài đã chọn.
               </p>
             </div>
           )}

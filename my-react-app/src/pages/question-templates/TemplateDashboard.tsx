@@ -26,12 +26,10 @@ import { questionBankService } from '../../services/questionBankService';
 import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
-import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useDebounce } from '../../hooks/useDebounce';
-import { useGrades } from '../../hooks/useGrades';
-import { useSubjectsByGrade } from '../../hooks/useSubjects';
 
 import { mockTeacher } from '../../data/mockData';
 import {
@@ -223,11 +221,10 @@ export function TemplateDashboard() {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
-  // Cascading academic filter (Lớp -> Môn -> Chương). Only chapterId is sent
-  // to the BE; gradeLevel/subjectId are FE-side helpers to drive the cascade.
-  const [filterGradeLevel, setFilterGradeLevel] = useState('');
+  const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
   const [page, setPage] = useState(0);
   // Page size is now teacher-controllable via the Pagination footer. Defaults
   // to 9 (clean 3×3 desktop grid). Persists nothing here — the Pagination
@@ -258,20 +255,14 @@ export function TemplateDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, status, filterChapterId, filterGradeLevel]);
+  }, [debouncedSearch, status, filterChapterId, filterGradeId, filterLessonId, filterSubjectId]);
 
-  // Cascading filter data — Lớp / Môn / Chương dropdowns above the toolbar.
-  const { data: gradesData } = useGrades(true);
-  const filterGrades = [...(gradesData?.result ?? [])].sort((a, b) => a.level - b.level);
-  const filterGradeId = filterGrades.find((g) => String(g.level) === filterGradeLevel)?.id;
-
-  const { data: filterSubjectsData } = useSubjectsByGrade(filterGradeLevel, !!filterGradeLevel);
-  const filterSubjects = filterSubjectsData?.result ?? [];
-
-  const { data: filterChaptersData } = useChaptersBySubject(filterSubjectId, !!filterSubjectId);
-  const filterChapters = filterChaptersData?.result ?? [];
-
-  const hasAnyFilter = !!(filterGradeLevel || filterSubjectId || filterChapterId);
+  const hasAnyFilter = !!(
+    filterGradeId ||
+    filterSubjectId ||
+    filterChapterId ||
+    filterLessonId
+  );
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
     page,
@@ -291,6 +282,10 @@ export function TemplateDashboard() {
   const unpublishMutation = useUnpublishTemplate();
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
+  const displayTemplates = useMemo(() => {
+    if (!filterLessonId) return templates;
+    return templates.filter((t) => t.lessonId === filterLessonId);
+  }, [templates, filterLessonId]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -489,63 +484,38 @@ export function TemplateDashboard() {
             ))}
           </div>
 
-          {/* ── Academic filter (Lớp / Môn / Chương) ── */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#87867F] mr-1">
-              Lọc:
-            </span>
-            <select
-              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all"
-              value={filterGradeLevel}
-              onChange={(e) => {
-                setFilterGradeLevel(e.target.value);
+          <div className="space-y-2 mb-3">
+            <CurriculumHierarchyFilter
+              gradeId={filterGradeId}
+              subjectId={filterSubjectId}
+              chapterId={filterChapterId}
+              lessonId={filterLessonId}
+              onGradeChange={(id) => {
+                setFilterGradeId(id);
                 setFilterSubjectId('');
                 setFilterChapterId('');
+                setFilterLessonId('');
               }}
-            >
-              <option value="">Tất cả lớp</option>
-              {filterGrades.map((g) => (
-                <option key={g.id} value={String(g.level)}>
-                  Lớp {g.level}
-                </option>
-              ))}
-            </select>
-            <select
-              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              value={filterSubjectId}
-              onChange={(e) => {
-                setFilterSubjectId(e.target.value);
+              onSubjectChange={(id) => {
+                setFilterSubjectId(id);
                 setFilterChapterId('');
+                setFilterLessonId('');
               }}
-              disabled={!filterGradeLevel}
-            >
-              <option value="">Tất cả môn</option>
-              {filterSubjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px]"
-              value={filterChapterId}
-              onChange={(e) => setFilterChapterId(e.target.value)}
-              disabled={!filterSubjectId}
-            >
-              <option value="">Tất cả chương</option>
-              {filterChapters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+              onChapterChange={(id) => {
+                setFilterChapterId(id);
+                setFilterLessonId('');
+              }}
+              onLessonChange={setFilterLessonId}
+              footnote="API đang lọc theo khối và chương; chọn bài để lọc thêm trên trang hiện tại."
+            />
             {hasAnyFilter && (
               <button
                 type="button"
                 onClick={() => {
-                  setFilterGradeLevel('');
+                  setFilterGradeId('');
                   setFilterSubjectId('');
                   setFilterChapterId('');
+                  setFilterLessonId('');
                 }}
                 className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] hover:text-[#141413] underline underline-offset-2 transition-colors"
               >
@@ -695,9 +665,9 @@ export function TemplateDashboard() {
           )}
 
           {/* ── Grid view ── */}
-          {!isLoading && !isError && templates.length > 0 && viewMode === 'grid' && (
+          {!isLoading && !isError && displayTemplates.length > 0 && viewMode === 'grid' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((template, idx) => {
+              {displayTemplates.map((template, idx) => {
                 const accent = coverAccents[idx % coverAccents.length];
                 const gradient = coverGradients[idx % coverGradients.length];
                 return (
@@ -886,9 +856,9 @@ export function TemplateDashboard() {
           )}
 
           {/* ── List view ── */}
-          {!isLoading && !isError && templates.length > 0 && viewMode === 'list' && (
+          {!isLoading && !isError && displayTemplates.length > 0 && viewMode === 'list' && (
             <div className="flex flex-col gap-2">
-              {templates.map((template, idx) => {
+              {displayTemplates.map((template, idx) => {
                 const accent = coverAccents[idx % coverAccents.length];
                 const gradient = coverGradients[idx % coverGradients.length];
                 return (

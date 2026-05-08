@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import React from 'react';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -22,8 +23,10 @@ import {
   usePendingReviewCourses,
   useRejectCourseReview,
 } from '../../hooks/useCourses';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { Link } from 'react-router-dom';
 import type { CourseResponse } from '../../types';
+import { entityMatchesGradeSubject } from '../../utils/curriculumFilter';
 
 const PAGE_SIZE = 10;
 
@@ -582,6 +585,14 @@ const AdminCourseReviewsPage: React.FC = () => {
   const [pendingPage, setPendingPage] = React.useState(0);
   const [historyPage, setHistoryPage] = React.useState(0);
   const [historyStatus, setHistoryStatus] = React.useState('ALL');
+  const [filterGradeId, setFilterGradeId] = React.useState('');
+  const [filterSubjectId, setFilterSubjectId] = React.useState('');
+
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: '',
+  });
 
   const pendingQuery = usePendingReviewCourses(pendingPage, PAGE_SIZE);
   const historyQuery = useCourseReviewHistory(historyStatus, historyPage, PAGE_SIZE);
@@ -591,12 +602,26 @@ const AdminCourseReviewsPage: React.FC = () => {
   const statDraft = useCourseReviewHistory('DRAFT', 0, 1);
 
   const pendingPageData = pendingQuery.data?.result;
-  const coursesPending = pendingPageData?.content ?? [];
+  const coursesPendingRaw = pendingPageData?.content ?? [];
+  const coursesPending = React.useMemo(
+    () =>
+      coursesPendingRaw.filter((c) =>
+        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades)
+      ),
+    [coursesPendingRaw, filterGradeId, filterSubjectId, schoolGrades]
+  );
   const totalPagesPending = pendingPageData?.totalPages ?? 1;
   const pendingTotal = pickTotalElements(pendingQuery.data);
 
   const historyPageData = historyQuery.data?.result;
-  const coursesHistory = historyPageData?.content ?? [];
+  const coursesHistoryRaw = historyPageData?.content ?? [];
+  const coursesHistory = React.useMemo(
+    () =>
+      coursesHistoryRaw.filter((c) =>
+        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades)
+      ),
+    [coursesHistoryRaw, filterGradeId, filterSubjectId, schoolGrades]
+  );
   const totalPagesHistory = historyPageData?.totalPages ?? 1;
   const historyListTotal = pickTotalElements(historyQuery.data);
 
@@ -699,6 +724,22 @@ const AdminCourseReviewsPage: React.FC = () => {
               </div>
             ))}
           </div>
+
+          <CurriculumHierarchyFilter
+            depth="subject"
+            gradeId={filterGradeId}
+            subjectId={filterSubjectId}
+            chapterId=""
+            lessonId=""
+            onGradeChange={(id) => {
+              setFilterGradeId(id);
+              setFilterSubjectId('');
+            }}
+            onSubjectChange={setFilterSubjectId}
+            onChapterChange={() => {}}
+            onLessonChange={() => {}}
+            footnote="Lọc theo khối/môn trên danh sách trang hiện tại."
+          />
 
           {/* Mode tabs — segmented control like mindmaps */}
           <div className="flex flex-col gap-3">

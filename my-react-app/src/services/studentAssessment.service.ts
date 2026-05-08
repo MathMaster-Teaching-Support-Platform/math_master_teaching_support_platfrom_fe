@@ -139,6 +139,10 @@ export class StudentAssessmentService {
     size?: number;
     sortBy?: string;
     sortDir?: string;
+    schoolGradeId?: string;
+    subjectId?: string;
+    chapterId?: string;
+    lessonId?: string;
   }): Promise<ApiResponse<PaginatedResponse<StudentAssessmentResponse>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
@@ -148,6 +152,10 @@ export class StudentAssessmentService {
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    if (params.schoolGradeId) queryParams.append('schoolGradeId', params.schoolGradeId);
+    if (params.subjectId) queryParams.append('subjectId', params.subjectId);
+    if (params.chapterId) queryParams.append('chapterId', params.chapterId);
+    if (params.lessonId) queryParams.append('lessonId', params.lessonId);
 
     const response = await fetch(
       `${API_BASE_URL}/student-assessments?${queryParams.toString()}`,

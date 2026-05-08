@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import { CourseCard } from '../../components/course/CourseCard';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
@@ -21,10 +22,8 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { UI_TEXT } from '../../constants/uiText';
 import { courseKeys, useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { CourseService } from '../../services/api/course.service';
-import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
-import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import type { Order } from '../../types/order.types';
 import './StudentCourses.css';
 import './TeacherCourses.css';
@@ -41,9 +40,6 @@ const coverGradients = [
 
 const coverAccents = ['#4d4c48', '#5e5d59', '#7a5a4d', '#81644c', '#6e5b7e', '#4a6a5a'] as const;
 const PAGE_SIZE = 9;
-
-const scSelectCls =
-  'w-full sm:w-auto border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors min-h-[42px] flex-shrink-0';
 
 const scSecondaryBtn =
   'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-45 disabled:pointer-events-none';
@@ -216,6 +212,8 @@ const StudentCourses: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -230,37 +228,41 @@ const StudentCourses: React.FC = () => {
   const { data: publicCoursesData, isLoading: loadingPublic } = usePublicCourses({
     schoolGradeId: filterGradeId || undefined,
     subjectId: filterSubjectId || undefined,
+    chapterId: filterChapterId || undefined,
+    lessonId: filterLessonId || undefined,
     page: Math.max(0, browsePage - 1),
     size: PAGE_SIZE,
   });
   const enrollMutation = useEnroll();
 
-  const { data: gradesData } = useQuery({
-    queryKey: ['school-grades', 'active'],
-    queryFn: () => LessonSlideService.getSchoolGrades(true),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: subjectsData } = useQuery({
-    queryKey: ['subjects', 'by-school-grade', filterGradeId],
-    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(filterGradeId),
-    enabled: !!filterGradeId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const grades: SchoolGrade[] = gradesData?.result ?? [];
-  const subjects: SubjectByGrade[] = subjectsData?.result ?? [];
-
-  const handleFilterGradeChange = (gradeId: string) => {
-    setFilterGradeId(gradeId);
+  const handleFilterGradeChange = (nextGradeId: string) => {
+    setFilterGradeId(nextGradeId);
     setFilterSubjectId('');
+    setFilterChapterId('');
+    setFilterLessonId('');
     setEnrolledPage(1);
   };
 
-  const handleFilterSubjectChange = (subjectId: string) => {
-    setFilterSubjectId(subjectId);
+  const handleFilterSubjectChange = (nextSubjectId: string) => {
+    setFilterSubjectId(nextSubjectId);
+    setFilterChapterId('');
+    setFilterLessonId('');
     setEnrolledPage(1);
   };
+
+  const handleFilterChapterChange = (nextChapterId: string) => {
+    setFilterChapterId(nextChapterId);
+    setFilterLessonId('');
+    setEnrolledPage(1);
+  };
+
+  const handleFilterLessonChange = (nextLessonId: string) => {
+    setFilterLessonId(nextLessonId);
+    setEnrolledPage(1);
+  };
+
+  const curriculumFilterActive =
+    !!filterGradeId || !!filterSubjectId || !!filterChapterId || !!filterLessonId;
 
   const enrollments = useMemo<EnrollmentResponse[]>(
     () => enrollmentsData?.result ?? [],
@@ -551,41 +553,33 @@ const StudentCourses: React.FC = () => {
                 </div>
 
                 {(activeTab === 'browse' || activeTab === 'enrolled') && (
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <select
-                      className={scSelectCls}
-                      value={filterGradeId}
-                      onChange={(e) => {
-                        if (activeTab === 'browse') setBrowsePage(1);
-                        handleFilterGradeChange(e.target.value);
-                      }}
-                      aria-label="Lọc theo lớp"
-                    >
-                      <option value="">Tất cả lớp</option>
-                      {grades.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className={scSelectCls}
-                      value={filterSubjectId}
-                      onChange={(e) => {
-                        if (activeTab === 'browse') setBrowsePage(1);
-                        handleFilterSubjectChange(e.target.value);
-                      }}
-                      disabled={!filterGradeId}
-                      aria-label="Lọc theo môn"
-                    >
-                      <option value="">Tất cả môn học</option>
-                      {subjects.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <CurriculumHierarchyFilter
+                    gradeId={filterGradeId}
+                    subjectId={filterSubjectId}
+                    chapterId={filterChapterId}
+                    lessonId={filterLessonId}
+                    onGradeChange={(id) => {
+                      if (activeTab === 'browse') setBrowsePage(1);
+                      handleFilterGradeChange(id);
+                    }}
+                    onSubjectChange={(id) => {
+                      if (activeTab === 'browse') setBrowsePage(1);
+                      handleFilterSubjectChange(id);
+                    }}
+                    onChapterChange={(id) => {
+                      if (activeTab === 'browse') setBrowsePage(1);
+                      handleFilterChapterChange(id);
+                    }}
+                    onLessonChange={(id) => {
+                      if (activeTab === 'browse') setBrowsePage(1);
+                      handleFilterLessonChange(id);
+                    }}
+                    footnote={
+                      activeTab === 'enrolled'
+                        ? 'Tab Đã đăng ký: chỉ áp dụng lọc theo lớp và môn. Chương/bài chỉ dùng cho tab Khám phá.'
+                        : 'Tab Khám phá: có thể lọc tới chương/bài khi khóa học có nội dung Bộ SGK gắn với bài đó.'
+                    }
+                  />
                 )}
               </div>
 
@@ -708,8 +702,8 @@ const StudentCourses: React.FC = () => {
                         <Search className="w-6 h-6 opacity-60" aria-hidden />
                       </div>
                       <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
-                        {filterGradeId || filterSubjectId
-                          ? 'Không có khóa học nào khớp với lớp/môn đã chọn.'
+                        {curriculumFilterActive
+                          ? 'Không có khóa học nào khớp với bộ lọc đã chọn.'
                           : 'Không tìm thấy khóa học nào'}
                       </p>
                     </div>

@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useRoadmaps } from '../../hooks/useRoadmaps';
 import { StudentDashboardService } from '../../services/api/student-dashboard.service';
 import type { RoadmapCatalogItem } from '../../types';
+import { roadmapMatchesCurriculum } from '../../utils/curriculumFilter';
 import './StudentRoadmap.css';
 import EmptyRoadmap from './components/EmptyRoadmap';
 import RoadmapGrid from './components/RoadmapGrid';
@@ -29,6 +32,15 @@ const StudentRoadmap: React.FC = () => {
   });
   const dashboardSummary = dashboardQuery.data?.result?.summary;
 
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: '',
+  });
+
   const {
     data: roadmaps = [],
     isLoading,
@@ -43,11 +55,21 @@ const StudentRoadmap: React.FC = () => {
       ),
   });
 
-  const inProgressCount = roadmaps.filter((r) => r.status === 'IN_PROGRESS').length;
-  const completedCount = roadmaps.filter((r) => r.status === 'COMPLETED').length;
+  const filteredRoadmaps = useMemo(
+    () =>
+      roadmaps.filter((r) =>
+        roadmapMatchesCurriculum(r, filterGradeId, filterSubjectId, schoolGrades)
+      ),
+    [roadmaps, filterGradeId, filterSubjectId, schoolGrades]
+  );
+
+  const inProgressCount = filteredRoadmaps.filter((r) => r.status === 'IN_PROGRESS').length;
+  const completedCount = filteredRoadmaps.filter((r) => r.status === 'COMPLETED').length;
   const avgProgress =
-    roadmaps.length > 0
-      ? Math.round(roadmaps.reduce((s, r) => s + r.progressPercentage, 0) / roadmaps.length)
+    filteredRoadmaps.length > 0
+      ? Math.round(
+          filteredRoadmaps.reduce((s, r) => s + r.progressPercentage, 0) / filteredRoadmaps.length
+        )
       : 0;
 
   return (
@@ -65,10 +87,26 @@ const StudentRoadmap: React.FC = () => {
         <section className="module-page">
           <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6">
             <RoadmapHeader
-              total={roadmaps.length}
+              total={filteredRoadmaps.length}
               inProgress={inProgressCount}
               completed={completedCount}
               avgProgress={avgProgress}
+            />
+
+            <CurriculumHierarchyFilter
+              depth="subject"
+              gradeId={filterGradeId}
+              subjectId={filterSubjectId}
+              chapterId=""
+              lessonId=""
+              onGradeChange={(id) => {
+                setFilterGradeId(id);
+                setFilterSubjectId('');
+              }}
+              onSubjectChange={setFilterSubjectId}
+              onChapterChange={() => {}}
+              onLessonChange={() => {}}
+              footnote="Lộ trình chỉ có khối và môn trên danh mục — chương/bài không áp dụng."
             />
 
             <div className="srp__body-full-width">
@@ -81,7 +119,17 @@ const StudentRoadmap: React.FC = () => {
               )}
               {error && <p className="srp__error-text">Đã xảy ra lỗi khi tải lộ trình.</p>}
               {!isLoading && !error && roadmaps.length === 0 && <EmptyRoadmap />}
-              {!isLoading && !error && roadmaps.length > 0 && <RoadmapGrid roadmaps={roadmaps} />}
+              {!isLoading &&
+                !error &&
+                roadmaps.length > 0 &&
+                filteredRoadmaps.length === 0 && (
+                  <p className="srp__error-text font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] py-8 text-center">
+                    Không có lộ trình nào khớp với lớp/môn đã chọn.
+                  </p>
+                )}
+              {!isLoading && !error && filteredRoadmaps.length > 0 && (
+                <RoadmapGrid roadmaps={filteredRoadmaps} />
+              )}
             </div>
           </div>
         </section>

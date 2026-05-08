@@ -234,6 +234,8 @@ export interface RejectCourseRequest {
 export interface GetPublicCoursesParams {
   schoolGradeId?: string;
   subjectId?: string;
+  chapterId?: string;
+  lessonId?: string;
   keyword?: string;
   page?: number;
   size?: number;

@@ -23,8 +23,10 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -340,6 +342,15 @@ const AISlideGenerator: React.FC = () => {
     useState<LessonSlideGeneratedFile | null>(null);
   const [generatedPage, setGeneratedPage] = useState(1);
   const [generatedPageSize, setGeneratedPageSize] = useState(12);
+  const [libGradeId, setLibGradeId] = useState('');
+  const [libSubjectId, setLibSubjectId] = useState('');
+  const [libChapterId, setLibChapterId] = useState('');
+  const [libLessonId, setLibLessonId] = useState('');
+  const { lessons: libLessons } = useCurriculumHierarchyCatalog({
+    gradeId: libGradeId,
+    subjectId: libSubjectId,
+    chapterId: libChapterId,
+  });
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
   const [loadingGeneratedPreviewPdf, setLoadingGeneratedPreviewPdf] = useState(false);
   const [openingGeneratedPreviewPdfTab, setOpeningGeneratedPreviewPdfTab] = useState(false);
@@ -396,6 +407,13 @@ const AISlideGenerator: React.FC = () => {
 
     let files = [...generatedFiles];
 
+    if (libLessonId) {
+      files = files.filter((file) => file.lessonId === libLessonId);
+    } else if (libChapterId) {
+      const inChapter = new Set(libLessons.map((l) => l.id));
+      files = files.filter((file) => inChapter.has(file.lessonId));
+    }
+
     if (generatedVisibilityFilter === 'PUBLIC') {
       files = files.filter((file) => file.isPublic);
     } else if (generatedVisibilityFilter === 'PRIVATE') {
@@ -434,7 +452,19 @@ const AISlideGenerator: React.FC = () => {
     });
 
     return files;
-  }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
+  }, [
+    generatedFiles,
+    generatedSearch,
+    generatedSort,
+    generatedVisibilityFilter,
+    libLessonId,
+    libChapterId,
+    libLessons,
+  ]);
+
+  useEffect(() => {
+    setGeneratedPage(1);
+  }, [libGradeId, libSubjectId, libChapterId, libLessonId]);
 
   const totalManagedGeneratedPages = useMemo(
     () => Math.max(1, Math.ceil(managedGeneratedFiles.length / generatedPageSize)),
@@ -2263,6 +2293,33 @@ const AISlideGenerator: React.FC = () => {
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {activeMainTab === 'MANAGE' && (
             <div className="space-y-4">
+              <CurriculumHierarchyFilter
+                gradeId={libGradeId}
+                subjectId={libSubjectId}
+                chapterId={libChapterId}
+                lessonId={libLessonId}
+                onGradeChange={(id) => {
+                  setLibGradeId(id);
+                  setLibSubjectId('');
+                  setLibChapterId('');
+                  setLibLessonId('');
+                }}
+                onSubjectChange={(id) => {
+                  setLibSubjectId(id);
+                  setLibChapterId('');
+                  setLibLessonId('');
+                }}
+                onChapterChange={(id) => {
+                  setLibChapterId(id);
+                  setLibLessonId('');
+                }}
+                onLessonChange={setLibLessonId}
+                footnote={
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                    Chọn chương hoặc bài để lọc thư viện slide đã tạo (theo bài học của file).
+                  </p>
+                }
+              />
               {/* Toolbar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 {/* Search */}

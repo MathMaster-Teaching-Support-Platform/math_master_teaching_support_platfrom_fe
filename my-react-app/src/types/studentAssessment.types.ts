@@ -22,6 +22,11 @@ export interface StudentAssessmentResponse {
   cannotStartReason?: string;
   isRequired?: boolean;
   courseOrderIndex?: number;
+  /** Metadata CT — phục vụ lọc Lớp → Môn → Chương → Bài (và API query). */
+  courseId?: string;
+  schoolGradeId?: string;
+  subjectId?: string;
+  lessonIds?: string[];
 }
 
 export interface AttemptStartResponse {

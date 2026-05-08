@@ -22,9 +22,11 @@ import {
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
 import { mockTeacher } from '../../data/mockData';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveMatrix,
@@ -39,6 +41,7 @@ import {
   type ExamMatrixRequest,
   type ExamMatrixResponse,
 } from '../../types/examMatrix';
+import { examMatrixMatchesCurriculum } from '../../utils/curriculumFilter';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
 
 const coverGradients = [
@@ -86,12 +89,20 @@ export function ExamMatrixDashboard() {
   const [formOpen, setFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
+  const [mfGradeId, setMfGradeId] = useState('');
+  const [mfSubjectId, setMfSubjectId] = useState('');
 
   const debouncedSearch = useDebounce(search, 300);
 
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: mfGradeId,
+    subjectId: mfSubjectId,
+    chapterId: '',
+  });
+
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, mfGradeId, mfSubjectId]);
 
   const { data, isLoading, isError, error, refetch } = useGetMyExamMatricesPaged({
     search: debouncedSearch.trim() || undefined,
@@ -110,6 +121,12 @@ export function ExamMatrixDashboard() {
   const { showToast } = useToast();
 
   const matrices = useMemo(() => data?.result?.content ?? [], [data]);
+  const filteredMatrices = useMemo(
+    () =>
+      matrices.filter((m) => examMatrixMatchesCurriculum(m, mfGradeId, mfSubjectId, schoolGrades)),
+    [matrices, mfGradeId, mfSubjectId, schoolGrades]
+  );
+  const curriculumFilterActive = Boolean(mfGradeId || mfSubjectId);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -117,15 +134,15 @@ export function ExamMatrixDashboard() {
   const effectiveTotalPages =
     totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
-  const stats = useMemo(
-    () => ({
-      total: effectiveTotalElements,
-      draft: matrices.filter((m) => m.status === MatrixStatus.DRAFT).length,
-      approved: matrices.filter((m) => m.status === MatrixStatus.APPROVED).length,
-      locked: matrices.filter((m) => m.status === MatrixStatus.LOCKED).length,
-    }),
-    [matrices, effectiveTotalElements]
-  );
+  const stats = useMemo(() => {
+    const src = curriculumFilterActive ? filteredMatrices : matrices;
+    return {
+      total: curriculumFilterActive ? filteredMatrices.length : effectiveTotalElements,
+      draft: src.filter((m) => m.status === MatrixStatus.DRAFT).length,
+      approved: src.filter((m) => m.status === MatrixStatus.APPROVED).length,
+      locked: src.filter((m) => m.status === MatrixStatus.LOCKED).length,
+    };
+  }, [matrices, filteredMatrices, curriculumFilterActive, effectiveTotalElements]);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('vi-VN', {
@@ -250,7 +267,7 @@ export function ExamMatrixDashboard() {
                   </h1>
                   {!isLoading && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
-                      {effectiveTotalElements}
+                      {curriculumFilterActive ? filteredMatrices.length : effectiveTotalElements}
                     </span>
                   )}
                 </div>
@@ -271,6 +288,26 @@ export function ExamMatrixDashboard() {
               </button>
             </div>
           </div>
+
+          <CurriculumHierarchyFilter
+            gradeId={mfGradeId}
+            subjectId={mfSubjectId}
+            chapterId=""
+            lessonId=""
+            depth="subject"
+            onGradeChange={(id) => {
+              setMfGradeId(id);
+              setMfSubjectId('');
+            }}
+            onSubjectChange={setMfSubjectId}
+            onChapterChange={() => {}}
+            onLessonChange={() => {}}
+            footnote={
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                Lọc áp dụng cho các ma trận trên trang hiện tại (theo lớp/môn đã ghi trong ma trận).
+              </p>
+            }
+          />
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -599,9 +636,21 @@ export function ExamMatrixDashboard() {
             </div>
           )}
 
-          {!isLoading && !isError && matrices.length > 0 && viewMode === 'grid' && (
+          {!isLoading &&
+            !isError &&
+            matrices.length > 0 &&
+            filteredMatrices.length === 0 &&
+            curriculumFilterActive && (
+              <div className="flex flex-col items-center justify-center py-14 gap-2 px-4">
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center">
+                  Không có ma trận khớp lớp/môn đã chọn trên trang này.
+                </p>
+              </div>
+            )}
+
+          {!isLoading && !isError && matrices.length > 0 && viewMode === 'grid' && filteredMatrices.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {matrices.map((matrix, idx) => (
+              {filteredMatrices.map((matrix, idx) => (
                 <article
                   key={matrix.id}
                   className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden group hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
@@ -777,9 +826,9 @@ export function ExamMatrixDashboard() {
             </div>
           )}
 
-          {!isLoading && !isError && matrices.length > 0 && viewMode === 'list' && (
+          {!isLoading && !isError && matrices.length > 0 && viewMode === 'list' && filteredMatrices.length > 0 && (
             <div className="flex flex-col gap-2">
-              {matrices.map((matrix, idx) => (
+              {filteredMatrices.map((matrix, idx) => (
                 <article
                   key={matrix.id}
                   className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-white hover:shadow-[rgba(0,0,0,0.06)_0px_4px_16px] transition-all duration-150"

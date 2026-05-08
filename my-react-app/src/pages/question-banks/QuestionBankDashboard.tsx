@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BookOpen,
   Database,
-  GraduationCap,
   Grid2x2,
   List,
   Pencil,
@@ -17,6 +16,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   QbCognitiveDistribution,
@@ -24,8 +24,8 @@ import {
 } from '../../components/question-banks/qb-ui';
 import { mockTeacher } from '../../data/mockData';
 import { useToast } from '../../context/ToastContext';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
-import { useGrades } from '../../hooks/useGrades';
 import {
   useCreateQuestionBank,
   useDeleteQuestionBank,
@@ -35,6 +35,7 @@ import {
 
 import '../../styles/qb-design-system.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
+import { entityMatchesGradeSubject } from '../../utils/curriculumFilter';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
@@ -49,15 +50,13 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#047857', '#6d28d9', '#c2410c', '#be185d', '#0f766e'] as const;
 
-// "ALL" = no grade filter; otherwise the value is the schoolGradeId.
-type GradeFilter = 'ALL' | string;
-
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 export function QuestionBankDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [gradeFilter, setGradeFilter] = useState<GradeFilter>('ALL');
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
@@ -70,7 +69,7 @@ export function QuestionBankDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, gradeFilter, pageSize]);
+  }, [debouncedSearch, filterGradeId, filterSubjectId, pageSize]);
 
   const searchParams = useMemo(() => {
     return {
@@ -84,7 +83,11 @@ export function QuestionBankDashboard() {
   }, [debouncedSearch, page, pageSize]);
 
   const { data, isLoading, isError, error, refetch } = useSearchQuestionBanks(searchParams);
-  const { data: gradesData } = useGrades();
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: '',
+  });
 
   const createMutation = useCreateQuestionBank();
   const updateMutation = useUpdateQuestionBank();
@@ -96,9 +99,11 @@ export function QuestionBankDashboard() {
   // /question-banks/search no longer accepts gradeLevel as a server filter.
   const allBanks = useMemo(() => data?.result?.content ?? [], [data]);
   const banks = useMemo(() => {
-    if (gradeFilter === 'ALL') return allBanks;
-    return allBanks.filter((b) => b.schoolGradeId === gradeFilter);
-  }, [allBanks, gradeFilter]);
+    if (!filterGradeId && !filterSubjectId) return allBanks;
+    return allBanks.filter((b) =>
+      entityMatchesGradeSubject(b, filterGradeId, filterSubjectId, schoolGrades)
+    );
+  }, [allBanks, filterGradeId, filterSubjectId, schoolGrades]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -106,9 +111,7 @@ export function QuestionBankDashboard() {
   const effectiveTotalPages =
     totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
-  const hasActiveFilters = !!debouncedSearch || gradeFilter !== 'ALL';
-
-  const grades = gradesData?.result ?? [];
+  const hasActiveFilters = !!debouncedSearch || !!filterGradeId || !!filterSubjectId;
 
   const pageStats = useMemo(() => {
     const questionsOnPage = banks.reduce((s, b) => s + (b.questionCount ?? 0), 0);
@@ -179,7 +182,8 @@ export function QuestionBankDashboard() {
             type="button"
             onClick={() => {
               setSearch('');
-              setGradeFilter('ALL');
+              setFilterGradeId('');
+              setFilterSubjectId('');
             }}
             className="mt-1 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
           >
@@ -303,6 +307,23 @@ export function QuestionBankDashboard() {
             &quot;Câu hỏi (trang)&quot; tính trên trang hiện tại; &quot;Tổng ngân hàng&quot; là tổng theo bộ lọc đang áp dụng.
           </p>
 
+          <CurriculumHierarchyFilter
+            depth="subject"
+            hideTitle
+            className="!p-4"
+            gradeId={filterGradeId}
+            subjectId={filterSubjectId}
+            chapterId=""
+            lessonId=""
+            onGradeChange={(id) => {
+              setFilterGradeId(id);
+              setFilterSubjectId('');
+            }}
+            onSubjectChange={setFilterSubjectId}
+            onChapterChange={() => {}}
+            onLessonChange={() => {}}
+          />
+
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#C96442] focus-within:shadow-[0_0_0_3px_rgba(201,100,66,0.12)] transition-all duration-150">
@@ -335,53 +356,6 @@ export function QuestionBankDashboard() {
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Làm mới</span>
               </button>
-
-              <div
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all duration-150 flex-shrink-0 ${
-                  gradeFilter === 'ALL'
-                    ? 'border-[#E8E6DC] bg-[#FAF9F5] hover:border-[#D1CFC5]'
-                    : 'border-[#C96442] bg-[#FFF5EE] shadow-[0_0_0_3px_rgba(201,100,66,0.12)]'
-                }`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                    gradeFilter === 'ALL'
-                      ? 'bg-[#E8E6DC] text-[#5E5D59]'
-                      : 'bg-[#C96442] text-white'
-                  }`}
-                  aria-hidden
-                >
-                  <GraduationCap className="w-3.5 h-3.5" />
-                </div>
-                <span className="hidden md:inline font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
-                  Lọc lớp
-                </span>
-                <select
-                  value={gradeFilter}
-                  onChange={(e) => setGradeFilter(e.target.value as GradeFilter)}
-                  className={`bg-transparent font-[Be_Vietnam_Pro] text-[14px] font-semibold outline-none cursor-pointer pr-1 ${
-                    gradeFilter === 'ALL' ? 'text-[#141413]' : 'text-[#C96442]'
-                  }`}
-                  aria-label="Lọc theo lớp"
-                >
-                  <option value="ALL">Tất cả lớp</option>
-                  {grades.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.gradeLevel ? `Lớp ${g.gradeLevel}` : g.id}
-                    </option>
-                  ))}
-                </select>
-                {gradeFilter !== 'ALL' && (
-                  <button
-                    type="button"
-                    aria-label="Bỏ lọc lớp"
-                    onClick={() => setGradeFilter('ALL')}
-                    className="w-5 h-5 rounded-full bg-white text-[#C96442] hover:bg-[#FFE8DA] flex items-center justify-center flex-shrink-0 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
 
               {banks.length > 0 && (
                 <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
