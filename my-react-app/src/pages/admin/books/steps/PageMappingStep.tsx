@@ -1,9 +1,13 @@
 import { AlertCircle, ListTree, Loader2, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useBookPageMapping, useSavePageMapping } from '../../../../hooks/useBooks';
+import {
+  useBookList,
+  useBookSeriesPageMapping,
+  useSaveSeriesPageMapping,
+} from '../../../../hooks/useBooks';
 import { useChaptersBySubject } from '../../../../hooks/useChapters';
 import { useLessonsByChapter } from '../../../../hooks/useLessons';
-import type { BookResponse, PageMappingItem } from '../../../../types/book.types';
+import type { BookResponse, SeriesPageMappingItem } from '../../../../types/book.types';
 
 interface Props {
   book: BookResponse;
@@ -14,18 +18,29 @@ interface DraftItem {
   lessonTitle: string;
   chapterId: string;
   chapterTitle: string;
+  bookId: string;
   pageStart: number | '';
   pageEnd: number | '';
 }
 
 const PageMappingStep: React.FC<Props> = ({ book }) => {
-  const mappingQuery = useBookPageMapping(book.id);
+  const mappingQuery = useBookSeriesPageMapping(book.id);
+  const seriesBooksQuery = useBookList({
+    bookSeriesId: book.bookSeriesId ?? undefined,
+    page: 0,
+    size: 100,
+  });
   const chapters = useChaptersBySubject(book.subjectId);
   const [activeChapterId, setActiveChapterId] = useState<string>('');
   const lessons = useLessonsByChapter(activeChapterId, '', Boolean(activeChapterId));
-  const saveMapping = useSavePageMapping(book.id);
+  const saveMapping = useSaveSeriesPageMapping(book.id);
   const [draft, setDraft] = useState<DraftItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const seriesBooks = useMemo(() => seriesBooksQuery.data?.result?.content ?? [], [seriesBooksQuery.data]);
+  const seriesBookNameMap = useMemo(
+    () => new Map(seriesBooks.map((b) => [b.id, b.title])),
+    [seriesBooks]
+  );
 
   // Hydrate draft from server-side mapping
   useEffect(() => {
@@ -36,6 +51,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         lessonTitle: m.lessonTitle,
         chapterId: m.chapterId,
         chapterTitle: m.chapterTitle,
+        bookId: m.bookId,
         pageStart: m.pageStart,
         pageEnd: m.pageEnd,
       }))
@@ -83,7 +99,11 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     if (draft.length === 0) return { ok: false, message: 'Cần ít nhất 1 bài học được mapping.' };
     const ocrFrom = book.ocrPageFrom ?? 1;
     const ocrTo = book.ocrPageTo ?? Number.MAX_SAFE_INTEGER;
+    const knownBookIds = new Set(seriesBooks.map((b) => b.id));
     for (const d of draft) {
+      if (!d.bookId || !knownBookIds.has(d.bookId)) {
+        return { ok: false, message: `Lesson "${d.lessonTitle}" chưa chọn sách/tập.` };
+      }
       if (d.pageStart === '' || d.pageEnd === '') {
         return { ok: false, message: `Lesson "${d.lessonTitle}" thiếu khoảng trang.` };
       }
@@ -91,10 +111,13 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
       const pe = Number(d.pageEnd);
       if (ps < 1 || pe < 1) return { ok: false, message: 'Số trang phải >= 1.' };
       if (pe < ps) return { ok: false, message: `"${d.lessonTitle}": pageEnd < pageStart.` };
-      if (ps < ocrFrom || pe > ocrTo) {
+      const selectedBook = seriesBooks.find((b) => b.id === d.bookId);
+      const selectedFrom = selectedBook?.ocrPageFrom ?? ocrFrom;
+      const selectedTo = selectedBook?.ocrPageTo ?? ocrTo;
+      if (ps < selectedFrom || pe > selectedTo) {
         return {
           ok: false,
-          message: `"${d.lessonTitle}": ngoài khoảng OCR (${ocrFrom}–${ocrTo}).`,
+          message: `"${d.lessonTitle}": ngoài khoảng OCR của sách đã chọn (${selectedFrom}–${selectedTo}).`,
         };
       }
     }
@@ -108,8 +131,9 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
       setError(v.message ?? 'Mapping không hợp lệ.');
       return;
     }
-    const mappings: PageMappingItem[] = draft.map((d) => ({
+    const mappings: SeriesPageMappingItem[] = draft.map((d) => ({
       lessonId: d.lessonId,
+      bookId: d.bookId,
       pageStart: Number(d.pageStart),
       pageEnd: Number(d.pageEnd),
     }));
@@ -130,14 +154,15 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
           <ListTree size={18} /> Bước 2 · Mapping bài học
         </h2>
         <p className="text-sm text-slate-500">
-          Chọn chương → nhập khoảng trang cho từng bài. Khoảng OCR đã thiết lập:{' '}
+          Chọn chương → chọn tập sách + nhập khoảng trang cho từng bài. Khoảng OCR của sách hiện tại:{' '}
           <strong>
             {book.ocrPageFrom ?? '?'}–{book.ocrPageTo ?? '?'}
-          </strong>
-          . Chỉ những bài bạn nhập trang mới thuộc sách này và được OCR.
+          </strong>{' '}
+          Mỗi bài chỉ gán cho 1 tập trong cùng bộ sách.
         </p>
         <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-          Đang mapping cho sách: <strong>{book.title}</strong>{' '}· OCR sẽ chạy theo PDF của chính sách
+          Đang mapping cho sách: <span className="font-semibold">{book.title}</span> · OCR sẽ chạy
+          theo PDF của chính sách
           này ({book.pdfPath ? 'đã có PDF' : 'chưa có PDF'}).
         </div>
       </div>
@@ -215,6 +240,29 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{l.title}</div>
                   </div>
+                  <select
+                    value={current?.bookId ?? ''}
+                    onChange={(e) =>
+                      upsertDraft({
+                        lessonId: l.id,
+                        lessonTitle: l.title ?? '',
+                        chapterId: activeChapterId,
+                        chapterTitle:
+                          chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
+                        bookId: e.target.value,
+                        pageStart: current?.pageStart ?? '',
+                        pageEnd: current?.pageEnd ?? '',
+                      })
+                    }
+                    className="w-44 px-2 py-1 text-sm rounded border border-slate-300"
+                  >
+                    <option value="">Chọn tập</option>
+                    {seriesBooks.map((seriesBook) => (
+                      <option key={seriesBook.id} value={seriesBook.id}>
+                        {seriesBook.title}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="number"
                     min={1}
@@ -227,6 +275,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         chapterId: activeChapterId,
                         chapterTitle:
                           chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
+                        bookId: current?.bookId ?? '',
                         pageStart: e.target.value === '' ? '' : Number(e.target.value),
                         pageEnd: current?.pageEnd ?? '',
                       })
@@ -246,6 +295,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                         chapterId: activeChapterId,
                         chapterTitle:
                           chapters.data?.result.find((c) => c.id === activeChapterId)?.title ?? '',
+                        bookId: current?.bookId ?? '',
                         pageStart: current?.pageStart ?? '',
                         pageEnd: e.target.value === '' ? '' : Number(e.target.value),
                       })
@@ -283,7 +333,10 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
               <span className="text-slate-700">
                 <span className="text-slate-400 mr-2">{d.chapterTitle}</span> {d.lessonTitle}
               </span>
-              <span className="font-mono text-xs text-slate-500">
+              <span className="font-mono text-xs text-slate-500 text-right">
+                <span className="block text-[10px] text-slate-400">
+                  {seriesBookNameMap.get(d.bookId) ?? 'Chưa chọn tập'}
+                </span>
                 p{d.pageStart}–p{d.pageEnd}
               </span>
             </div>

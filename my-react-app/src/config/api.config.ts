@@ -518,6 +518,7 @@ export const API_ENDPOINTS = {
   BOOK_DETAIL: (bookId: string) => `/v1/books/${bookId}`,
   BOOK_PDF_PATH: (bookId: string) => `/v1/books/${bookId}/pdf-path`,
   BOOK_PAGE_MAPPING: (bookId: string) => `/v1/books/${bookId}/page-mapping`,
+  BOOK_SERIES_PAGE_MAPPING: (bookId: string) => `/v1/books/${bookId}/series-page-mapping`,
   BOOK_OCR_TRIGGER: (bookId: string) => `/v1/books/${bookId}/ocr`,
   BOOK_OCR_CANCEL: (bookId: string) => `/v1/books/${bookId}/ocr/cancel`,
   BOOK_PROGRESS: (bookId: string) => `/v1/books/${bookId}/progress`,
