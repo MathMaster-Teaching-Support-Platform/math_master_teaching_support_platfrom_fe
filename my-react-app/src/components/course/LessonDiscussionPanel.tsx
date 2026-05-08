@@ -19,7 +19,12 @@ interface LessonDiscussionPanelProps {
 const MAX_DEPTH = 2;
 
 const formatTime = (iso: string) =>
-  new Date(iso).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  new Date(iso).toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
 
 function RepliesBlock({
   courseId,
@@ -109,7 +114,11 @@ function CommentItem({
           setReplyText('');
           setShowReplyEditor(false);
         },
-        onError: (e) => showToast({ type: 'error', message: e instanceof Error ? e.message : 'Không thể phản hồi' }),
+        onError: (e) =>
+          showToast({
+            type: 'error',
+            message: e instanceof Error ? e.message : 'Không thể phản hồi',
+          }),
       }
     );
   };
@@ -120,7 +129,11 @@ function CommentItem({
       { commentId: comment.id, content: editText.trim() },
       {
         onSuccess: () => setShowEditEditor(false),
-        onError: (e) => showToast({ type: 'error', message: e instanceof Error ? e.message : 'Không thể chỉnh sửa' }),
+        onError: (e) =>
+          showToast({
+            type: 'error',
+            message: e instanceof Error ? e.message : 'Không thể chỉnh sửa',
+          }),
       }
     );
   };
@@ -136,7 +149,9 @@ function CommentItem({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
             <span className="font-semibold text-slate-800">{comment.authorName}</span>
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 uppercase">{comment.authorRole}</span>
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 uppercase">
+              {comment.authorRole}
+            </span>
             <span>{formatTime(comment.createdAt)}</span>
           </div>
           <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{comment.content}</p>
@@ -163,7 +178,11 @@ function CommentItem({
             )}
 
             {comment.canEdit && !comment.deleted && (
-              <button type="button" className="text-slate-600" onClick={() => setShowEditEditor((prev) => !prev)}>
+              <button
+                type="button"
+                className="text-slate-600"
+                onClick={() => setShowEditEditor((prev) => !prev)}
+              >
                 Edit
               </button>
             )}
@@ -187,7 +206,11 @@ function CommentItem({
                 placeholder="Viết phản hồi..."
                 className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
-              <button type="button" className="rounded-lg bg-[#C96442] px-3 py-2 text-white" onClick={submitReply}>
+              <button
+                type="button"
+                className="rounded-lg bg-[#C96442] px-3 py-2 text-white"
+                onClick={submitReply}
+              >
                 <Send size={14} />
               </button>
             </div>
@@ -200,7 +223,11 @@ function CommentItem({
                 onChange={(e) => setEditText(e.target.value)}
                 className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
-              <button type="button" className="rounded-lg bg-[#C96442] px-3 py-2 text-white" onClick={submitEdit}>
+              <button
+                type="button"
+                className="rounded-lg bg-[#C96442] px-3 py-2 text-white"
+                onClick={submitEdit}
+              >
                 Lưu
               </button>
             </div>
@@ -239,7 +266,10 @@ export default function LessonDiscussionPanel({
       {
         onSuccess: () => setContent(''),
         onError: (e) =>
-          showToast({ type: 'error', message: e instanceof Error ? e.message : 'Không thể gửi bình luận' }),
+          showToast({
+            type: 'error',
+            message: e instanceof Error ? e.message : 'Không thể gửi bình luận',
+          }),
       }
     );
   };
@@ -252,7 +282,7 @@ export default function LessonDiscussionPanel({
         <input
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Viết bình luận (hỗ trợ emoji)..."
+          placeholder="Viết bình luận"
           className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm"
         />
         <button
@@ -267,7 +297,13 @@ export default function LessonDiscussionPanel({
 
       <div className="space-y-3">
         {comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} courseId={courseId} lessonId={lessonId} depth={0} />
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            courseId={courseId}
+            lessonId={lessonId}
+            depth={0}
+          />
         ))}
       </div>
 

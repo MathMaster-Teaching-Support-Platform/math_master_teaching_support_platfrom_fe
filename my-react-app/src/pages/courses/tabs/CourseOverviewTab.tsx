@@ -112,7 +112,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       Icon: Star,
       label: 'Đánh giá',
       value: Number(course.rating).toFixed(1),
-      sub: 'Điểm TB / 5',
+      sub: 'Điểm Trung Bình / 5',
     },
     {
       key: 'status',
@@ -129,7 +129,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
   return (
     <div className="course-overview-tab">
       {/* Provider Banner */}
-      {course.provider === 'CUSTOM' ? (
+      {course.provider === 'CUSTOM' && (
         <div className="course-overview-banner custom">
           <div className="course-overview-banner__icon">
             <Sparkles size={24} />
@@ -142,42 +142,11 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
             </p>
           </div>
         </div>
-      ) : (
-        <div className="course-overview-banner ministry">
-          <div className="course-overview-banner__icon">
-            <BookOpen size={24} />
-          </div>
-          <div className="course-overview-banner__content">
-            <h4>Chương trình chuẩn của Bộ GD&ĐT</h4>
-            <p>Khóa học tuân theo cấu trúc môn học và lớp chính thức từ Bộ Giáo Dục và Đào Tạo.</p>
-          </div>
-        </div>
       )}
-
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        {statSets.map((stat, index) => (
-          <div
-            key={stat.key}
-            className={`stat-card ${stat.cardClass}`}
-            style={{ animationDelay: `${index * 70}ms` }}
-          >
-            <div className="stat-icon-wrap" aria-hidden>
-              <stat.Icon size={20} />
-            </div>
-            <div className="stat-card__text">
-              <h3>{stat.value}</h3>
-              <p>{stat.label}</p>
-              <span className="stat-card__sub">{stat.sub}</span>
-            </div>
-          </div>
-        ))}
-      </div>
 
       <div className="course-overview-tab__config">
         <div className="course-overview-tab__config-head">
-          <p className="course-overview-tab__kicker">Hồ sơ {UI_TEXT.COURSE.toLowerCase()}</p>
-          <h2 className="course-overview-config-heading">Thông tin cấu hình</h2>
+          <h2 className="course-overview-config-heading">Thông tin khóa học</h2>
           <p className="course-overview-tab__lede">
             Chi tiết phân loại, thời lượng, tài nguyên và các mốc thời gian quan trọng.
           </p>
@@ -209,10 +178,6 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
 
           <MetaRow icon={Download} label="Tài nguyên tải về">
             <strong>{course.resourcesCount ?? 0} file đính kèm</strong>
-          </MetaRow>
-
-          <MetaRow icon={FileText} label="Bài đọc (Articles)">
-            <strong>{course.articlesCount ?? 0} bài viết</strong>
           </MetaRow>
 
           <MetaRow icon={Calendar} label="Ngày tạo">

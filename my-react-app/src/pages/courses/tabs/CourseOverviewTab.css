@@ -55,11 +55,7 @@
 }
 
 .course-overview-tab .stat-card h3 {
-  font-family:
-    'Playfair Display',
-    Georgia,
-    'Times New Roman',
-    serif;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.15;
@@ -151,13 +147,15 @@
 .course-overview-banner.ministry {
   border-left-color: #3b82f6;
   background: linear-gradient(to right, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0.9));
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
 }
 
 .course-overview-banner.custom {
   border-left-color: #eab308;
   background: linear-gradient(to right, rgba(254, 252, 232, 0.9), rgba(255, 255, 255, 0.9));
-  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5);
+  box-shadow:
+    0 4px 12px rgba(234, 179, 8, 0.08),
+    0 0 0 1px rgba(226, 232, 240, 0.5);
 }
 
 .course-overview-banner__icon {
@@ -325,4 +323,3 @@
   color: #334155;
   white-space: pre-wrap;
 }
-
