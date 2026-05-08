@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, CheckCircle, ChevronDown, Clock, FileText, Paperclip, Play } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
+import LessonDiscussionPanel from '../../../components/course/LessonDiscussionPanel';
 import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
 import {
@@ -563,6 +564,8 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                 </p>
               )}
             </div>
+
+            <LessonDiscussionPanel courseId={courseId} lessonId={playingLessonId} />
 
             <button
               className="slt-btn secondary"
