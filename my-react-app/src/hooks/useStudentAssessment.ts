@@ -35,6 +35,10 @@ export function useMyAssessments(
     size?: number;
     sortBy?: string;
     sortDir?: string;
+    schoolGradeId?: string;
+    subjectId?: string;
+    chapterId?: string;
+    lessonId?: string;
   },
   options?: Omit<
     UseQueryOptions<ApiResponse<PaginatedResponse<StudentAssessmentResponse>>>,

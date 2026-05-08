@@ -255,6 +255,8 @@ export class CourseService {
     const qs = new URLSearchParams();
     if (params.schoolGradeId) qs.append('schoolGradeId', params.schoolGradeId);
     if (params.subjectId) qs.append('subjectId', params.subjectId);
+    if (params.chapterId) qs.append('chapterId', params.chapterId);
+    if (params.lessonId) qs.append('lessonId', params.lessonId);
     if (params.keyword) qs.append('keyword', params.keyword);
     if (params.page !== undefined) qs.append('page', String(params.page));
     if (params.size !== undefined) qs.append('size', String(params.size));

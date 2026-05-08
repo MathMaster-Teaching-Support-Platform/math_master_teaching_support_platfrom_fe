@@ -18,11 +18,14 @@ import {
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useAdminRoadmaps, useDeleteRoadmap } from '../../hooks/useRoadmaps';
 import type { RoadmapCatalogItem } from '../../types';
+import { roadmapMatchesCurriculum } from '../../utils/curriculumFilter';
 import '../courses/TeacherCourses.css';
 import './admin-roadmap-page.css';
 
@@ -62,8 +65,16 @@ export default function AdminRoadmapManagementPage() {
   const [searchInput, setSearchInput] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
 
   const searchDebounced = useDebounce(searchInput, 300);
+
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: '',
+  });
 
   const { data, isLoading, error, isFetching } = useAdminRoadmaps(
     searchDebounced,
@@ -74,9 +85,18 @@ export default function AdminRoadmapManagementPage() {
 
   const { rows: roadmaps, totalPages, totalElements, page } = normalizePage(data?.result);
 
-  const filteredRoadmaps = statusFilter
-    ? roadmaps.filter((r) => r.status === statusFilter)
-    : roadmaps;
+  const statusFilteredRoadmaps = useMemo(
+    () => (statusFilter ? roadmaps.filter((r) => r.status === statusFilter) : roadmaps),
+    [roadmaps, statusFilter]
+  );
+
+  const filteredRoadmaps = useMemo(
+    () =>
+      statusFilteredRoadmaps.filter((r) =>
+        roadmapMatchesCurriculum(r, filterGradeId, filterSubjectId, schoolGrades)
+      ),
+    [statusFilteredRoadmaps, filterGradeId, filterSubjectId, schoolGrades]
+  );
 
   const pageStatusStats = useMemo(() => {
     const c = (s: string) => roadmaps.filter((r) => r.status === s).length;
@@ -191,6 +211,22 @@ export default function AdminRoadmapManagementPage() {
               ))}
             </div>
 
+            <CurriculumHierarchyFilter
+              depth="subject"
+              gradeId={filterGradeId}
+              subjectId={filterSubjectId}
+              chapterId=""
+              lessonId=""
+              onGradeChange={(id) => {
+                setFilterGradeId(id);
+                setFilterSubjectId('');
+              }}
+              onSubjectChange={setFilterSubjectId}
+              onChapterChange={() => {}}
+              onLessonChange={() => {}}
+              footnote="Lọc khối/môn trên dữ liệu trang hiện tại (giữ nguyên ô tìm kiếm server)."
+            />
+
             {/* Toolbar */}
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <label className="relative flex w-full lg:max-w-xl items-center gap-3 bg-white border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#A3B6D4] focus-within:ring-1 focus-within:ring-[rgba(163,182,212,0.38)] transition-all duration-150 shadow-[rgba(0,0,0,0.03)_0px_2px_12px]">
@@ -258,7 +294,7 @@ export default function AdminRoadmapManagementPage() {
                   Hiển thị
                 </span>
                 <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                  {filteredRoadmaps.length} / {roadmaps.length}
+                  {filteredRoadmaps.length} / {statusFilteredRoadmaps.length}
                 </strong>
                 <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" aria-hidden />
                 <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">

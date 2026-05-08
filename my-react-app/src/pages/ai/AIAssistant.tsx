@@ -515,7 +515,7 @@ const AIAssistant: React.FC = () => {
                 </h1>
               </div>
               <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                Giải bài, chứng minh, tạo đề thi
+                Trợ lý AI của bạn
               </p>
             </div>
           </div>

@@ -449,13 +449,7 @@ const Pricing: React.FC = () => {
                       )}
                     </div>
                     <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                      {wallet
-                        ? `${formatPrice(wallet.balance)} trong ví${
-                            activeSubscription
-                              ? ` · ${activeSubscription.tokenRemaining}/${activeSubscription.tokenQuota} token`
-                              : ''
-                          }`
-                        : 'Mua gói bằng số dư ví, theo dõi hạn mức token theo gói đang hoạt động'}
+                      Tham khảo các gói với giá vô cùng ưu đãi
                     </p>
                   </div>
                 </div>

@@ -491,7 +491,7 @@ const BookListPage: React.FC = () => {
         )}
       </div>
       {renameTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
           <div className="w-full max-w-lg rounded-xl bg-white border border-slate-200 shadow-xl p-5">
             <h2 className="text-lg font-semibold text-slate-900">Đổi tên bộ sách</h2>
             <p className="mt-1 text-sm text-slate-500">

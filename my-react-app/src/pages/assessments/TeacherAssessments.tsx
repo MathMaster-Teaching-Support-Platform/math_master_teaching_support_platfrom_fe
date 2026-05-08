@@ -17,6 +17,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
@@ -30,6 +31,7 @@ import {
   useReopenAssessment,
   useUnpublishAssessment,
 } from '../../hooks/useAssessment';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import { AssessmentBuilderFlowBody } from './AssessmentBuilderFlow';
@@ -80,6 +82,16 @@ export default function TeacherAssessments() {
   const [view, setView] = useState<'create' | 'manage'>('manage');
   const [cardLayout, setCardLayout] = useState<'grid' | 'list'>('grid');
 
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
+  const { lessons: filterLessons } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: filterChapterId,
+  });
+
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
@@ -106,6 +118,19 @@ export default function TeacherAssessments() {
   const { showToast } = useToast();
 
   const assessments = data?.result?.content ?? [];
+  const lessonFilterIds = useMemo(() => {
+    if (filterLessonId) return new Set([filterLessonId]);
+    if (filterChapterId) return new Set(filterLessons.map((l) => l.id));
+    return null;
+  }, [filterLessonId, filterChapterId, filterLessons]);
+
+  const filteredAssessments = useMemo(() => {
+    if (!lessonFilterIds) return assessments;
+    return assessments.filter((a) =>
+      (a.lessonIds ?? []).some((id) => lessonFilterIds.has(id))
+    );
+  }, [assessments, lessonFilterIds]);
+
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -115,11 +140,11 @@ export default function TeacherAssessments() {
   const stats = useMemo(
     () => ({
       total: totalElements,
-      draft: assessments.filter((a) => a.status === 'DRAFT').length,
-      published: assessments.filter((a) => a.status === 'PUBLISHED').length,
-      closed: assessments.filter((a) => a.status === 'CLOSED').length,
+      draft: filteredAssessments.filter((a) => a.status === 'DRAFT').length,
+      published: filteredAssessments.filter((a) => a.status === 'PUBLISHED').length,
+      closed: filteredAssessments.filter((a) => a.status === 'CLOSED').length,
     }),
-    [assessments, totalElements]
+    [filteredAssessments, totalElements]
   );
 
   async function saveAssessment(payload: AssessmentRequest | Partial<AssessmentRequest>) {
@@ -432,6 +457,30 @@ export default function TeacherAssessments() {
                 ))}
               </div>
 
+              <CurriculumHierarchyFilter
+                gradeId={filterGradeId}
+                subjectId={filterSubjectId}
+                chapterId={filterChapterId}
+                lessonId={filterLessonId}
+                onGradeChange={(id) => {
+                  setFilterGradeId(id);
+                  setFilterSubjectId('');
+                  setFilterChapterId('');
+                  setFilterLessonId('');
+                }}
+                onSubjectChange={(id) => {
+                  setFilterSubjectId(id);
+                  setFilterChapterId('');
+                  setFilterLessonId('');
+                }}
+                onChapterChange={(id) => {
+                  setFilterChapterId(id);
+                  setFilterLessonId('');
+                }}
+                onLessonChange={setFilterLessonId}
+                footnote="Chọn chương hoặc bài để lọc đề theo bài học đã gán (trang hiện tại)."
+              />
+
               <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
                 <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
                   <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
@@ -475,7 +524,7 @@ export default function TeacherAssessments() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {assessments.length > 0 && (
+                    {filteredAssessments.length > 0 && (
                       <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
                         <button
                           type="button"
@@ -518,13 +567,13 @@ export default function TeacherAssessments() {
                 </div>
               </div>
 
-              {!isLoading && !isError && assessments.length > 0 && (
+              {!isLoading && !isError && filteredAssessments.length > 0 && (
                 <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
                   <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
                     Trang {page + 1}/{Math.max(effectiveTotalPages, 1)}
                   </span>
                   <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                    {assessments.length} / {effectiveTotalElements} {UI_TEXT.QUIZ.toLowerCase()}
+                    {filteredAssessments.length} / {effectiveTotalElements} {UI_TEXT.QUIZ.toLowerCase()}
                   </strong>
                   <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" />
                   <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -563,7 +612,7 @@ export default function TeacherAssessments() {
                 </div>
               )}
 
-              {!isLoading && !isError && assessments.length === 0 && (
+              {!isLoading && !isError && filteredAssessments.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
                     <ClipboardList className="w-6 h-6" />
@@ -574,9 +623,9 @@ export default function TeacherAssessments() {
                 </div>
               )}
 
-              {!isLoading && !isError && assessments.length > 0 && cardLayout === 'grid' && (
+              {!isLoading && !isError && filteredAssessments.length > 0 && cardLayout === 'grid' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {assessments.map((assessment, idx) => {
+                  {filteredAssessments.map((assessment, idx) => {
                     const showTags =
                       assessment.assessmentMode === 'MATRIX_BASED' ||
                       !!assessment.examMatrixGradeLevel ||
@@ -685,9 +734,9 @@ export default function TeacherAssessments() {
                 </div>
               )}
 
-              {!isLoading && !isError && assessments.length > 0 && cardLayout === 'list' && (
+              {!isLoading && !isError && filteredAssessments.length > 0 && cardLayout === 'list' && (
                 <div className="flex flex-col gap-2">
-                  {assessments.map((assessment, idx) => {
+                  {filteredAssessments.map((assessment, idx) => {
                     const showTags =
                       assessment.assessmentMode === 'MATRIX_BASED' ||
                       !!assessment.examMatrixGradeLevel ||

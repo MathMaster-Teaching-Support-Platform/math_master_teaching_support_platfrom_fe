@@ -20,10 +20,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { QbCognitiveBadge, QbConfirmDialog, QbQuestionStatusBadge } from '../../components/question-banks/qb-ui';
 import { useToast } from '../../context/ToastContext';
 import { mockTeacher } from '../../data/mockData';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveQuestion,
@@ -75,11 +77,16 @@ export default function TeacherQuestionManagementPage() {
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
   const [pendingDelete, setPendingDelete] = useState<QuestionResponse | null>(null);
 
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
+
   const debouncedSearchName = useDebounce(searchName, 300);
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchName, pageSize]);
+  }, [debouncedSearchName, pageSize, filterGradeId, filterChapterId, filterLessonId]);
 
   const queryParams = useMemo(
     () => ({
@@ -88,8 +95,10 @@ export default function TeacherQuestionManagementPage() {
       sortBy: 'createdAt',
       sortDirection: 'DESC' as const,
       searchName: debouncedSearchName.trim() || undefined,
+      gradeId: filterGradeId || undefined,
+      chapterId: filterChapterId || undefined,
     }),
-    [page, debouncedSearchName, pageSize]
+    [page, debouncedSearchName, pageSize, filterGradeId, filterChapterId]
   );
 
   const { showToast } = useToast();
@@ -101,6 +110,18 @@ export default function TeacherQuestionManagementPage() {
   const approveMutation = useApproveQuestion();
 
   const questions = useMemo(() => data?.result?.content ?? [], [data]);
+
+  useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: filterChapterId,
+  });
+
+  const displayedQuestions = useMemo(() => {
+    if (!filterLessonId) return questions;
+    return questions.filter((q) => q.lessonId === filterLessonId);
+  }, [questions, filterLessonId]);
+
   const totalPages =
     data?.result?.totalPages ??
     (data?.result as { page?: { totalPages?: number } } | undefined)?.page?.totalPages ??
@@ -111,13 +132,13 @@ export default function TeacherQuestionManagementPage() {
     questions.length;
 
   const pageStats = useMemo(() => {
-    const approved = questions.filter((q) => q.questionStatus === 'APPROVED').length;
-    const pendingOrDraft = questions.filter(
+    const approved = displayedQuestions.filter((q) => q.questionStatus === 'APPROVED').length;
+    const pendingOrDraft = displayedQuestions.filter(
       (q) => q.questionStatus === 'UNDER_REVIEW' || q.questionStatus === 'AI_DRAFT'
     ).length;
-    const mcq = questions.filter((q) => q.questionType === 'MULTIPLE_CHOICE').length;
+    const mcq = displayedQuestions.filter((q) => q.questionType === 'MULTIPLE_CHOICE').length;
     return { approved, pendingOrDraft, mcq };
-  }, [questions]);
+  }, [displayedQuestions]);
 
   const openingCreateModal = () => {
     setFormMode('create');
@@ -210,7 +231,12 @@ export default function TeacherQuestionManagementPage() {
     }
   }
 
-  const hasFilter = !!searchName;
+  const hasFilter =
+    !!searchName.trim() ||
+    !!filterGradeId ||
+    !!filterSubjectId ||
+    !!filterChapterId ||
+    !!filterLessonId;
 
   const quickLinks = [
     {
@@ -360,6 +386,30 @@ export default function TeacherQuestionManagementPage() {
             ))}
           </div>
 
+          <CurriculumHierarchyFilter
+            gradeId={filterGradeId}
+            subjectId={filterSubjectId}
+            chapterId={filterChapterId}
+            lessonId={filterLessonId}
+            onGradeChange={(id) => {
+              setFilterGradeId(id);
+              setFilterSubjectId('');
+              setFilterChapterId('');
+              setFilterLessonId('');
+            }}
+            onSubjectChange={(id) => {
+              setFilterSubjectId(id);
+              setFilterChapterId('');
+              setFilterLessonId('');
+            }}
+            onChapterChange={(id) => {
+              setFilterChapterId(id);
+              setFilterLessonId('');
+            }}
+            onLessonChange={setFilterLessonId}
+            footnote="API lọc theo khối/chương; chọn bài để lọc thêm trên trang hiện tại."
+          />
+
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
@@ -393,13 +443,13 @@ export default function TeacherQuestionManagementPage() {
           </div>
 
           {/* ── Summary bar ── */}
-          {!isLoading && !isError && questions.length > 0 && (
+          {!isLoading && !isError && displayedQuestions.length > 0 && (
             <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
               <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
                 Hiển thị
               </span>
               <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                {questions.length} / {totalElements}
+                {displayedQuestions.length} / {totalElements}
               </strong>
               <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" />
               <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -443,20 +493,26 @@ export default function TeacherQuestionManagementPage() {
           )}
 
           {/* ── Empty ── */}
-          {!isLoading && !isError && questions.length === 0 && (
+          {!isLoading && !isError && displayedQuestions.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
                 {hasFilter ? <Search className="w-6 h-6" /> : <FileQuestion className="w-6 h-6" />}
               </div>
               <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center">
                 {hasFilter
-                  ? 'Không có câu hỏi phù hợp với từ khóa.'
+                  ? 'Không có câu hỏi phù hợp với bộ lọc hoặc từ khóa.'
                   : 'Chưa có câu hỏi nào. Hãy tạo câu hỏi hoặc nhập từ Excel.'}
               </p>
               {hasFilter ? (
                 <button
                   type="button"
-                  onClick={() => setSearchName('')}
+                  onClick={() => {
+                    setSearchName('');
+                    setFilterGradeId('');
+                    setFilterSubjectId('');
+                    setFilterChapterId('');
+                    setFilterLessonId('');
+                  }}
                   className="mt-1 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
                 >
                   Xóa bộ lọc
@@ -474,9 +530,9 @@ export default function TeacherQuestionManagementPage() {
           )}
 
           {/* ── List ── */}
-          {!isLoading && !isError && questions.length > 0 && (
+          {!isLoading && !isError && displayedQuestions.length > 0 && (
             <div className="flex flex-col gap-2">
-              {questions.map((question) => (
+              {displayedQuestions.map((question) => (
                 <article
                   key={question.id}
                   className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] p-4 flex flex-col lg:flex-row lg:items-center gap-4 hover:bg-white hover:shadow-[rgba(0,0,0,0.06)_0px_4px_16px] transition-all duration-150"
