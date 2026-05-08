@@ -825,7 +825,11 @@ const TeacherCourses: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button type="button" className={tcPrimaryBtn} onClick={() => setShowCreateModal(true)}>
+              <button
+                type="button"
+                className={tcPrimaryBtn}
+                onClick={() => setShowCreateModal(true)}
+              >
                 <Plus className="w-4 h-4" />
                 Tạo {UI_TEXT.COURSE.toLowerCase()}
               </button>
@@ -950,43 +954,6 @@ const TeacherCourses: React.FC = () => {
                     </button>
                   ))}
                 </div>
-
-                {courses.length > 0 && (
-                  <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0 sm:ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setViewMode('grid');
-                        setCurrentPage(1);
-                      }}
-                      aria-label="Hiển thị lưới"
-                      title="Lưới"
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                        viewMode === 'grid'
-                          ? 'bg-white shadow-md text-[#141413]'
-                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
-                      }`}
-                    >
-                      <Grid2x2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setViewMode('list');
-                        setCurrentPage(1);
-                      }}
-                      aria-label="Hiển thị danh sách"
-                      title="Danh sách"
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                        viewMode === 'list'
-                          ? 'bg-white shadow-md text-[#141413]'
-                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
-                      }`}
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1003,19 +970,26 @@ const TeacherCourses: React.FC = () => {
                 <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                   Công khai{' '}
-                  <strong className="text-[#141413] font-semibold tabular-nums">{stats.active}</strong>
+                  <strong className="text-[#141413] font-semibold tabular-nums">
+                    {stats.active}
+                  </strong>
                 </span>
                 <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                   Nháp{' '}
-                  <strong className="text-[#141413] font-semibold tabular-nums">{stats.draft}</strong>
+                  <strong className="text-[#141413] font-semibold tabular-nums">
+                    {stats.draft}
+                  </strong>
                 </span>
               </div>
             )}
 
             {/* ── Loading ── */}
             {isLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                aria-busy="true"
+              >
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div
                     key={i}
@@ -1037,203 +1011,207 @@ const TeacherCourses: React.FC = () => {
               </div>
             )}
 
-          {/* ── Grid ── */}
-          {!isLoading && !error && filteredCourses.length > 0 && (
-            <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
-              {paginatedCourses.map((course, idx) => (
-                <article key={course.id} className="data-card course-card">
-                  <div
-                    className="course-cover"
-                    style={{
-                      background: coverGradients[idx % coverGradients.length],
-                      color: coverAccents[idx % coverAccents.length],
-                    }}
-                  >
-                    {course.thumbnailUrl && (
-                      <img src={course.thumbnailUrl} alt={course.title} className="cover-thumb" />
-                    )}
-                    <div className="cover-overlay" />
-                    <div className="cover-index">
-                      #{String((safeCurrentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, '0')}
-                    </div>
-                    <span
+            {/* ── Grid ── */}
+            {!isLoading && !error && filteredCourses.length > 0 && (
+              <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
+                {paginatedCourses.map((course, idx) => (
+                  <article key={course.id} className="data-card course-card">
+                    <div
+                      className="course-cover"
                       style={{
-                        position: 'absolute',
-                        top: '0.6rem',
-                        left: '0.7rem',
-                        zIndex: 2,
-                        background: 'rgba(0,0,0,0.38)',
-                        color: '#fff',
-                        borderRadius: '999px',
-                        padding: '2px 8px',
-                        fontSize: '0.68rem',
-                        fontWeight: 700,
-                        backdropFilter: 'blur(6px)',
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
+                        background: coverGradients[idx % coverGradients.length],
+                        color: coverAccents[idx % coverAccents.length],
                       }}
                     >
-                      {course.status === 'PENDING_REVIEW' ? (
-                        <>
-                          <CheckCircle2 size={11} /> Chờ duyệt
-                        </>
-                      ) : course.status === 'REJECTED' ? (
-                        <>
-                          <AlertCircle size={11} /> Bị từ chối
-                        </>
-                      ) : course.status === 'ARCHIVED' ? (
-                        <>
-                          <BookOpen size={11} /> Đã lưu trữ
-                        </>
-                      ) : course.published ? (
-                        <>
-                          <Eye size={11} /> Công khai
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff size={11} /> Nháp
-                        </>
+                      {course.thumbnailUrl && (
+                        <img src={course.thumbnailUrl} alt={course.title} className="cover-thumb" />
                       )}
-                    </span>
-                    <h3 className="cover-title">{course.title}</h3>
-                  </div>
-
-                  <div className="course-body">
-                    <p className="course-desc">
-                      {course.description ||
-                        `Chưa có mô tả cho ${UI_TEXT.COURSE.toLowerCase()} này.`}
-                    </p>
-
-                    <div className="course-metrics">
-                      <div className="metric">
-                        <Users size={13} />
-                        <span>{course.studentsCount} học viên</span>
+                      <div className="cover-overlay" />
+                      <div className="cover-index">
+                        #{String((safeCurrentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, '0')}
                       </div>
-                      <div className="metric">
-                        <Star size={13} />
-                        <span>{Number(course.rating).toFixed(1)}</span>
-                      </div>
-                      <div className="metric">
-                        <BookOpen size={13} />
-                        <span>{course.lessonsCount} bài</span>
-                      </div>
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '0.6rem',
+                          left: '0.7rem',
+                          zIndex: 2,
+                          background: 'rgba(0,0,0,0.38)',
+                          color: '#fff',
+                          borderRadius: '999px',
+                          padding: '2px 8px',
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          backdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(255,255,255,0.18)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        {course.status === 'PENDING_REVIEW' ? (
+                          <>
+                            <CheckCircle2 size={11} /> Chờ duyệt
+                          </>
+                        ) : course.status === 'REJECTED' ? (
+                          <>
+                            <AlertCircle size={11} /> Bị từ chối
+                          </>
+                        ) : course.status === 'ARCHIVED' ? (
+                          <>
+                            <BookOpen size={11} /> Đã lưu trữ
+                          </>
+                        ) : course.published ? (
+                          <>
+                            <Eye size={11} /> Công khai
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff size={11} /> Nháp
+                          </>
+                        )}
+                      </span>
                     </div>
 
-                    <div className="course-actions">
-                      <button
-                        className="action-primary"
-                        onClick={() => navigate(`/teacher/courses/${course.id}/review`)}
-                      >
-                        <Settings2 size={14} /> Quản lý
-                      </button>
-                      {!course.published &&
-                        course.status !== 'PENDING_REVIEW' &&
-                        course.status !== 'ARCHIVED' && (
+                    <div className="course-body">
+                      <h3 className="cover-title">{course.title}</h3>
+                      <p className="course-desc">
+                        {course.description ||
+                          `Chưa có mô tả cho ${UI_TEXT.COURSE.toLowerCase()} này.`}
+                      </p>
+
+                      <div className="course-metrics">
+                        <div className="metric">
+                          <Users size={13} />
+                          <span>{course.studentsCount} học viên</span>
+                        </div>
+                        <div className="metric">
+                          <Star size={13} />
+                          <span>{Number(course.rating).toFixed(1)}</span>
+                        </div>
+                        <div className="metric">
+                          <BookOpen size={13} />
+                          <span>{course.lessonsCount} bài</span>
+                        </div>
+                      </div>
+
+                      <div className="course-actions">
+                        <button
+                          className="action-primary"
+                          onClick={() => navigate(`/teacher/courses/${course.id}/review`)}
+                        >
+                          <Settings2 size={14} /> Quản lý
+                        </button>
+                        {!course.published &&
+                          course.status !== 'PENDING_REVIEW' &&
+                          course.status !== 'ARCHIVED' && (
+                            <button
+                              className="action-toggle"
+                              onClick={() => handleSubmitForReview(course)}
+                              disabled={submitReviewMutation.isPending}
+                              title="Gửi khóa học để admin phê duyệt"
+                            >
+                              <CheckCircle2 size={14} /> Gửi duyệt
+                            </button>
+                          )}
+                        {/* Published courses cannot be unpublished — backend intentionally blocks it.
+                          Only show the toggle button for non-published courses that are approved (PUBLISHED status). */}
+                        {!course.published && (
                           <button
                             className="action-toggle"
-                            onClick={() => handleSubmitForReview(course)}
-                            disabled={submitReviewMutation.isPending}
-                            title="Gửi khóa học để admin phê duyệt"
+                            onClick={() => handleTogglePublish(course)}
+                            disabled={publishMutation.isPending || course.status !== 'PUBLISHED'}
+                            title={
+                              course.status !== 'PUBLISHED'
+                                ? 'Khóa học cần được admin duyệt trước khi công khai'
+                                : 'Công khai khóa học'
+                            }
                           >
-                            <CheckCircle2 size={14} /> Gửi duyệt
+                            <Eye size={14} /> Công khai
                           </button>
                         )}
-                      {/* Published courses cannot be unpublished — backend intentionally blocks it.
-                          Only show the toggle button for non-published courses that are approved (PUBLISHED status). */}
-                      {!course.published && (
                         <button
-                          className="action-toggle"
-                          onClick={() => handleTogglePublish(course)}
-                          disabled={publishMutation.isPending || course.status !== 'PUBLISHED'}
-                          title={
-                            course.status !== 'PUBLISHED'
-                              ? 'Khóa học cần được admin duyệt trước khi công khai'
-                              : 'Công khai khóa học'
-                          }
+                          className="action-danger"
+                          onClick={() => handleDelete(course.id)}
+                          disabled={deleteMutation.isPending}
+                          aria-label={`Xóa ${UI_TEXT.COURSE.toLowerCase()}`}
                         >
-                          <Eye size={14} /> Công khai
+                          <Trash2 size={14} />
                         </button>
-                      )}
-                      <button
-                        className="action-danger"
-                        onClick={() => handleDelete(course.id)}
-                        disabled={deleteMutation.isPending}
-                        aria-label={`Xóa ${UI_TEXT.COURSE.toLowerCase()}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-
-          {!isLoading && !error && filteredCourses.length > PAGE_SIZE && (
-            <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
-              <button
-                type="button"
-                className={tcSecondaryBtn}
-                onClick={() => setCurrentPage((p) => Math.max(1, Math.min(totalPages, p) - 1))}
-                disabled={safeCurrentPage === 1}
-              >
-                <ArrowLeft className="w-3.5 h-3.5" /> Trước
-              </button>
-              <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] tabular-nums">
-                Trang <strong className="text-[#141413]">{safeCurrentPage}</strong> / {totalPages}
-              </span>
-              <button
-                type="button"
-                className={tcSecondaryBtn}
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, Math.min(totalPages, p) + 1))
-                }
-                disabled={safeCurrentPage === totalPages}
-              >
-                Sau <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* ── Empty: filtered ── */}
-          {!isLoading && !error && filteredCourses.length === 0 && courses.length > 0 && (
-            <div className="flex flex-col items-center justify-center py-16 gap-2 px-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
-                <Search className="w-6 h-6 opacity-60" aria-hidden />
+                  </article>
+                ))}
               </div>
-              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
-                Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}
-                {search ? ` khớp với "${search}"` : ' với bộ lọc này'}.
-              </p>
-            </div>
-          )}
+            )}
 
-          {/* ── Empty: no courses ── */}
-          {!isLoading && !error && courses.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
-                <BookOpen className="w-6 h-6 opacity-60" aria-hidden />
+            {!isLoading && !error && filteredCourses.length > PAGE_SIZE && (
+              <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
+                <button
+                  type="button"
+                  className={tcSecondaryBtn}
+                  onClick={() => setCurrentPage((p) => Math.max(1, Math.min(totalPages, p) - 1))}
+                  disabled={safeCurrentPage === 1}
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Trước
+                </button>
+                <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] tabular-nums">
+                  Trang <strong className="text-[#141413]">{safeCurrentPage}</strong> / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className={tcSecondaryBtn}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, Math.min(totalPages, p) + 1))
+                  }
+                  disabled={safeCurrentPage === totalPages}
+                >
+                  Sau <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
-                Bạn chưa có {UI_TEXT.COURSE.toLowerCase()} nào. Hãy tạo{' '}
-                {UI_TEXT.COURSE.toLowerCase()} để bắt đầu giảng dạy.
-              </p>
-              <button type="button" className={tcPrimaryBtn} onClick={() => setShowCreateModal(true)}>
-                <Plus className="w-4 h-4" /> Tạo {UI_TEXT.COURSE.toLowerCase()} đầu tiên
-              </button>
-            </div>
-          )}
-        </section>
+            )}
 
-        {showCreateModal && (
-          <CreateCourseModal
-            onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreate}
-            isLoading={createMutation.isPending}
-          />
-        )}
+            {/* ── Empty: filtered ── */}
+            {!isLoading && !error && filteredCourses.length === 0 && courses.length > 0 && (
+              <div className="flex flex-col items-center justify-center py-16 gap-2 px-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                  <Search className="w-6 h-6 opacity-60" aria-hidden />
+                </div>
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
+                  Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}
+                  {search ? ` khớp với "${search}"` : ' với bộ lọc này'}.
+                </p>
+              </div>
+            )}
+
+            {/* ── Empty: no courses ── */}
+            {!isLoading && !error && courses.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                  <BookOpen className="w-6 h-6 opacity-60" aria-hidden />
+                </div>
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
+                  Bạn chưa có {UI_TEXT.COURSE.toLowerCase()} nào. Hãy tạo{' '}
+                  {UI_TEXT.COURSE.toLowerCase()} để bắt đầu giảng dạy.
+                </p>
+                <button
+                  type="button"
+                  className={tcPrimaryBtn}
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  <Plus className="w-4 h-4" /> Tạo {UI_TEXT.COURSE.toLowerCase()} đầu tiên
+                </button>
+              </div>
+            )}
+          </section>
+
+          {showCreateModal && (
+            <CreateCourseModal
+              onClose={() => setShowCreateModal(false)}
+              onSubmit={handleCreate}
+              isLoading={createMutation.isPending}
+            />
+          )}
         </div>
       </div>
     </DashboardLayout>
