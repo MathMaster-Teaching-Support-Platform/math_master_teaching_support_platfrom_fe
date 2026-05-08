@@ -90,18 +90,25 @@ const AuthenticatedImage: React.FC<{
   onLoad?: () => void;
   onError?: () => void;
 }> = ({ src, alt, className, onLoad, onError }) => {
-  const [resolvedSrc, setResolvedSrc] = useState(src);
+  const [resolvedSrc, setResolvedSrc] = useState('');
 
   useEffect(() => {
     let revokedObjectUrl: string | null = null;
     const controller = new AbortController();
     const finalSrc = resolveAssetUrl(src);
-    setResolvedSrc(finalSrc);
+    setResolvedSrc('');
 
     const fetchProtectedImage = async () => {
-      if (!finalSrc || !shouldTryAuthImageFetch(finalSrc)) return;
+      if (!finalSrc) return;
+      if (!shouldTryAuthImageFetch(finalSrc)) {
+        setResolvedSrc(finalSrc);
+        return;
+      }
       const token = AuthService.getToken();
-      if (!token) return;
+      if (!token) {
+        setResolvedSrc(finalSrc);
+        return;
+      }
       try {
         const response = await fetch(finalSrc, {
           method: 'GET',
@@ -109,15 +116,22 @@ const AuthenticatedImage: React.FC<{
             Authorization: `Bearer ${token}`,
             accept: 'image/*,*/*',
           },
+          credentials: 'include',
           signal: controller.signal,
         });
-        if (!response.ok) return;
+        if (!response.ok) {
+          setResolvedSrc(finalSrc);
+          return;
+        }
         const blob = await response.blob();
-        if (!blob.type.startsWith('image/')) return;
+        if (!blob.type.startsWith('image/')) {
+          setResolvedSrc(finalSrc);
+          return;
+        }
         revokedObjectUrl = URL.createObjectURL(blob);
         setResolvedSrc(revokedObjectUrl);
       } catch {
-        // Fallback to direct src when fetch fails.
+        setResolvedSrc(finalSrc);
       }
     };
 
@@ -127,6 +141,15 @@ const AuthenticatedImage: React.FC<{
       if (revokedObjectUrl) URL.revokeObjectURL(revokedObjectUrl);
     };
   }, [src]);
+
+  if (!resolvedSrc) {
+    return (
+      <div className="flex min-h-[120px] items-center justify-center py-4">
+        <Loader2 size={20} className="animate-spin text-slate-400" aria-hidden />
+        <span className="sr-only">Đang tải ảnh…</span>
+      </div>
+    );
+  }
 
   return <img src={resolvedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />;
 };
