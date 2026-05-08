@@ -1,6 +1,8 @@
 import { HelpCircle, SlidersHorizontal } from 'lucide-react';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
+import { FormField } from '../../components/common/FormField';
 import { useEffect, useRef, useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { AIExtractPanel } from '../../components/question-templates/AIExtractPanel';
@@ -263,8 +265,13 @@ export function TemplateFormModal({
   const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { showToast } = useToast();
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  // Belt-and-suspenders: only the Save button's onClick sets this true. Any
+  // submit invocation NOT preceded by a Save click (Enter key, browser
+  // autofill, anything else) bails out silently.
+  const intentionalSaveRef = useRef(false);
   const [lastFocusedInput, setLastFocusedInput] = useState<
     HTMLInputElement | HTMLTextAreaElement | null
   >(null);
@@ -497,6 +504,24 @@ export function TemplateFormModal({
 
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
+
+    // Native <form> submits on Enter from any input. Only the final step
+    // should actually save — earlier steps just advance. Without this guard,
+    // hitting Enter on step 1/2/3 fires the save + "Cập nhật mẫu câu hỏi
+    // thành công" toast even though the teacher only meant to confirm a field.
+    if (currentStep < 4) {
+      goNext();
+      return;
+    }
+
+    // Even on step 4, only the Save button click should trigger the actual
+    // save. Enter-in-input on step 4 still raises submit; we ignore it unless
+    // intentionalSaveRef was just set by the button's onClick.
+    if (!intentionalSaveRef.current) {
+      return;
+    }
+    intentionalSaveRef.current = false;
+
     setSubmitError(null);
 
     // Re-run every step gate before save — protects against back-edits that
@@ -656,7 +681,10 @@ export function TemplateFormModal({
       }
 
       await onSubmit(payload);
-      onClose();
+      showToast({
+        type: 'success',
+        message: mode === 'create' ? 'Tạo mẫu câu hỏi thành công!' : 'Cập nhật mẫu câu hỏi thành công!',
+      });
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : 'Không thể lưu mẫu câu hỏi. Vui lòng thử lại.'
@@ -698,18 +726,22 @@ export function TemplateFormModal({
             {currentStep === 1 && (
               <>
                 <div className="form-grid">
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>
-                      Tên mẫu <span style={{ color: '#ef4444' }}>*</span>
-                    </p>
+                  <FormField
+                    htmlFor="tpl-name"
+                    label="Tên mẫu"
+                    required
+                    counter={{ value: name.length, max: 255 }}
+                  >
                     <input
+                      id="tpl-name"
                       ref={nameRef}
                       className="input"
                       required
+                      maxLength={255}
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                     />
-                  </label>
+                  </FormField>
 
                   <AcademicCascade
                     gradeLevel={gradeLevel}
@@ -727,11 +759,9 @@ export function TemplateFormModal({
                     disabled={mode === 'edit'}
                   />
 
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>
-                      Mức độ câu hỏi
-                    </p>
+                  <FormField htmlFor="tpl-cognitive" label="Mức độ câu hỏi">
                     <select
+                      id="tpl-cognitive"
                       className="select"
                       value={cognitiveLevel}
                       onChange={(event) =>
@@ -744,21 +774,25 @@ export function TemplateFormModal({
                         </option>
                       ))}
                     </select>
-                  </label>
+                  </FormField>
                 </div>
 
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Mô tả
-                  </p>
+                <FormField
+                  htmlFor="tpl-desc"
+                  label="Mô tả"
+                  counter={{ value: description.length, max: 1000 }}
+                  hint="Mô tả giúp người dùng khác tìm hiểu mẫu câu hỏi này."
+                >
                   <textarea
+                    id="tpl-desc"
                     ref={descriptionRef}
                     className="textarea"
                     rows={2}
+                    maxLength={1000}
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                   />
-                </label>
+                </FormField>
 
               </>
             )}
@@ -906,7 +940,14 @@ export function TemplateFormModal({
                 Tiếp tục →
               </button>
             ) : (
-              <button type="submit" className="btn" disabled={saving}>
+              <button
+                type="submit"
+                className="btn"
+                disabled={saving}
+                onClick={() => {
+                  intentionalSaveRef.current = true;
+                }}
+              >
                 {submitLabel}
               </button>
             )}
@@ -1030,8 +1071,8 @@ export function TemplateFormModal({
                 </summary>
                 <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
                   <div
-                    className="data-card"
-                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                    className="data-card data-card--info"
+                    style={{ padding: '0.65rem' }}
                   >
                     <strong>Bước 1: Nhập đề bài</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
@@ -1039,8 +1080,8 @@ export function TemplateFormModal({
                     </p>
                   </div>
                   <div
-                    className="data-card"
-                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                    className="data-card data-card--info"
+                    style={{ padding: '0.65rem' }}
                   >
                     <strong>Bước 2: Công thức đáp án đúng</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
@@ -1048,8 +1089,8 @@ export function TemplateFormModal({
                     </p>
                   </div>
                   <div
-                    className="data-card"
-                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                    className="data-card data-card--info"
+                    style={{ padding: '0.65rem' }}
                   >
                     <strong>Bước 3: Khai báo tham số</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
@@ -1057,8 +1098,8 @@ export function TemplateFormModal({
                     </p>
                   </div>
                   <div
-                    className="data-card"
-                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                    className="data-card data-card--info"
+                    style={{ padding: '0.65rem' }}
                   >
                     <strong>Bước 4 (trắc nghiệm): Nhập đáp án A/B/C/D</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
@@ -1066,8 +1107,8 @@ export function TemplateFormModal({
                     </p>
                   </div>
                   <div
-                    className="data-card"
-                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                    className="data-card data-card--info"
+                    style={{ padding: '0.65rem' }}
                   >
                     <strong>Bước 5: Xem preview</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>

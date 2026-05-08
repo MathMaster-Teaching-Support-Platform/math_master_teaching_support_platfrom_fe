@@ -1311,3 +1311,83 @@
 .module-layout-container .add-question-panel__body {
   padding: 12px 14px 14px;
 }
+
+/* ── FormField ─────────────────────────────────────────────── */
+.module-layout-container .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.module-layout-container .form-field__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--mod-slate-700);
+  cursor: pointer;
+}
+
+.module-layout-container .form-field__required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.module-layout-container .form-field__counter {
+  font-size: 0.75rem;
+  color: var(--mod-slate-500);
+  flex-shrink: 0;
+}
+
+.module-layout-container .form-field__hint {
+  font-size: 0.78rem;
+  color: var(--mod-slate-500);
+}
+
+.module-layout-container .form-field__error {
+  font-size: 0.78rem;
+  color: #ef4444;
+}
+
+/* Error state on inputs */
+.module-layout-container .input[aria-invalid='true'],
+.module-layout-container .textarea[aria-invalid='true'],
+.module-layout-container .select[aria-invalid='true'] {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+/* ── Section-card color variants ───────────────────────────── */
+.module-layout-container .data-card--info,
+.module-layout-container .data-card--success,
+.module-layout-container .data-card--warn,
+.module-layout-container .data-card--danger {
+  min-height: 0;
+}
+
+.module-layout-container .data-card--info {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.module-layout-container .data-card--success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.module-layout-container .data-card--warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.module-layout-container .data-card--danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+/* Section card title inherits a semantic color per variant */
+.module-layout-container .data-card--info .data-card__title { color: #3730a3; }
+.module-layout-container .data-card--success .data-card__title { color: #166534; }
+.module-layout-container .data-card--warn .data-card__title { color: #92400e; }
+.module-layout-container .data-card--danger .data-card__title { color: #991b1b; }
