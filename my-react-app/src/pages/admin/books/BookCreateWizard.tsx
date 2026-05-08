@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -43,6 +43,29 @@ const BookCreateWizard: React.FC = () => {
     return false;
   }, [stepIdx, book]);
 
+  const canAccessStep = (targetStep: StepIdx) => {
+    if (targetStep === 0) return true;
+    if (!bookId || !book) return false;
+    if (targetStep >= 1 && !book.pdfPath) return false;
+    if (targetStep >= 2 && (book.mappedLessonCount ?? 0) <= 0) return false;
+    if (targetStep >= 3 && book.status !== 'OCR_DONE') return false;
+    return true;
+  };
+
+  useEffect(() => {
+    if (stepIdx > 0 && !book?.pdfPath) {
+      setStepIdx(0);
+      return;
+    }
+    if (stepIdx > 1 && (book?.mappedLessonCount ?? 0) <= 0) {
+      setStepIdx(1);
+      return;
+    }
+    if (stepIdx > 2 && book?.status !== 'OCR_DONE') {
+      setStepIdx(2);
+    }
+  }, [book, stepIdx]);
+
   const handleBookCreated = (newId: string) => {
     setBookId(newId);
     navigate(`/admin/books/${newId}/wizard`, { replace: true });
@@ -51,6 +74,12 @@ const BookCreateWizard: React.FC = () => {
   const handleSelectBook = (selectedId: string) => {
     setBookId(selectedId);
     navigate(`/admin/books/${selectedId}/wizard`, { replace: true });
+  };
+
+  const handleSwitchToNew = () => {
+    setBookId(undefined);
+    setStepIdx(0);
+    navigate('/admin/books/new', { replace: true });
   };
 
   return (
@@ -96,8 +125,11 @@ const BookCreateWizard: React.FC = () => {
               <li key={s.key} className="flex-1 flex items-center gap-2">
                 <button
                   type="button"
-                  disabled={!bookId && i > 0}
-                  onClick={() => setStepIdx(s.key)}
+                  disabled={!canAccessStep(s.key)}
+                  onClick={() => {
+                    if (!canAccessStep(s.key)) return;
+                    setStepIdx(s.key);
+                  }}
                   className={[
                     'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border w-full transition',
                     active
@@ -105,7 +137,7 @@ const BookCreateWizard: React.FC = () => {
                       : completed
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                         : 'border-slate-200 bg-white text-slate-500',
-                    !bookId && i > 0 ? 'opacity-50 cursor-not-allowed' : '',
+                    !canAccessStep(s.key) ? 'opacity-50 cursor-not-allowed' : '',
                   ].join(' ')}
                 >
                   <span
@@ -132,15 +164,12 @@ const BookCreateWizard: React.FC = () => {
               book={book}
               onCreated={handleBookCreated}
               onSelectBook={handleSelectBook}
+              onSwitchToNew={handleSwitchToNew}
               onUploaded={() => setStepIdx(1)}
             />
           )}
           {stepIdx === 1 && bookId && book && (
-            <PageMappingStep
-              book={book}
-              onNext={() => setStepIdx(2)}
-              onBack={() => setStepIdx(0)}
-            />
+            <PageMappingStep book={book} />
           )}
           {stepIdx === 2 && bookId && book && (
             <OcrTriggerStep
