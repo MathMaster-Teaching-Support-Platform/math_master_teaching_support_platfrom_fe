@@ -88,6 +88,14 @@ const shouldTryAuthImageFetch = (url: string): boolean => {
   }
 };
 
+const shouldSendAuthHeaderForImage = (url: string): boolean => {
+  if (!url) return false;
+  // Crawl-data static endpoints are publicly readable and can reject Authorization in CORS preflight.
+  if (url.includes('/api/v1/crawl-data/static/')) return false;
+  if (url.includes('/api/static/')) return false;
+  return true;
+};
+
 const buildAssetCandidates = (url: string): string[] => {
   if (!url) return [];
   const candidates = [url];
@@ -126,17 +134,21 @@ const AuthenticatedImage: React.FC<{
           setResolvedSrc(candidateSrc);
           return;
         }
-        if (!token) {
+        const shouldSendAuth = shouldSendAuthHeaderForImage(candidateSrc);
+        if (shouldSendAuth && !token) {
           setResolvedSrc(candidateSrc);
           return;
         }
         try {
+          const headers: Record<string, string> = {
+            accept: 'image/*,*/*',
+          };
+          if (shouldSendAuth && token) {
+            headers.Authorization = `Bearer ${token}`;
+          }
           const response = await fetch(candidateSrc, {
             method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              accept: 'image/*,*/*',
-            },
+            headers,
             credentials: 'include',
             signal: controller.signal,
           });
