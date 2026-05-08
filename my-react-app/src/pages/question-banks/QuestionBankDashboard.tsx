@@ -179,7 +179,7 @@ export function QuestionBankDashboard() {
             type="button"
             onClick={() => {
               setSearch('');
-              setVisibilityFilter('ALL');
+              setGradeFilter('ALL');
             }}
             className="mt-1 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
           >
