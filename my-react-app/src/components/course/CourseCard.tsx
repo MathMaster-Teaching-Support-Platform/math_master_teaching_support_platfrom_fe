@@ -1,6 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, ChevronRight, Clock, Eye, Loader2, Star, Users } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronRight,
+  Clock,
+  Eye,
+  GraduationCap,
+  Loader2,
+  Star,
+  Users,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { CourseResponse, CourseLevel } from '../../types';
 import {
@@ -198,12 +207,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             -{discountPct}%
           </span>
         )}
-
-        <h3 className="cover-title">{course.title}</h3>
       </div>
 
       {/* ── Body ── */}
       <div className="course-body">
+        <h3 className="cover-title">{course.title}</h3>
+
         {/* Teacher */}
         {course.teacherName && (
           <div
@@ -228,6 +237,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
         {/* Metrics row */}
         <div className="course-metrics">
+          <div className="metric">
+            <GraduationCap size={13} />
+            <span>
+              {typeof course.gradeLevel === 'number' ? `Lớp ${course.gradeLevel}` : 'Lớp —'}
+            </span>
+          </div>
           <div className="metric">
             <BookOpen size={13} />
             <span>{course.lessonsCount} bài học</span>
@@ -292,7 +307,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
               /* Enrolled state: single "Vào học" CTA */
               <button
                 className="action-primary"
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
                 onClick={handleGoToCourse}
               >
                 <ChevronRight size={14} />
@@ -328,7 +349,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                 >
                   {isPurchasing ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" style={{ display: 'inline', marginRight: 4 }} />
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                        style={{ display: 'inline', marginRight: 4 }}
+                      />
                       Đang xử lý...
                     </>
                   ) : (
