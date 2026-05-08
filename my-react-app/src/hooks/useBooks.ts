@@ -103,6 +103,17 @@ export function useUploadBookPdf(bookId: string) {
   });
 }
 
+export function useSetBookPdfPath(bookId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pdfPath: string) => BookService.setPdfPath(bookId, pdfPath),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.pdfPreviewUrl(bookId) });
+    },
+  });
+}
+
 /** Presigned MinIO URL for admin PDF preview; omit when using a local Object URL instead. */
 export function useBookPdfPreviewUrl(bookId: string | undefined, enabled: boolean) {
   return useQuery({
