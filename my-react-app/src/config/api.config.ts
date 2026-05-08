@@ -400,6 +400,17 @@ export const API_ENDPOINTS = {
     `/courses/${courseId}/lessons/${lessonId}/materials/${materialId}/download`,
   COURSE_LESSON_MATERIAL_DOWNLOAD_URL: (courseId: string, lessonId: string, materialId: string) =>
     `/courses/${courseId}/lessons/${lessonId}/materials/${materialId}/download-url`,
+  COURSE_LESSON_DISCUSSION_COMMENTS: (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/comments`,
+  COURSE_LESSON_DISCUSSION_REPLIES: (courseId: string, lessonId: string, commentId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/comments/${commentId}/replies`,
+  COURSE_LESSON_DISCUSSION_COMMENT_DETAIL: (
+    courseId: string,
+    lessonId: string,
+    commentId: string
+  ) => `/courses/${courseId}/lessons/${lessonId}/comments/${commentId}`,
+  COURSE_LESSON_DISCUSSION_LIKE_TOGGLE: (courseId: string, lessonId: string, commentId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/comments/${commentId}/like-toggle`,
 
   // Enrollments
   COURSE_ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,

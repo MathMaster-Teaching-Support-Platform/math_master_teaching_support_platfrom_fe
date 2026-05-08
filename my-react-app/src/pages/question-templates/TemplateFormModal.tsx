@@ -1,4 +1,4 @@
-import { HelpCircle, X } from 'lucide-react';
+import { HelpCircle, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
@@ -61,6 +61,63 @@ function validateFormInput(input: { name: string }): {
       normalizedName,
     },
   };
+}
+
+function tokensIn(text: string): string[] {
+  const set = new Set<string>();
+  const re = /\{\{\s*([\p{L}\p{N}_]+)\s*\}\}/gu;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) set.add(match[1]);
+  return [...set];
+}
+
+const STEP_LABELS = ['Thông tin chung', 'Đề bài & hệ số', 'Phương án', 'Lời giải & xem trước'];
+
+function FormStepper({
+  current,
+  onJump,
+}: Readonly<{ current: 1 | 2 | 3 | 4; onJump: (step: 1 | 2 | 3 | 4) => void }>) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 16,
+        padding: '8px 0',
+        borderBottom: '1px solid #e5e7eb',
+      }}
+    >
+      {STEP_LABELS.map((label, idx) => {
+        const stepNum = (idx + 1) as 1 | 2 | 3 | 4;
+        const isActive = stepNum === current;
+        const isPast = stepNum < current;
+        const clickable = isPast;
+        return (
+          <button
+            key={label}
+            type="button"
+            disabled={!clickable}
+            onClick={() => clickable && onJump(stepNum)}
+            style={{
+              flex: 1,
+              padding: '8px 10px',
+              borderRadius: 8,
+              border: isActive ? '2px solid #6366f1' : '1px solid #e5e7eb',
+              background: isActive ? '#eef2ff' : isPast ? '#f8fafc' : '#ffffff',
+              cursor: clickable ? 'pointer' : 'default',
+              textAlign: 'left',
+              opacity: !isActive && !isPast ? 0.6 : 1,
+            }}
+          >
+            <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>
+              Bước {stepNum}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{label}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function buildParameters(parameters: ParameterInput[]): Record<string, unknown> {
@@ -206,6 +263,7 @@ export function TemplateFormModal({
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [lastFocusedInput, setLastFocusedInput] = useState<
     HTMLInputElement | HTMLTextAreaElement | null
   >(null);
@@ -273,6 +331,8 @@ export function TemplateFormModal({
   useEffect(() => {
     if (!isOpen) {
       setIsGuideOpen(false);
+    } else {
+      setCurrentStep(1);
     }
   }, [isOpen]);
 
@@ -313,11 +373,146 @@ export function TemplateFormModal({
   if (saving) submitLabel = 'Đang lưu...';
   else if (mode === 'create') submitLabel = 'Tạo mẫu';
 
+  function validateStep1(): string | null {
+    const v = validateFormInput({ name });
+    if (v.error) return v.error;
+    if (mode === 'create') {
+      if (!gradeLevel) return 'Vui lòng chọn khối lớp.';
+      if (!selectedSubjectId) return 'Vui lòng chọn môn học.';
+      if (!selectedChapterId) return 'Vui lòng chọn chương.';
+    }
+    return null;
+  }
+
+  function validateStep2(): string | null {
+    if (templateType === QuestionType.TRUE_FALSE) {
+      const data = tfBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (!data.stemText.trim()) return 'Vui lòng nhập đề bài / mệnh đề chính.';
+      const params = (data.parameters ?? []).filter((p) => p.name.trim());
+      const declared = new Set(params.map((p) => p.name.trim()));
+      for (const p of params) {
+        if (!p.sampleValue?.toString().trim())
+          return `Hệ số {{${p.name}}} chưa có giá trị mẫu.`;
+      }
+      const undef = tokensIn(data.stemText).find((t) => !declared.has(t));
+      if (undef) return `{{${undef}}} dùng trong đề bài chưa được khai báo trong danh sách hệ số.`;
+      return null;
+    }
+    const data =
+      templateType === QuestionType.MULTIPLE_CHOICE
+        ? mcqBlueprintRef.current?.getData()
+        : saBlueprintRef.current?.getData();
+    if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+    if (!data.templateText.trim()) return 'Vui lòng nhập nội dung câu hỏi.';
+    const params = (data.parameters ?? []).filter((p) => p.name.trim());
+    if (params.length === 0) return 'Bạn cần khai báo ít nhất một hệ số.';
+    for (const p of params) {
+      if (!p.sampleValue?.toString().trim())
+        return `Hệ số {{${p.name}}} chưa có giá trị mẫu.`;
+    }
+    const declared = new Set(params.map((p) => p.name.trim()));
+    const undef = tokensIn(data.templateText).find((t) => !declared.has(t));
+    if (undef) return `{{${undef}}} dùng trong đề bài chưa được khai báo trong danh sách hệ số.`;
+    return null;
+  }
+
+  function validateStep3(): string | null {
+    if (templateType === QuestionType.MULTIPLE_CHOICE) {
+      const data = mcqBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      const filled = data.options.filter((o) => o.formula.trim());
+      if (filled.length < 2) return 'Cần ít nhất 2 phương án có công thức.';
+      const correct = data.options.find((o) => o.isCorrect);
+      if (!correct) return 'Vui lòng đánh dấu một phương án là đáp án đúng.';
+      if (!correct.formula.trim())
+        return `Phương án ${correct.key} được đánh dấu đáp án đúng nhưng chưa có công thức.`;
+      const declared = new Set(
+        data.parameters.filter((p) => p.name.trim()).map((p) => p.name.trim())
+      );
+      for (const o of filled) {
+        const undef = tokensIn(o.formula).find((t) => !declared.has(t));
+        if (undef) return `Phương án ${o.key}: {{${undef}}} chưa được khai báo.`;
+      }
+      return null;
+    }
+    if (templateType === QuestionType.TRUE_FALSE) {
+      const data = tfBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (data.clauses.some((c) => !c.text.trim()))
+        return 'Tất cả 4 mệnh đề phải có nội dung.';
+      const trueCount = data.clauses.filter((c) => c.truthValue).length;
+      const falseCount = data.clauses.filter((c) => !c.truthValue).length;
+      if (trueCount === 0 || falseCount === 0)
+        return 'Phải có ít nhất 1 mệnh đề đúng và 1 mệnh đề sai.';
+      const declared = new Set(
+        data.parameters.filter((p) => p.name.trim()).map((p) => p.name.trim())
+      );
+      for (const c of data.clauses) {
+        const undef = tokensIn(c.text).find((t) => !declared.has(t));
+        if (undef) return `Mệnh đề ${c.key}: {{${undef}}} chưa được khai báo.`;
+      }
+      return null;
+    }
+    if (templateType === QuestionType.SHORT_ANSWER) {
+      const data = saBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (!data.answerFormula.trim()) return 'Vui lòng nhập công thức đáp án đúng.';
+      if (data.validationMode === 'NUMERIC' && !data.tolerance.trim())
+        return 'Chế độ NUMERIC yêu cầu sai số cho phép.';
+      const declared = new Set(
+        data.parameters.filter((p) => p.name.trim()).map((p) => p.name.trim())
+      );
+      const undef = tokensIn(data.answerFormula).find((t) => !declared.has(t));
+      if (undef) return `Công thức đáp án: {{${undef}}} chưa được khai báo.`;
+      return null;
+    }
+    return null;
+  }
+
+  function goNext() {
+    let err: string | null = null;
+    if (currentStep === 1) err = validateStep1();
+    else if (currentStep === 2) err = validateStep2();
+    else if (currentStep === 3) err = validateStep3();
+    if (err) {
+      setSubmitError(err);
+      return;
+    }
+    setSubmitError(null);
+    setCurrentStep((s) => (Math.min(4, s + 1) as 1 | 2 | 3 | 4));
+  }
+
+  function goBack() {
+    setSubmitError(null);
+    setCurrentStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4));
+  }
+
+  function jumpTo(step: 1 | 2 | 3 | 4) {
+    if (step >= currentStep) return;
+    setSubmitError(null);
+    setCurrentStep(step);
+  }
+
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setSubmitError(null);
 
-    // Validate Zone 1 (Metadata)
+    // Re-run every step gate before save — protects against back-edits that
+    // invalidated a downstream step.
+    for (const [step, gate] of [
+      [1, validateStep1],
+      [2, validateStep2],
+      [3, validateStep3],
+    ] as const) {
+      const err = gate();
+      if (err) {
+        setSubmitError(err);
+        setCurrentStep(step as 1 | 2 | 3);
+        return;
+      }
+    }
+
     const validation = validateFormInput({ name });
     if (validation.error || !validation.result) {
       setSubmitError(validation.error || 'Dữ liệu mẫu chưa hợp lệ.');
@@ -474,13 +669,18 @@ export function TemplateFormModal({
     <div className="modal-layer">
       <div className="modal-card">
         <div className="modal-header">
-          <div>
-            <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
+          <div className="modal-title-block">
+            <div className="modal-title-row">
+              <span className="modal-icon-badge">
+                <SlidersHorizontal size={16} />
+              </span>
+              <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
+            </div>
+            <p className="modal-subtitle">
               Thiết lập hệ số để tạo câu hỏi ngẫu nhiên tự động.
             </p>
           </div>
-          <div className="row" style={{ gap: 8 }}>
+          <div className="modal-actions">
             <button type="button" className="btn secondary" onClick={() => setIsGuideOpen(true)}>
               <HelpCircle size={14} />
               Hướng dẫn
@@ -493,110 +693,123 @@ export function TemplateFormModal({
 
         <form onSubmit={submit}>
           <div className="modal-body">
-            {/* ZONE 1: Metadata Section */}
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Tên mẫu <span style={{ color: '#ef4444' }}>*</span>
-                </p>
-                <input
-                  ref={nameRef}
-                  className="input"
-                  required
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
+            <FormStepper current={currentStep} onJump={jumpTo} />
+
+            {/* STEP 1: Metadata */}
+            {currentStep === 1 && (
+              <>
+                <div className="form-grid">
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Tên mẫu <span style={{ color: '#ef4444' }}>*</span>
+                    </p>
+                    <input
+                      ref={nameRef}
+                      className="input"
+                      required
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                    />
+                  </label>
+
+                  <AcademicCascade
+                    gradeLevel={gradeLevel}
+                    subjectId={selectedSubjectId}
+                    chapterId={selectedChapterId}
+                    onGradeChange={setGradeLevel}
+                    onSubjectChange={setSelectedSubjectId}
+                    onChapterChange={setSelectedChapterId}
+                    required={mode === 'create'}
+                  />
+
+                  <TypeSelector
+                    selectedType={templateType}
+                    onChange={setTemplateType}
+                    disabled={mode === 'edit'}
+                  />
+
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Mức độ nhận thức
+                    </p>
+                    <select
+                      className="select"
+                      value={cognitiveLevel}
+                      onChange={(event) =>
+                        setCognitiveLevel(event.target.value as CognitiveLevel)
+                      }
+                    >
+                      {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
+                        <option key={key} value={key}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Mô tả
+                  </p>
+                  <textarea
+                    ref={descriptionRef}
+                    className="textarea"
+                    rows={2}
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                  />
+                </label>
+
+              </>
+            )}
+
+            {/* STEP 2/3/4: Blueprint slices (always mounted to preserve state) */}
+            <div style={{ display: currentStep >= 2 ? 'block' : 'none' }}>
+              {templateType === QuestionType.MULTIPLE_CHOICE && (
+                <MCQBlueprint
+                  ref={mcqBlueprintRef}
+                  defaultChapterId={selectedChapterId}
+                  templateId={initialData?.id}
+                  step={currentStep}
+                  initialData={
+                    mode === 'edit'
+                      ? extractBlueprintInitialData(initialData, QuestionType.MULTIPLE_CHOICE)
+                      : undefined
+                  }
                 />
-              </label>
+              )}
 
-              <AcademicCascade
-                gradeLevel={gradeLevel}
-                subjectId={selectedSubjectId}
-                chapterId={selectedChapterId}
-                onGradeChange={setGradeLevel}
-                onSubjectChange={setSelectedSubjectId}
-                onChapterChange={setSelectedChapterId}
-                required={mode === 'create'}
-              />
+              {templateType === QuestionType.TRUE_FALSE && (
+                <TFBlueprint
+                  ref={tfBlueprintRef}
+                  templateId={initialData?.id}
+                  step={currentStep}
+                  initialData={
+                    mode === 'edit'
+                      ? extractBlueprintInitialData(initialData, QuestionType.TRUE_FALSE)
+                      : undefined
+                  }
+                />
+              )}
 
-              <TypeSelector
-                selectedType={templateType}
-                onChange={setTemplateType}
-                disabled={mode === 'edit'}
-              />
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Mức độ nhận thức
-                </p>
-                <select
-                  className="select"
-                  value={cognitiveLevel}
-                  onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
-                >
-                  {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
+              {templateType === QuestionType.SHORT_ANSWER && (
+                <SABlueprint
+                  ref={saBlueprintRef}
+                  defaultChapterId={selectedChapterId}
+                  templateId={initialData?.id}
+                  step={currentStep}
+                  initialData={
+                    mode === 'edit'
+                      ? extractBlueprintInitialData(initialData, QuestionType.SHORT_ANSWER)
+                      : undefined
+                  }
+                />
+              )}
             </div>
 
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Mô tả
-              </p>
-              <textarea
-                ref={descriptionRef}
-                className="textarea"
-                rows={2}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </label>
-
-            {/* ZONE 2: Blueprint Section (swaps based on type) */}
-            {templateType === QuestionType.MULTIPLE_CHOICE && (
-              <MCQBlueprint
-                ref={mcqBlueprintRef}
-                defaultChapterId={selectedChapterId}
-                templateId={initialData?.id}
-                initialData={
-                  mode === 'edit'
-                    ? extractBlueprintInitialData(initialData, QuestionType.MULTIPLE_CHOICE)
-                    : undefined
-                }
-              />
-            )}
-
-            {templateType === QuestionType.TRUE_FALSE && (
-              <TFBlueprint
-                ref={tfBlueprintRef}
-                templateId={initialData?.id}
-                initialData={
-                  mode === 'edit'
-                    ? extractBlueprintInitialData(initialData, QuestionType.TRUE_FALSE)
-                    : undefined
-                }
-              />
-            )}
-
-            {templateType === QuestionType.SHORT_ANSWER && (
-              <SABlueprint
-                ref={saBlueprintRef}
-                defaultChapterId={selectedChapterId}
-                templateId={initialData?.id}
-                initialData={
-                  mode === 'edit'
-                    ? extractBlueprintInitialData(initialData, QuestionType.SHORT_ANSWER)
-                    : undefined
-                }
-              />
-            )}
-
-            {/* AI Extract Panel — Feature 1: only shown in edit mode (template has an id) */}
-            {initialData?.id && (
+            {/* AI Extract Panel — only in step 4 (review/refine). Edit-mode only. */}
+            {currentStep === 4 && initialData?.id && (
               <AIExtractPanel
                 templateId={initialData.id}
                 templateText={
@@ -645,15 +858,6 @@ export function TemplateFormModal({
               />
             )}
 
-            <label className="row" style={{ justifyContent: 'start' }}>
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(event) => setIsPublic(event.target.checked)}
-              />{' '}
-              Công khai mẫu cho giáo viên khác
-            </label>
-
             {submitError && (
               <div className="empty" style={{ color: '#b91c1c', marginTop: 0 }}>
                 {submitError}
@@ -689,12 +893,24 @@ export function TemplateFormModal({
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>
-              Hủy
-            </button>
-            <button type="submit" className="btn" disabled={saving}>
-              {submitLabel}
-            </button>
+            {currentStep === 1 ? (
+              <button type="button" className="btn secondary" onClick={onClose}>
+                Hủy
+              </button>
+            ) : (
+              <button type="button" className="btn secondary" onClick={goBack}>
+                ← Quay lại
+              </button>
+            )}
+            {currentStep < 4 ? (
+              <button type="button" className="btn" onClick={goNext}>
+                Tiếp tục →
+              </button>
+            ) : (
+              <button type="submit" className="btn" disabled={saving}>
+                {submitLabel}
+              </button>
+            )}
           </div>
         </form>
       </div>

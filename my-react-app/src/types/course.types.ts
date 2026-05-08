@@ -375,3 +375,39 @@ export interface CourseReviewRequest {
 export interface InstructorReplyRequest {
   reply: string;
 }
+
+export interface LessonDiscussionCommentResponse {
+  id: string;
+  courseId: string;
+  courseLessonId: string;
+  parentId: string | null;
+  depth: number;
+  content: string;
+  likesCount: number;
+  replyCount: number;
+  likedByCurrentUser: boolean;
+  deleted: boolean;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string | null;
+  authorRole: 'teacher' | 'student' | 'admin' | string;
+  canEdit: boolean;
+  canDelete: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLessonDiscussionCommentRequest {
+  content: string;
+  parentId?: string;
+}
+
+export interface UpdateLessonDiscussionCommentRequest {
+  content: string;
+}
+
+export interface LessonDiscussionLikeResponse {
+  commentId: string;
+  liked: boolean;
+  likesCount: number;
+}

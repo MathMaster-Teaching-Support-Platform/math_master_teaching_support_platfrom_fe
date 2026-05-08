@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save, X } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import QuestionDisplay from '../../components/assessment/QuestionDisplay';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
@@ -301,6 +301,9 @@ export default function TakeRoadmapEntryTest() {
                       Bạn có chắc chắn muốn nộp bài không?
                     </p>
                   </div>
+                  <button className="icon-btn" onClick={() => setShowSubmitConfirm(false)} aria-label="Đóng">
+                    <X size={16} />
+                  </button>
                 </div>
 
                 <div className="modal-body">

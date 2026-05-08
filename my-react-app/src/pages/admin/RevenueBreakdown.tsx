@@ -13,7 +13,6 @@ import {
   Layers,
   Package,
   RefreshCw,
-  Search,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
@@ -135,7 +134,6 @@ const RevenueBreakdown: React.FC = () => {
   });
   const [quickRange, setQuickRange] = useState<RevenueQuickRange>('1m');
   const [groupBy, setGroupBy] = useState<RevenueGroupBy>('day');
-  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const breakdownQuery = useQuery({
@@ -170,7 +168,7 @@ const RevenueBreakdown: React.FC = () => {
     () => new Map((breakdown?.data ?? []).map((item) => [item.date, item])),
     [breakdown]
   );
-  const normalizedSeries = useMemo(
+  const allBuckets = useMemo(
     () =>
       buckets.map((bucket) => {
         const item = breakdownMap.get(bucket.key);
@@ -188,25 +186,29 @@ const RevenueBreakdown: React.FC = () => {
       }),
     [buckets, breakdownMap]
   );
-  const filteredData = useMemo(() => {
-    if (searchTerm.trim() === '') return normalizedSeries;
-    const term = searchTerm.toLowerCase();
-    return normalizedSeries.filter((item) => {
-      const display = formatLedgerLabel(item.key, groupBy).toLowerCase();
-      return item.key.includes(searchTerm) || display.includes(term);
-    });
-  }, [normalizedSeries, searchTerm, groupBy]);
+
+  const normalizedSeries = useMemo(
+    () => allBuckets.filter((item) => item.total > 0),
+    [allBuckets]
+  );
+
+  const sortedSeries = useMemo(
+    () => [...normalizedSeries].sort((a, b) => b.key.localeCompare(a.key)),
+    [normalizedSeries]
+  );
+
+  const filteredData = sortedSeries;
 
   const stats = useMemo(() => {
-    const total = normalizedSeries.reduce((sum, item) => sum + item.total, 0);
-    const subscriptions = normalizedSeries.reduce((sum, item) => sum + item.subscriptions, 0);
-    const courses = normalizedSeries.reduce((sum, item) => sum + item.courseSales, 0);
+    const total = allBuckets.reduce((sum, item) => sum + item.total, 0);
+    const subscriptions = allBuckets.reduce((sum, item) => sum + item.subscriptions, 0);
+    const courses = allBuckets.reduce((sum, item) => sum + item.courseSales, 0);
     return { total, subscriptions, courses };
-  }, [normalizedSeries]);
+  }, [allBuckets]);
 
   const handleExport = () => {
     if (normalizedSeries.length === 0) return;
-    const exportData = normalizedSeries.map((item) => ({
+    const exportData = sortedSeries.map((item) => ({
       'Thời gian': formatLedgerLabel(item.key, groupBy),
       'Đăng ký (VND)': item.subscriptions,
       'Khóa học (VND)': item.courseSales,
@@ -243,7 +245,7 @@ const RevenueBreakdown: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [dateRange.from, dateRange.to, groupBy, searchTerm]);
+  }, [dateRange.from, dateRange.to, groupBy]);
 
   const totalRecords = filteredData.length;
   const totalPages = totalRecords === 0 ? 0 : Math.ceil(totalRecords / pageSize);
@@ -303,12 +305,6 @@ const RevenueBreakdown: React.FC = () => {
 
   if (!breakdown) return null;
 
-  const groupByVi: Record<RevenueGroupBy, string> = {
-    hour: 'Theo giờ',
-    day: 'Theo ngày',
-    month: 'Theo tháng',
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -335,7 +331,7 @@ const RevenueBreakdown: React.FC = () => {
             <div className="header-stack">
               <h2 className="breakdown-header__heading">Phân tích doanh thu</h2>
               <p className="header-sub">
-                Nguồn thu theo gói đăng ký và hoa hồng khóa học — đối chiếu biểu đồ và bảng kê
+                Nguồn thu theo gói đăng ký và hoa hồng khóa học
               </p>
             </div>
           </div>
@@ -418,10 +414,6 @@ const RevenueBreakdown: React.FC = () => {
           <div className="card-label-large">Tổng doanh thu trong khoảng đã chọn</div>
           <p className="card-value-large">{formatCurrency(stats.total)}</p>
           <div className="card-meta-row">
-            <span className="card-meta-pill">
-              <Layers size={14} aria-hidden />
-              {groupByVi[groupBy]}
-            </span>
             <span className="card-meta-muted">
               {dateRange.from} → {dateRange.to}
             </span>
@@ -470,7 +462,7 @@ const RevenueBreakdown: React.FC = () => {
           <p>Xếp chồng hai nguồn: gói đăng ký (tím) và hoa hồng khóa học (lục)</p>
         </div>
         <div className="chart-container">
-          <RevenueBreakdownChart data={normalizedSeries} groupBy={groupBy} />
+          <RevenueBreakdownChart data={allBuckets} groupBy={groupBy} />
         </div>
       </motion.div>
 
@@ -478,18 +470,9 @@ const RevenueBreakdown: React.FC = () => {
       <div className="ledger-section">
         <motion.div className="ledger-header-row" variants={itemVariants}>
           <div className="header-stack">
-            <h2>Bảng kê doanh thu</h2>
-            <p className="header-sub">Chi tiết theo mốc thời gian ({groupByVi[groupBy].toLowerCase()})</p>
+            <h2>Doanh thu theo ngày</h2>
+            <p className="header-sub">Tổng hợp doanh thu theo từng ngày phát sinh</p>
           </div>
-          <label className="ledger-search">
-            <Search size={17} className="ledger-search-icon" aria-hidden />
-            <input
-              type="search"
-              placeholder="Tìm theo ngày hoặc giá trị..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </label>
         </motion.div>
 
         <motion.div className="table-wrapper" variants={itemVariants}>
@@ -504,28 +487,44 @@ const RevenueBreakdown: React.FC = () => {
             </thead>
             <tbody>
               <AnimatePresence mode="popLayout">
-                {pagedData.map((item) => (
-                  <motion.tr
-                    key={item.key}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    layout
-                  >
-                    <td>
-                      <span className="date-cell">
-                        {formatLedgerLabel(item.key, groupBy)}
-                      </span>
+                {pagedData.length > 0 ? (
+                  pagedData.map((item) => {
+                    return (
+                      <motion.tr
+                        key={item.key}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        layout
+                      >
+                        <td>
+                          <span className="date-cell">{formatLedgerLabel(item.key, groupBy)}</span>
+                        </td>
+                        <td className="currency-cell rb-currency-sub">
+                          {formatCurrency(item.subscriptions)}
+                        </td>
+                        <td className="currency-cell rb-currency-course">
+                          {formatCurrency(item.courseSales)}
+                        </td>
+                        <td className="currency-cell currency-total">
+                          {formatCurrency(item.total)}
+                        </td>
+                      </motion.tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={4}>
+                      <div className="empty-revenue-state">
+                        <div className="empty-revenue-state__icon">
+                          <Layers size={24} />
+                        </div>
+                        <h3>Chưa có doanh thu</h3>
+                        <p>Không tìm thấy doanh thu phát sinh trong khoảng thời gian này.</p>
+                      </div>
                     </td>
-                    <td className="currency-cell rb-currency-sub">
-                      {formatCurrency(item.subscriptions)}
-                    </td>
-                    <td className="currency-cell rb-currency-course">
-                      {formatCurrency(item.courseSales)}
-                    </td>
-                    <td className="currency-cell currency-total">{formatCurrency(item.total)}</td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                )}
               </AnimatePresence>
             </tbody>
             <tfoot>
@@ -539,79 +538,81 @@ const RevenueBreakdown: React.FC = () => {
           </table>
         </motion.div>
 
-        <motion.div className="ledger-footer" variants={itemVariants}>
-          <div className="ledger-footer-left">
-            Hiển thị{' '}
-            <strong>
-              {totalRecords === 0 ? 0 : currentPage * pageSize + 1}–
-              {Math.min((currentPage + 1) * pageSize, totalRecords)}
-            </strong>{' '}
-            / {totalRecords} dòng
-          </div>
-          <div className="ledger-footer-right">
-            <label className="rb-page-size-label">
-              <span className="rb-page-size-label__text">Số dòng</span>
-              <select
-                className="rb-page-size-select"
-                value={pageSize}
-                aria-label="Số dòng mỗi trang"
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPage(0);
-                }}
-              >
-                {[10, 25, 50, 100].map((size) => (
-                  <option key={size} value={size}>
-                    {size} / trang
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <span className="ledger-page-indicator">
-              Trang {totalPages === 0 ? 0 : currentPage + 1} / {totalPages}
-            </span>
-
-            <div className="rb-pager">
-              <button
-                type="button"
-                onClick={() => setPage(0)}
-                disabled={currentPage === 0 || totalPages <= 1}
-                className="rb-pager-btn"
-                aria-label="Trang đầu"
-              >
-                <ChevronsLeft size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
-                disabled={currentPage === 0 || totalPages <= 1}
-                className="rb-pager-btn"
-                aria-label="Trang trước"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((prev) => Math.min(totalPages - 1, prev + 1))}
-                disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="rb-pager-btn"
-                aria-label="Trang sau"
-              >
-                <ChevronRight size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage(Math.max(0, totalPages - 1))}
-                disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="rb-pager-btn"
-                aria-label="Trang cuối"
-              >
-                <ChevronsRight size={16} />
-              </button>
+        {totalRecords > pageSize && (
+          <motion.div className="ledger-footer" variants={itemVariants}>
+            <div className="ledger-footer-left">
+              Hiển thị{' '}
+              <strong>
+                {totalRecords === 0 ? 0 : currentPage * pageSize + 1}–
+                {Math.min((currentPage + 1) * pageSize, totalRecords)}
+              </strong>{' '}
+              / {totalRecords} dòng
             </div>
-          </div>
-        </motion.div>
+            <div className="ledger-footer-right">
+              <label className="rb-page-size-label">
+                <span className="rb-page-size-label__text">Số dòng</span>
+                <select
+                  className="rb-page-size-select"
+                  value={pageSize}
+                  aria-label="Số dòng mỗi trang"
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(0);
+                  }}
+                >
+                  {[10, 25, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size} / trang
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <span className="ledger-page-indicator">
+                Trang {totalPages === 0 ? 0 : currentPage + 1} / {totalPages}
+              </span>
+
+              <div className="rb-pager">
+                <button
+                  type="button"
+                  onClick={() => setPage(0)}
+                  disabled={currentPage === 0 || totalPages <= 1}
+                  className="rb-pager-btn"
+                  aria-label="Trang đầu"
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0 || totalPages <= 1}
+                  className="rb-pager-btn"
+                  aria-label="Trang trước"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((prev) => Math.min(totalPages - 1, prev + 1))}
+                  disabled={totalPages === 0 || currentPage + 1 >= totalPages}
+                  className="rb-pager-btn"
+                  aria-label="Trang sau"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage(Math.max(0, totalPages - 1))}
+                  disabled={totalPages === 0 || currentPage + 1 >= totalPages}
+                  className="rb-pager-btn"
+                  aria-label="Trang cuối"
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Insight Footer */}

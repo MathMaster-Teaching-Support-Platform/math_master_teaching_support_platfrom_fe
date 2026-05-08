@@ -304,7 +304,7 @@ const FeedbackSubmitPage: React.FC = () => {
       </div>
       {detailItem && (
         <div
-          className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[oklch(12%_0.01_250)]/35 flex items-center justify-center p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setDetailItem(null);
           }}
