@@ -460,7 +460,7 @@ export function TemplateFormModal({
       if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
       if (!data.answerFormula.trim()) return 'Vui lòng nhập công thức đáp án đúng.';
       if (data.validationMode === 'NUMERIC' && !data.tolerance.trim())
-        return 'Chế độ NUMERIC yêu cầu sai số cho phép.';
+        return 'Kiểu đánh giá "có sai số" yêu cầu nhập sai số cho phép.';
       const declared = new Set(
         data.parameters.filter((p) => p.name.trim()).map((p) => p.name.trim())
       );
@@ -624,7 +624,7 @@ export function TemplateFormModal({
           }
 
           if (saData.validationMode === 'NUMERIC' && !saData.tolerance) {
-            setSubmitError('Chế độ NUMERIC yêu cầu sai số cho phép.');
+            setSubmitError('Kiểu đánh giá "có sai số" yêu cầu nhập sai số cho phép.');
             setSaving(false);
             return;
           }

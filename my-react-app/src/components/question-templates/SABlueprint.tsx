@@ -6,6 +6,12 @@ import { AIParameterPanel } from './AIParameterPanel';
 
 export type ValidationMode = 'EXACT' | 'NUMERIC' | 'REGEX';
 
+const MODE_LABEL: Record<ValidationMode, string> = {
+  EXACT: 'chính xác',
+  NUMERIC: 'có sai số',
+  REGEX: 'công thức toán học',
+};
+
 export interface SABlueprintData {
   templateText: string;
   parameters: ParameterInput[];
@@ -190,7 +196,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
 
             <section className="data-card" style={{ minHeight: 0, border: '1px solid #dcfce7' }}>
               <div>
-                <h3 style={{ color: '#166534' }}>Chế độ đánh giá đáp án</h3>
+                <h3 style={{ color: '#166534' }}>Kiểu đánh giá</h3>
                 <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
                   Chọn cách hệ thống so sánh đáp án của học sinh với đáp án đúng.
                 </p>
@@ -203,7 +209,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
                   style={{ flex: 1 }}
                   onClick={() => setValidationMode('EXACT')}
                 >
-                  EXACT
+                  chính xác
                 </button>
                 <button
                   type="button"
@@ -211,7 +217,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
                   style={{ flex: 1 }}
                   onClick={() => setValidationMode('NUMERIC')}
                 >
-                  NUMERIC
+                  có sai số
                 </button>
                 <button
                   type="button"
@@ -219,7 +225,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
                   style={{ flex: 1 }}
                   onClick={() => setValidationMode('REGEX')}
                 >
-                  REGEX
+                  công thức toán học
                 </button>
               </div>
 
@@ -231,7 +237,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
                   fontSize: '0.875rem',
                 }}
               >
-                <strong>Chế độ hiện tại: {validationMode}</strong>
+                <strong>Kiểu đánh giá hiện tại: {MODE_LABEL[validationMode]}</strong>
                 <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
                   {validationMode === 'EXACT' && (
                     <li>So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
@@ -246,7 +252,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
               {validationMode === 'NUMERIC' && (
                 <label style={{ marginTop: 16 }}>
                   <p className="muted" style={{ marginBottom: 6 }}>
-                    Sai số cho phép (tolerance)
+                    Sai số cho phép
                   </p>
                   <input
                     ref={toleranceRef}
@@ -322,7 +328,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
               </div>
 
               <div style={{ fontSize: '0.85rem', color: '#475569' }}>
-                <strong>Chế độ chấm:</strong> {validationMode}
+                <strong>Kiểu đánh giá:</strong> {MODE_LABEL[validationMode]}
                 {validationMode === 'NUMERIC' && tolerance && (
                   <> &middot; sai số cho phép: ±{tolerance}</>
                 )}

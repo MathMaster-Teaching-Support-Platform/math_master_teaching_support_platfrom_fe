@@ -134,7 +134,7 @@ export function QbAddQuestionsModal({
   );
 
   const questions = useMemo<QuestionResponse[]>(
-    () => data?.result?.content ?? [],
+    () => (data?.result?.content ?? []).filter((q) => q.questionStatus === 'APPROVED'),
     [data]
   );
 
