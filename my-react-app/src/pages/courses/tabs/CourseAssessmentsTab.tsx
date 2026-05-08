@@ -91,7 +91,7 @@ function AddAssessmentModal({
   );
   const addMutation = useAddAssessmentToCourse();
 
-  const assessments = assessmentsData?.result ?? [];
+  const assessments = useMemo(() => assessmentsData?.result ?? [], [assessmentsData]);
   const available = useMemo(() => {
     return assessments.filter((a) => !existingAssessmentIds.includes(a.assessmentId));
   }, [assessments, existingAssessmentIds]);
@@ -134,9 +134,6 @@ function AddAssessmentModal({
         <div className="cat-modal-header">
           <div>
             <h3>Thêm bài kiểm tra vào {UI_TEXT.COURSE.toLowerCase()}</h3>
-            <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-              Chọn bài kiểm tra đã công khai từ ngân hàng của bạn
-            </p>
           </div>
           <button
             className="btn secondary"
@@ -410,7 +407,10 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   const removeMutation = useRemoveAssessmentFromCourse();
   const updateMutation = useUpdateCourseAssessment();
 
-  const assessments: CourseAssessmentResponse[] = assessmentsData?.result ?? [];
+  const assessments: CourseAssessmentResponse[] = useMemo(
+    () => assessmentsData?.result ?? [],
+    [assessmentsData]
+  );
   const existingIds = assessments.map((a) => a.assessmentId);
 
   const stats = useMemo(() => {
@@ -423,14 +423,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   }, [assessments]);
 
   const handleRemove = async (assessment: CourseAssessmentResponse) => {
-    if (assessment.submissionCount && assessment.submissionCount > 0) {
-      showToast({
-        type: 'warning',
-        message: `Không thể xóa bài kiểm tra này vì đã có ${assessment.submissionCount} bài nộp từ học viên.`,
-      });
-      return;
-    }
-
     if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi ${UI_TEXT.COURSE.toLowerCase()}?`))
       return;
 
@@ -646,9 +638,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                         {assessment.isRequired && (
                           <span className="cat-badge required">⭐ Bắt buộc</span>
                         )}
-                        {!assessment.lessonMatched && course.provider === 'MINISTRY' && (
-                          <span className="cat-badge warning">⚠ Không khớp lesson</span>
-                        )}
                       </div>
                       <span className="muted" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
                         #{assessment.orderIndex ?? '—'}
@@ -718,39 +707,8 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                         >
                           Khớp lesson: {assessment.matchedLessonTitles.join(', ')}
                         </p>
-                      ) : (
-                        <p
-                          style={{
-                            fontSize: '0.85rem',
-                            margin: 0,
-                            color: '#b91c1c',
-                            fontWeight: 700,
-                          }}
-                        >
-                          Assessment này chưa liên kết với bất kỳ lesson nào của course.
-                        </p>
-                      )}
+                      ) : null}
                     </div>
-
-                    {assessment.submissionCount && assessment.submissionCount > 0 && (
-                      <div
-                        style={{
-                          marginTop: 12,
-                          padding: '0.75rem 1rem',
-                          background: '#fef3c7',
-                          borderRadius: '8px',
-                          fontSize: '0.85rem',
-                          color: '#92400e',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <AlertCircle size={16} />
-                        Không thể xóa vì đã có {assessment.submissionCount} bài nộp
-                      </div>
-                    )}
 
                     <div className="row cat-actions" style={{ gap: 12, marginTop: 16 }}>
                       <button
@@ -768,10 +726,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                       </button>
                       <button
                         className="cat-btn danger"
-                        disabled={
-                          removeMutation.isPending ||
-                          (assessment.submissionCount !== null && assessment.submissionCount > 0)
-                        }
+                        disabled={removeMutation.isPending}
                         onClick={() => void handleRemove(assessment)}
                       >
                         <Trash2 size={16} />

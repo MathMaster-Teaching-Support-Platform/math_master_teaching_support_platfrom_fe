@@ -325,7 +325,11 @@ const TeacherCourseDetail: React.FC = () => {
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6">
               {UI_TEXT.COURSE} có thể đã bị xóa hoặc bạn không có quyền xem.
             </p>
-            <button type="button" className={secondaryBtn} onClick={() => navigate('/teacher/courses')}>
+            <button
+              type="button"
+              className={secondaryBtn}
+              onClick={() => navigate('/teacher/courses')}
+            >
               <ArrowLeft size={16} strokeWidth={2} />
               Quay lại danh sách
             </button>
@@ -377,12 +381,15 @@ const TeacherCourseDetail: React.FC = () => {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_2px_24px_rgba(20,20,19,0.06)] overflow-hidden"
           >
-
             <div className="p-6 md:p-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-4 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-3">
-                    <button type="button" className={secondaryBtn} onClick={() => navigate('/teacher/courses')}>
+                    <button
+                      type="button"
+                      className={secondaryBtn}
+                      onClick={() => navigate('/teacher/courses')}
+                    >
                       <ArrowLeft size={16} strokeWidth={2} />
                       Quay lại
                     </button>
@@ -401,8 +408,7 @@ const TeacherCourseDetail: React.FC = () => {
                         {course.title}
                       </h1>
                       <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1">
-                        Quản lý nội dung, bài học và học viên — tab Tổng quan hiển thị hồ sơ và chỉ số
-                        chính.
+                        Quản lý nội dung, bài học và học viên.
                       </p>
                     </div>
                   </div>
@@ -452,9 +458,13 @@ const TeacherCourseDetail: React.FC = () => {
                       )}
                       {course.rejectedBy && (
                         <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-4 py-3 font-[Be_Vietnam_Pro] text-[12px] text-rose-900">
-                          <p className="font-semibold">Từ chối bởi <span className="font-bold">Quản trị viên</span></p>
+                          <p className="font-semibold">
+                            Từ chối bởi <span className="font-bold">Quản trị viên</span>
+                          </p>
                           {course.rejectedAt && (
-                            <p className="text-rose-800/85 mt-1">{formatViDateTime(course.rejectedAt)}</p>
+                            <p className="text-rose-800/85 mt-1">
+                              {formatViDateTime(course.rejectedAt)}
+                            </p>
                           )}
                         </div>
                       )}
@@ -499,7 +509,8 @@ const TeacherCourseDetail: React.FC = () => {
                       className={`${publishPrimaryBtn} w-full justify-center`}
                       onClick={handleTogglePublish}
                       disabled={
-                        publishMutation.isPending || (!course.published && course.status !== 'PUBLISHED')
+                        publishMutation.isPending ||
+                        (!course.published && course.status !== 'PUBLISHED')
                       }
                       title={
                         !course.published && course.status !== 'PUBLISHED'
@@ -574,7 +585,9 @@ const TeacherCourseDetail: React.FC = () => {
                   transition={{ duration: 0.18 }}
                 >
                   {activeTab === 'overview' && <CourseOverviewTab course={course} />}
-                  {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
+                  {activeTab === 'lessons' && (
+                    <CourseLessonsTab courseId={course.id} course={course} />
+                  )}
                   {activeTab === 'assessments' && (
                     <CourseAssessmentsTab courseId={course.id} course={course} />
                   )}
