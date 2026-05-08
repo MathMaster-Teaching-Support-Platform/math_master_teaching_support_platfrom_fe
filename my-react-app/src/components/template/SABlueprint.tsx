@@ -4,6 +4,12 @@ import { ParametersEditor, type ParameterInput } from './ParametersEditor';
 
 export type ValidationMode = 'EXACT' | 'NUMERIC' | 'REGEX';
 
+const MODE_LABEL: Record<ValidationMode, string> = {
+  EXACT: 'chính xác',
+  NUMERIC: 'có sai số',
+  REGEX: 'công thức toán học',
+};
+
 export interface SABlueprintData {
   templateText: string;
   parameters: ParameterInput[];
@@ -166,7 +172,7 @@ export function SABlueprint({
 
       <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
         <div>
-          <h3 style={{ color: '#1e40af' }}>Chế độ đánh giá</h3>
+          <h3 style={{ color: '#1e40af' }}>Kiểu đánh giá</h3>
           <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 12 }}>
             Chọn cách hệ thống so sánh đáp án của học sinh với đáp án đúng.
           </p>
@@ -179,7 +185,7 @@ export function SABlueprint({
             style={{ flex: 1 }}
             onClick={() => updateValidationMode('EXACT')}
           >
-            EXACT
+            chính xác
           </button>
           <button
             type="button"
@@ -187,7 +193,7 @@ export function SABlueprint({
             style={{ flex: 1 }}
             onClick={() => updateValidationMode('NUMERIC')}
           >
-            NUMERIC
+            có sai số
           </button>
           <button
             type="button"
@@ -195,7 +201,7 @@ export function SABlueprint({
             style={{ flex: 1 }}
             onClick={() => updateValidationMode('REGEX')}
           >
-            REGEX
+            công thức toán học
           </button>
         </div>
 
@@ -208,7 +214,7 @@ export function SABlueprint({
             fontSize: '0.875rem',
           }}
         >
-          <strong>Chế độ hiện tại: {validationMode}</strong>
+          <strong>Kiểu đánh giá hiện tại: {MODE_LABEL[validationMode]}</strong>
           <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
             {validationMode === 'EXACT' && (
               <li>So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
