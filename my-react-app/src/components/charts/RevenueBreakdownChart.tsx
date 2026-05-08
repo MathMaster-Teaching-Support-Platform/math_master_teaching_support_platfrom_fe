@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { formatInBusinessTz } from '../../utils/dateTime';
 interface RevenueChartPoint {
   key: string;
   label: string;
@@ -33,34 +34,28 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, gro
     }).format(value);
   };
 
-  const parseKeyDate = (key: string): Date => {
-    if (groupBy === 'month') return new Date(`${key}-01T00:00:00Z`);
-    if (groupBy === 'hour') return new Date(`${key.replace(' ', 'T')}:00Z`);
-    return new Date(`${key}T00:00:00Z`);
-  };
-
   const formatTooltipLabel = (key: string): string => {
-    const date = parseKeyDate(key);
     if (groupBy === 'hour') {
-      return new Intl.DateTimeFormat('vi-VN', {
+      return formatInBusinessTz(key, {
         hour: '2-digit',
         minute: '2-digit',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
-      }).format(date);
+        hour12: false,
+      });
     }
     if (groupBy === 'month') {
-      return new Intl.DateTimeFormat('vi-VN', {
+      return formatInBusinessTz(key, {
         month: 'long',
         year: 'numeric',
-      }).format(date);
+      });
     }
-    return new Intl.DateTimeFormat('vi-VN', {
+    return formatInBusinessTz(key, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
-    }).format(date);
+    });
   };
 
   interface TooltipPayloadEntry {

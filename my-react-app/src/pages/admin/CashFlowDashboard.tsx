@@ -34,13 +34,21 @@ import {
   trendColor,
 } from '../../services/cash-flow.service';
 import type {
-  CashFlowCategory,
   CashFlowChartPoint,
   CashFlowEntry,
   CashFlowSummary,
   CashFlowType,
   GroupBy,
 } from '../../types/cash-flow.types';
+import {
+  formatInBusinessTz,
+  getBusinessDayKey,
+  getBusinessDayLabel,
+  getBusinessHourKey,
+  getBusinessMonthKey,
+  getBusinessMonthLabel,
+  toLocalDateOnly,
+} from '../../utils/dateTime';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import './admin-finance-studio.css';
 
@@ -152,29 +160,10 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const pad2 = (value: number): string => String(value).padStart(2, '0');
-
-const toDateOnly = (date: Date): string => date.toISOString().split('T')[0];
-
 const parseUtcDate = (dateStr: string): Date => new Date(`${dateStr}T00:00:00Z`);
 
 const inclusiveDayDiff = (from: Date, to: Date): number =>
   Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-
-const formatUtcDayKey = (date: Date): string =>
-  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
-
-const formatUtcMonthKey = (date: Date): string =>
-  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}`;
-
-const formatUtcHourKey = (date: Date): string =>
-  `${formatUtcDayKey(date)} ${pad2(date.getUTCHours())}:00`;
-
-const formatUtcDayLabel = (date: Date): string =>
-  `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}`;
-
-const formatUtcMonthLabel = (date: Date): string =>
-  `${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
 
 const computeAutoGroupBy = (fromStr: string, toStr: string): GroupBy => {
   const from = parseUtcDate(fromStr);
@@ -198,8 +187,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
       const current = new Date(base);
       current.setUTCHours(base.getUTCHours() + idx);
       return {
-        key: formatUtcHourKey(current),
-        label: `${pad2(current.getUTCHours())}:00`,
+        key: getBusinessHourKey(current),
+        label: `${formatInBusinessTz(current, { hour: '2-digit', hour12: false })}:00`,
       };
     });
   }
@@ -211,8 +200,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
 
     while (current.getTime() <= end.getTime()) {
       buckets.push({
-        key: formatUtcMonthKey(current),
-        label: formatUtcMonthLabel(current),
+        key: getBusinessMonthKey(current),
+        label: getBusinessMonthLabel(current),
       });
       current.setUTCMonth(current.getUTCMonth() + 1);
     }
@@ -231,8 +220,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
 
     while (current.getTime() <= to.getTime()) {
       buckets.push({
-        key: formatUtcDayKey(current),
-        label: formatUtcDayLabel(current),
+        key: getBusinessDayKey(current),
+        label: getBusinessDayLabel(current),
       });
       current.setUTCDate(current.getUTCDate() + 7);
     }
@@ -245,8 +234,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
 
   while (current.getTime() <= to.getTime()) {
     buckets.push({
-      key: formatUtcDayKey(current),
-      label: formatUtcDayLabel(current),
+      key: getBusinessDayKey(current),
+      label: getBusinessDayLabel(current),
     });
     current.setUTCDate(current.getUTCDate() + 1);
   }
@@ -305,21 +294,22 @@ const SummaryCard = ({
   );
 };
 
-const selectSurfaceCls =
-  'border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none bg-white focus:border-[#A3B6D4] focus:ring-1 focus:ring-[rgba(163,182,212,0.42)] transition-colors';
 
 const CashFlowDashboard: React.FC = () => {
   // ─── State ─────────────────────────────────────────────────────────────
-  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({
-    from: new Date(new Date().setDate(1)).toISOString().split('T')[0], // 1st of month
-    to: new Date().toISOString().split('T')[0],
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      from: toLocalDateOnly(startOfMonth),
+      to: toLocalDateOnly(now),
+    };
   });
 
   const [quickRange, setQuickRange] = useState<'1d' | '1w' | '1m' | '1y' | null>(null);
   const [groupBy, setGroupBy] = useState<GroupBy>('day');
   const [summary, setSummary] = useState<CashFlowSummary | null>(null);
   const [chartData, setChartData] = useState<CashFlowChartPoint[]>([]);
-  const [categories, setCategories] = useState<CashFlowCategory[]>([]);
 
   // Transactions table state
   const [transactions, setTransactions] = useState<CashFlowEntry[]>([]);
@@ -330,7 +320,6 @@ const CashFlowDashboard: React.FC = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
   const [filterType, setFilterType] = useState<CashFlowType | ''>('');
-  const [filterCat, setFilterCat] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<CashFlowEntry | null>(null);
   const [pageSizeOpen, setPageSizeOpen] = useState(false);
@@ -428,8 +417,8 @@ const CashFlowDashboard: React.FC = () => {
       fromUtc.setUTCDate(1);
     }
 
-    const toStr = toDateOnly(toUtc);
-    const fromStr = toDateOnly(fromUtc);
+    const toStr = toLocalDateOnly(toUtc);
+    const fromStr = toLocalDateOnly(fromUtc);
 
     setDateRange({ from: fromStr, to: toStr });
     setQuickRange(range);
@@ -438,9 +427,6 @@ const CashFlowDashboard: React.FC = () => {
   };
 
   // ─── Fetch data ────────────────────────────────────────────────────────
-  useEffect(() => {
-    cashFlowService.getCategories().then(setCategories).catch(console.error);
-  }, []);
 
   useEffect(() => {
     const loadOverview = async () => {
@@ -475,7 +461,7 @@ const CashFlowDashboard: React.FC = () => {
           size: pageSize,
           search: debouncedSearch,
           type: filterType,
-          categoryId: filterCat,
+          categoryId: undefined,
         });
         setTransactions(res.content);
         setTotalElements(res.totalElements);
@@ -487,11 +473,11 @@ const CashFlowDashboard: React.FC = () => {
       }
     };
     loadTransactions();
-  }, [dateRange, page, pageSize, debouncedSearch, filterType, filterCat]);
+  }, [dateRange, page, pageSize, debouncedSearch, filterType]);
 
   useEffect(() => {
     setPage(0);
-  }, [dateRange.from, dateRange.to, debouncedSearch, filterType, filterCat]);
+  }, [dateRange.from, dateRange.to, debouncedSearch, filterType]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
   const handleExport = async () => {
@@ -853,18 +839,6 @@ const CashFlowDashboard: React.FC = () => {
                       </select>
                     </div>
 
-                    <select
-                      className={`${selectSurfaceCls} min-w-[10rem] flex-1 sm:flex-none`}
-                      value={filterCat}
-                      onChange={(e) => setFilterCat(e.target.value)}
-                    >
-                      <option value="">Tất cả danh mục</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>

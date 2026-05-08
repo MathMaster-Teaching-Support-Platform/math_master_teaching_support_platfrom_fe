@@ -40,6 +40,7 @@ import '../courses/TeacherCourses.css';
 import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import { formatInBusinessTz } from '../../utils/dateTime';
 import './SubscriptionManagement.css';
 
 const BILLING_CYCLE_OPTIONS: { label: string; value: BillingCycle }[] = [
@@ -533,9 +534,9 @@ const SubscriptionManagement: React.FC = () => {
                             {sub.plan.name}
                           </span>
                         </td>
-                        <td>{new Date(sub.startDate).toLocaleDateString('vi-VN')}</td>
+                        <td>{formatInBusinessTz(sub.startDate, { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                         <td>
-                          {sub.endDate ? new Date(sub.endDate).toLocaleDateString('vi-VN') : '—'}
+                          {sub.endDate ? formatInBusinessTz(sub.endDate, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                         </td>
                         <td className="amount-cell">{formatPrice(sub.amount)}</td>
                         <td>

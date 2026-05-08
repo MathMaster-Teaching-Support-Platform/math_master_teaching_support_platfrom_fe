@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CognitiveLevel,
   QuestionType,
@@ -15,6 +15,8 @@ const NO_TOKEN_TOAST =
   'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
 import { TypeSelector } from '../../components/question-templates/TypeSelector';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
+import { FormField } from '../../components/common/FormField';
+import { McqOptionRow } from '../../components/common/McqOptionRow';
 import MathText from '../../components/common/MathText';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
 
@@ -110,6 +112,9 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
   const [chapterId, setChapterId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  // Belt-and-suspenders: only the "Tạo Blueprint" button's onClick sets this
+  // true. Any submit invocation NOT preceded by an explicit click bails out.
+  const intentionalSaveRef = useRef(false);
   const [lastFocusedInput, setLastFocusedInput] = useState<
     HTMLInputElement | HTMLTextAreaElement | null
   >(null);
@@ -237,6 +242,23 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+
+    // Native <form> submits on Enter from any input. Only step 4 should fire
+    // the AI Blueprint mutation — earlier steps just advance. Without this
+    // guard, pressing Enter in a step-1/2/3 input would call the AI (and
+    // burn a token) instead of moving to the next step.
+    if (currentStep < 4) {
+      goNext();
+      return;
+    }
+
+    // Even on step 4, ignore Enter-in-input. Only the explicit click on the
+    // submit button sets intentionalSaveRef.current.
+    if (!intentionalSaveRef.current) {
+      return;
+    }
+    intentionalSaveRef.current = false;
+
     setError(null);
 
     for (const [step, gate] of [
@@ -339,11 +361,9 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                   required={false}
                 />
 
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Mức độ câu hỏi
-                  </p>
+                <FormField htmlFor="rq-cognitive" label="Mức độ câu hỏi">
                   <select
+                    id="rq-cognitive"
                     className="select"
                     value={cognitiveLevel}
                     onChange={(e) => setCognitiveLevel(e.target.value as CognitiveLevel)}
@@ -354,97 +374,79 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                       </option>
                     ))}
                   </select>
-                </label>
+                </FormField>
               </>
             )}
 
             {/* STEP 2: Đề bài */}
             {currentStep === 2 && (
               <>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Đề bài (số thật, không cần biến số){' '}
-                    <span style={{ color: '#ef4444' }}>*</span>
-                  </p>
-                  <textarea
-                    className="textarea"
-                    rows={4}
-                    placeholder="Ví dụ: Giải phương trình 2x + 5 = 0"
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                  />
-                  {questionText && (
-                    <div className="preview-box">
-                      <MathText text={questionText} />
-                    </div>
-                  )}
-                </label>
+                <FormField
+                  htmlFor="rq-question"
+                  label="Đề bài (số thật, không cần biến số)"
+                  required
+                  counter={{ value: questionText.length, max: 2000 }}
+                >
+                  <>
+                    <textarea
+                      id="rq-question"
+                      className="textarea"
+                      rows={4}
+                      maxLength={2000}
+                      placeholder="Ví dụ: Giải phương trình 2x + 5 = 0"
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
+                    />
+                    {questionText && (
+                      <div className="preview-box">
+                        <MathText text={questionText} />
+                      </div>
+                    )}
+                  </>
+                </FormField>
 
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Sơ đồ / Hình LaTeX (tùy chọn)
-                  </p>
+                <FormField
+                  htmlFor="rq-diagram"
+                  label="Sơ đồ / Hình LaTeX"
+                  hint="Tùy chọn — nhập mã LaTeX nếu cần thêm hình minh họa."
+                >
                   <textarea
+                    id="rq-diagram"
                     className="textarea"
                     rows={3}
                     value={diagramLatex}
                     onChange={(e) => setDiagramLatex(e.target.value)}
                   />
-                </label>
+                </FormField>
               </>
             )}
 
             {/* STEP 3: Phương án */}
             {currentStep === 3 && questionType === QuestionType.MULTIPLE_CHOICE && (
-              <section className="data-card" style={{ minHeight: 0 }}>
-                <h4 style={{ margin: 0, color: '#92400e' }}>Đáp án A / B / C / D</h4>
+              <section className="data-card data-card--warn">
+                <h4 className="data-card__title" style={{ margin: 0 }}>Đáp án A / B / C / D</h4>
                 <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 10 }}>
                   Nhập <em>giá trị thật</em> cho từng đáp án và chọn ô bên trái để đánh dấu đáp án
                   đúng. Bỏ trống nếu chỉ dùng 2-3 phương án.
                 </p>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {options.map((opt, i) => (
-                    <label
+                    <McqOptionRow
                       key={opt.key}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'auto auto 1fr',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '6px 10px',
-                        border: opt.isCorrect ? '1px solid #10b981' : '1px solid #e5e7eb',
-                        background: opt.isCorrect ? '#ecfdf5' : '#fff',
-                        borderRadius: 8,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="mcq-correct"
-                        checked={opt.isCorrect}
-                        onChange={() => markOptionCorrect(i)}
-                        title="Đánh dấu là đáp án đúng"
-                      />
-                      <strong
-                        style={{ width: 16, color: opt.isCorrect ? '#047857' : '#475569' }}
-                      >
-                        {opt.key}
-                      </strong>
-                      <input
-                        className="input"
-                        placeholder={`Nội dung phương án ${opt.key}`}
-                        value={opt.text}
-                        onChange={(e) => updateOptionText(i, e.target.value)}
-                      />
-                    </label>
+                      optKey={opt.key}
+                      text={opt.text}
+                      isCorrect={opt.isCorrect}
+                      onMarkCorrect={() => markOptionCorrect(i)}
+                      onChange={(text) => updateOptionText(i, text)}
+                    />
                   ))}
                 </div>
               </section>
             )}
 
             {currentStep === 3 && questionType === QuestionType.TRUE_FALSE && (
-              <section className="data-card" style={{ minHeight: 0 }}>
-                <h4 style={{ margin: 0, color: '#1e40af' }}>Mệnh đề Đúng/Sai (4 mệnh đề)</h4>
+              <section className="data-card data-card--info">
+                <h4 className="data-card__title" style={{ margin: 0 }}>Mệnh đề Đúng/Sai (4 mệnh đề)</h4>
                 <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 10 }}>
                   Mỗi mệnh đề ghi <em>giá trị thật</em>; AI sẽ chuyển thành placeholder. Phải có
                   ít nhất 1 mệnh đề Đúng và 1 mệnh đề Sai.
@@ -493,48 +495,44 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
             )}
 
             {currentStep === 3 && questionType === QuestionType.SHORT_ANSWER && (
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Đáp án đúng (số thật)
-                </p>
+              <FormField
+                htmlFor="rq-answer"
+                label="Đáp án đúng (số thật)"
+                hint="Tùy chọn — nếu để trống, AI sẽ cố gắng suy luận từ đề bài và lời giải."
+              >
                 <input
+                  id="rq-answer"
                   className="input"
                   placeholder="Ví dụ: x = -2.5"
                   value={correctAnswer}
                   onChange={(e) => setCorrectAnswer(e.target.value)}
                 />
-                <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                  Tùy chọn — nếu để trống, AI sẽ cố gắng suy luận từ đề bài và lời giải.
-                </p>
-              </label>
+              </FormField>
             )}
 
             {/* STEP 4: Lời giải & xem trước */}
             {currentStep === 4 && (
               <>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Lời giải mẫu
-                  </p>
-                  <textarea
-                    className="textarea"
-                    rows={4}
-                    placeholder="Ví dụ: Bước 1: Chuyển 5 sang vế phải → 2x = -5. Bước 2: Chia hai vế cho 2 → x = -2.5."
-                    value={solutionSteps}
-                    onChange={(e) => setSolutionSteps(e.target.value)}
-                  />
-                  {solutionSteps && (
-                    <div className="preview-box">
-                      <MathText text={solutionSteps} />
-                    </div>
-                  )}
-                </label>
+                <FormField htmlFor="rq-solution" label="Lời giải mẫu">
+                  <>
+                    <textarea
+                      id="rq-solution"
+                      className="textarea"
+                      rows={4}
+                      placeholder="Ví dụ: Bước 1: Chuyển 5 sang vế phải → 2x = -5. Bước 2: Chia hai vế cho 2 → x = -2.5."
+                      value={solutionSteps}
+                      onChange={(e) => setSolutionSteps(e.target.value)}
+                    />
+                    {solutionSteps && (
+                      <div className="preview-box">
+                        <MathText text={solutionSteps} />
+                      </div>
+                    )}
+                  </>
+                </FormField>
 
-                <section
-                  className="data-card"
-                  style={{ minHeight: 0, border: '1px solid #c7d2fe', background: '#eef2ff' }}
-                >
-                  <h3 style={{ color: '#3730a3', marginTop: 0 }}>Xem trước câu hỏi</h3>
+                <section className="data-card data-card--info">
+                  <h3 className="data-card__title" style={{ marginTop: 0 }}>Xem trước câu hỏi</h3>
                   <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 12 }}>
                     Đây là nội dung sẽ được gửi cho AI để phân tích và tạo Blueprint.
                   </p>
@@ -686,7 +684,14 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                 Tiếp tục →
               </button>
             ) : (
-              <button type="submit" className="btn" disabled={isLoading}>
+              <button
+                type="submit"
+                className="btn"
+                disabled={isLoading}
+                onClick={() => {
+                  intentionalSaveRef.current = true;
+                }}
+              >
                 {isLoading ? (
                   <>
                     <span

@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, UploadCloud, FileText, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { useCreateBook, useUpdateBook, useUploadBookPdf } from '../../../../hooks/useBooks';
+import {
+  Loader2,
+  UploadCloud,
+  FileText,
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Plus,
+} from 'lucide-react';
+import { useBookList, useCreateBook, useUpdateBook, useUploadBookPdf } from '../../../../hooks/useBooks';
 import { useGrades } from '../../../../hooks/useGrades';
 import { useSubjectsByGrade } from '../../../../hooks/useSubjects';
 import type { BookResponse, CreateBookRequest } from '../../../../types/book.types';
@@ -9,10 +18,11 @@ import BookPdfPreview from '../BookPdfPreview';
 interface Props {
   book?: BookResponse;
   onCreated: (bookId: string) => void;
+  onSelectBook: (bookId: string) => void;
   onUploaded: () => void;
 }
 
-const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
+const BookUploadStep: React.FC<Props> = ({ book, onCreated, onSelectBook, onUploaded }) => {
   const [schoolGradeId, setSchoolGradeId] = useState(book?.schoolGradeId ?? '');
   const [subjectId, setSubjectId] = useState(book?.subjectId ?? '');
   const [title, setTitle] = useState(book?.title ?? '');
@@ -24,6 +34,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isAddingAnother, setIsAddingAnother] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const localPdfObjectUrl = useMemo(() => {
@@ -46,20 +57,21 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
 
   const createBook = useCreateBook();
   const updateBook = useUpdateBook(book?.id ?? '');
-  const uploadPdf = useUploadBookPdf(book?.id ?? '');
+  const uploadPdf = useUploadBookPdf(isAddingAnother ? '' : (book?.id ?? ''));
+  const relatedBooksQuery = useBookList({
+    schoolGradeId: schoolGradeId || undefined,
+    subjectId: subjectId || undefined,
+    page: 0,
+    size: 50,
+  });
 
-  useEffect(() => {
-    if (book) {
-      setSchoolGradeId(book.schoolGradeId);
-      setSubjectId(book.subjectId);
-      setTitle(book.title);
-      setPublisher(book.publisher ?? '');
-      setAcademicYear(book.academicYear ?? '');
-      setTotalPages(book.totalPages ?? '');
-      setOcrPageFrom(book.ocrPageFrom ?? '');
-      setOcrPageTo(book.ocrPageTo ?? '');
-    }
-  }, [book]);
+  const relatedBooks = useMemo(
+    () =>
+      (relatedBooksQuery.data?.result?.content ?? []).filter(
+        (item) => item.schoolGradeId === schoolGradeId && item.subjectId === subjectId
+      ),
+    [relatedBooksQuery.data, schoolGradeId, subjectId]
+  );
 
   const validate = (): string | null => {
     if (!schoolGradeId) return 'Vui lòng chọn khối lớp.';
@@ -93,7 +105,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
     };
 
     try {
-      if (book?.id) {
+      if (book?.id && !isAddingAnother) {
         await updateBook.mutateAsync({
           title: payload.title,
           publisher: payload.publisher ?? undefined,
@@ -104,7 +116,10 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
         });
       } else {
         const res = await createBook.mutateAsync(payload);
-        if (res.result?.id) onCreated(res.result.id);
+        if (res.result?.id) {
+          setIsAddingAnother(false);
+          onCreated(res.result.id);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Lỗi khi lưu thông tin sách.');
@@ -113,7 +128,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
 
   const handleUpload = async () => {
     setError(null);
-    if (!book?.id) {
+    if (!book?.id || isAddingAnother) {
       setError('Vui lòng lưu thông tin sách trước khi upload PDF.');
       return;
     }
@@ -135,6 +150,35 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
   const isSavingMetadata = createBook.isPending || updateBook.isPending;
   const isUploading = uploadPdf.isPending;
 
+  const startAddAnotherBook = () => {
+    setError(null);
+    setShowPreview(false);
+    setPdfFile(null);
+    setIsAddingAnother(true);
+    setTitle('');
+    setPublisher('');
+    setTotalPages('');
+    setOcrPageFrom('');
+    setOcrPageTo('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const cancelAddAnotherBook = () => {
+    if (!book) return;
+    setIsAddingAnother(false);
+    setSchoolGradeId(book.schoolGradeId);
+    setSubjectId(book.subjectId);
+    setTitle(book.title);
+    setPublisher(book.publisher ?? '');
+    setAcademicYear(book.academicYear ?? '');
+    setTotalPages(book.totalPages ?? '');
+    setOcrPageFrom(book.ocrPageFrom ?? '');
+    setOcrPageTo(book.ocrPageTo ?? '');
+    setPdfFile(null);
+    setShowPreview(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -146,6 +190,65 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
           <AlertCircle size={16} className="mt-0.5" />
           <div>{error}</div>
+        </div>
+      )}
+
+      {schoolGradeId && subjectId && (
+        <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-medium text-slate-700">
+              Sách cùng khối/môn ({relatedBooks.length})
+            </div>
+            {!isAddingAnother && (
+              <button
+                type="button"
+                onClick={startAddAnotherBook}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+              >
+                <Plus size={14} /> Thêm sách
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {relatedBooks.map((item) => {
+              const isActive = !isAddingAnother && item.id === book?.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectBook(item.id)}
+                  className={[
+                    'inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition',
+                    isActive
+                      ? 'border-blue-300 bg-blue-50 text-blue-700'
+                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  <span className="max-w-[300px] truncate">{item.title}</span>
+                  {item.pdfPath ? (
+                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
+                      PDF
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          {isAddingAnother && (
+            <div className="flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-700">
+                Đang tạo sách mới trong cùng khối/môn. Lưu metadata để tạo bản ghi mới, rồi upload
+                PDF cho sách này.
+              </p>
+              <button
+                type="button"
+                onClick={cancelAddAnotherBook}
+                className="ml-3 inline-flex items-center rounded-md border border-blue-300 bg-white px-2 py-1 text-xs text-blue-700 hover:bg-blue-100"
+              >
+                Huỷ
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -247,7 +350,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800 disabled:opacity-50"
         >
           {isSavingMetadata && <Loader2 size={14} className="animate-spin" />}
-          {book?.id ? 'Cập nhật metadata' : 'Lưu metadata'}
+          {book?.id && !isAddingAnother ? 'Cập nhật metadata' : 'Lưu metadata sách mới'}
         </button>
       </div>
 
@@ -256,7 +359,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
         <h3 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
           <FileText size={16} /> File PDF nguồn
         </h3>
-        {book?.pdfPath ? (
+        {!isAddingAnother && book?.pdfPath ? (
           <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 text-sm text-emerald-700">
             <CheckCircle2 size={16} />
             Đã upload PDF thành công.
@@ -272,21 +375,31 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
             type="file"
             accept="application/pdf"
             onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-            disabled={!book?.id}
+            disabled={!book?.id || isAddingAnother}
             className="text-sm"
           />
           <button
             type="button"
             onClick={handleUpload}
-            disabled={!pdfFile || !book?.id || isUploading}
+            disabled={!pdfFile || !book?.id || isUploading || isAddingAnother}
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
           >
             {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-            Upload PDF & sang bước 2
+            Upload PDF
           </button>
+          {!isAddingAnother && (
+            <button
+              type="button"
+              onClick={onUploaded}
+              disabled={!book?.pdfPath}
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Sang bước 2
+            </button>
+          )}
         </div>
 
-        {book?.id && (book.pdfPath || pdfFile) ? (
+        {!isAddingAnother && book?.id && (book.pdfPath || pdfFile) ? (
           <div className="mt-4 space-y-3">
             <button
               type="button"

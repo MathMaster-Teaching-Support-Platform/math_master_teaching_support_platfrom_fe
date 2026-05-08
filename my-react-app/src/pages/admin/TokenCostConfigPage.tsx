@@ -8,6 +8,8 @@ import {
   MessageSquare,
   Save,
   ShieldAlert,
+  Sparkles,
+  Wand2,
   X,
   Zap,
 } from 'lucide-react';
@@ -32,6 +34,18 @@ const featureMeta: Record<string, { icon: React.ReactNode; label: string; descri
     icon: <MessageSquare className="w-4 h-4" />,
     label: 'AI Chat',
     description: 'Trò chuyện và giải đáp thắc mắc trực tiếp với trợ lý ảo.',
+  },
+  'question-blueprint': {
+    icon: <Wand2 className="w-4 h-4" />,
+    label: 'Tạo mẫu từ câu hỏi (AI)',
+    description:
+      'Giáo viên dán một câu hỏi thật, AI gợi ý mẫu (Blueprint) gồm biến số, ràng buộc và công thức đáp án. Mỗi lần gọi tốn số token cấu hình ở đây.',
+  },
+  'question-generate': {
+    icon: <Sparkles className="w-4 h-4" />,
+    label: 'Sinh câu hỏi từ mẫu (AI)',
+    description:
+      'AI sinh nhiều câu hỏi mới từ một mẫu sẵn có. Số token tiêu hao = giá trị cấu hình ở đây × số câu giáo viên yêu cầu.',
   },
 };
 
