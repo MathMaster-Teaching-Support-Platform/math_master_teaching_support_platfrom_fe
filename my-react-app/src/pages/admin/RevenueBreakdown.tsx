@@ -13,7 +13,6 @@ import {
   Layers,
   Package,
   RefreshCw,
-  Search,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
@@ -135,7 +134,6 @@ const RevenueBreakdown: React.FC = () => {
   });
   const [quickRange, setQuickRange] = useState<RevenueQuickRange>('1m');
   const [groupBy, setGroupBy] = useState<RevenueGroupBy>('day');
-  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const breakdownQuery = useQuery({
@@ -247,7 +245,7 @@ const RevenueBreakdown: React.FC = () => {
 
   useEffect(() => {
     setPage(0);
-  }, [dateRange.from, dateRange.to, groupBy, searchTerm]);
+  }, [dateRange.from, dateRange.to, groupBy]);
 
   const totalRecords = filteredData.length;
   const totalPages = totalRecords === 0 ? 0 : Math.ceil(totalRecords / pageSize);
@@ -306,12 +304,6 @@ const RevenueBreakdown: React.FC = () => {
   }
 
   if (!breakdown) return null;
-
-  const groupByVi: Record<RevenueGroupBy, string> = {
-    hour: 'Theo giờ',
-    day: 'Theo ngày',
-    month: 'Theo tháng',
-  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
