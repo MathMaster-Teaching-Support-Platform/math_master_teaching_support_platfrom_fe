@@ -3,17 +3,14 @@ import {
   ArrowRight,
   BookOpen,
   Database,
-  Eye,
-  EyeOff,
+  GraduationCap,
   Grid2x2,
   List,
-  Lock,
   Pencil,
   Plus,
   RefreshCw,
   Trash2,
   User,
-  Globe,
   Search,
   X,
 } from 'lucide-react';
@@ -28,11 +25,11 @@ import {
 import { mockTeacher } from '../../data/mockData';
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useGrades } from '../../hooks/useGrades';
 import {
   useCreateQuestionBank,
   useDeleteQuestionBank,
   useSearchQuestionBanks,
-  useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
 
@@ -52,20 +49,15 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#047857', '#6d28d9', '#c2410c', '#be185d', '#0f766e'] as const;
 
-type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
-
-const VISIBILITY_OPTIONS = [
-  { value: 'ALL' as const, label: 'Tất cả' },
-  { value: 'PUBLIC' as const, label: 'Công khai' },
-  { value: 'PRIVATE' as const, label: 'Riêng tư' },
-];
+// "ALL" = no grade filter; otherwise the value is the schoolGradeId.
+type GradeFilter = 'ALL' | string;
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 export function QuestionBankDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
+  const [gradeFilter, setGradeFilter] = useState<GradeFilter>('ALL');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
@@ -78,50 +70,49 @@ export function QuestionBankDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, visibilityFilter, pageSize]);
+  }, [debouncedSearch, gradeFilter, pageSize]);
 
   const searchParams = useMemo(() => {
-    let isPublic: boolean | undefined;
-    if (visibilityFilter === 'PUBLIC') isPublic = true;
-    else if (visibilityFilter === 'PRIVATE') isPublic = false;
     return {
       searchTerm: debouncedSearch.trim() || undefined,
-      isPublic,
       mineOnly: true,
       page,
       size: pageSize,
       sortBy: 'createdAt',
       sortDirection: 'DESC' as const,
     };
-  }, [debouncedSearch, visibilityFilter, page, pageSize]);
+  }, [debouncedSearch, page, pageSize]);
 
   const { data, isLoading, isError, error, refetch } = useSearchQuestionBanks(searchParams);
+  const { data: gradesData } = useGrades();
 
   const createMutation = useCreateQuestionBank();
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
-  const togglePublicMutation = useToggleQuestionBankPublicStatus();
 
   const { showToast } = useToast();
 
-  const banks = useMemo(() => data?.result?.content ?? [], [data]);
+  // Server-side bank list (paged); grade filter is applied client-side because
+  // /question-banks/search no longer accepts gradeLevel as a server filter.
+  const allBanks = useMemo(() => data?.result?.content ?? [], [data]);
+  const banks = useMemo(() => {
+    if (gradeFilter === 'ALL') return allBanks;
+    return allBanks.filter((b) => b.schoolGradeId === gradeFilter);
+  }, [allBanks, gradeFilter]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
-  const effectiveTotalElements = Math.max(totalElements, banks.length);
+  const effectiveTotalElements = Math.max(totalElements, allBanks.length);
   const effectiveTotalPages =
     totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
-  const hasActiveFilters = !!debouncedSearch || visibilityFilter !== 'ALL';
+  const hasActiveFilters = !!debouncedSearch || gradeFilter !== 'ALL';
+
+  const grades = gradesData?.result ?? [];
 
   const pageStats = useMemo(() => {
-    const pub = banks.filter((b) => b.isPublic).length;
     const questionsOnPage = banks.reduce((s, b) => s + (b.questionCount ?? 0), 0);
-    return {
-      publicOnPage: pub,
-      privateOnPage: banks.length - pub,
-      questionsOnPage,
-    };
+    return { questionsOnPage };
   }, [banks]);
 
   async function saveQuestionBank(payload: QuestionBankRequest) {
@@ -148,24 +139,6 @@ export function QuestionBankDashboard() {
         message: err instanceof Error ? err.message : 'Không thể xóa ngân hàng câu hỏi.',
       });
       setPendingDelete(null);
-    }
-  }
-
-  async function handleTogglePublic(bank: QuestionBankResponse) {
-    try {
-      await togglePublicMutation.mutateAsync(bank.id);
-      showToast({
-        type: 'success',
-        message: bank.isPublic
-          ? `Đã chuyển "${bank.name}" thành riêng tư.`
-          : `Đã chia sẻ "${bank.name}" công khai.`,
-      });
-    } catch (err) {
-      showToast({
-        type: 'error',
-        message:
-          err instanceof Error ? err.message : 'Không thể đổi trạng thái chia sẻ của ngân hàng.',
-      });
     }
   }
 
@@ -287,7 +260,7 @@ export function QuestionBankDashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {(
               [
                 {
@@ -296,20 +269,6 @@ export function QuestionBankDashboard() {
                   Icon: Database,
                   bg: 'bg-[#EEF2FF]',
                   color: 'text-[#4F7EF7]',
-                },
-                {
-                  label: 'Công khai (trang)',
-                  value: pageStats.publicOnPage,
-                  Icon: Globe,
-                  bg: 'bg-[#ECFDF5]',
-                  color: 'text-[#2EAD7A]',
-                },
-                {
-                  label: 'Riêng tư (trang)',
-                  value: pageStats.privateOnPage,
-                  Icon: Lock,
-                  bg: 'bg-[#FFF7ED]',
-                  color: 'text-[#E07B39]',
                 },
                 {
                   label: 'Câu hỏi (trang)',
@@ -341,7 +300,7 @@ export function QuestionBankDashboard() {
             ))}
           </div>
           <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#B0AEA5] mt-1">
-            Ba chỉ số cuối theo trang hiện tại; &quot;Tổng ngân hàng&quot; là tổng theo bộ lọc đang áp dụng.
+            &quot;Câu hỏi (trang)&quot; tính trên trang hiện tại; &quot;Tổng ngân hàng&quot; là tổng theo bộ lọc đang áp dụng.
           </p>
 
           {/* Toolbar */}
@@ -377,21 +336,51 @@ export function QuestionBankDashboard() {
                 <span className="hidden sm:inline">Làm mới</span>
               </button>
 
-              <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
-                {VISIBILITY_OPTIONS.map((opt) => (
+              <div
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all duration-150 flex-shrink-0 ${
+                  gradeFilter === 'ALL'
+                    ? 'border-[#E8E6DC] bg-[#FAF9F5] hover:border-[#D1CFC5]'
+                    : 'border-[#C96442] bg-[#FFF5EE] shadow-[0_0_0_3px_rgba(201,100,66,0.12)]'
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                    gradeFilter === 'ALL'
+                      ? 'bg-[#E8E6DC] text-[#5E5D59]'
+                      : 'bg-[#C96442] text-white'
+                  }`}
+                  aria-hidden
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                </div>
+                <span className="hidden md:inline font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                  Lọc lớp
+                </span>
+                <select
+                  value={gradeFilter}
+                  onChange={(e) => setGradeFilter(e.target.value as GradeFilter)}
+                  className={`bg-transparent font-[Be_Vietnam_Pro] text-[14px] font-semibold outline-none cursor-pointer pr-1 ${
+                    gradeFilter === 'ALL' ? 'text-[#141413]' : 'text-[#C96442]'
+                  }`}
+                  aria-label="Lọc theo lớp"
+                >
+                  <option value="ALL">Tất cả lớp</option>
+                  {grades.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.gradeLevel ? `Lớp ${g.gradeLevel}` : g.id}
+                    </option>
+                  ))}
+                </select>
+                {gradeFilter !== 'ALL' && (
                   <button
-                    key={opt.value}
                     type="button"
-                    onClick={() => setVisibilityFilter(opt.value)}
-                    className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
-                      visibilityFilter === opt.value
-                        ? 'bg-white text-[#141413] shadow-sm'
-                        : 'text-[#87867F] hover:text-[#5E5D59]'
-                    }`}
+                    aria-label="Bỏ lọc lớp"
+                    onClick={() => setGradeFilter('ALL')}
+                    className="w-5 h-5 rounded-full bg-white text-[#C96442] hover:bg-[#FFE8DA] flex items-center justify-center flex-shrink-0 transition-colors"
                   >
-                    {opt.label}
+                    <X className="w-3 h-3" />
                   </button>
-                ))}
+                )}
               </div>
 
               {banks.length > 0 && (
@@ -438,17 +427,10 @@ export function QuestionBankDashboard() {
               </strong>
               <div className="hidden sm:block w-px h-4 bg-[#E8E6DC]" />
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                Công khai{' '}
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9B6FE0] inline-block" />
+                Tổng câu hỏi{' '}
                 <strong className="text-[#141413] font-semibold tabular-nums">
-                  {pageStats.publicOnPage}
-                </strong>
-              </span>
-              <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                Riêng tư{' '}
-                <strong className="text-[#141413] font-semibold tabular-nums">
-                  {pageStats.privateOnPage}
+                  {pageStats.questionsOnPage}
                 </strong>
               </span>
             </div>
@@ -503,17 +485,6 @@ export function QuestionBankDashboard() {
                     >
                       #{String(page * pageSize + idx + 1).padStart(2, '0')}
                     </span>
-                    <div className="absolute top-3 right-3">
-                      {bank.isPublic ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
-                          <Eye className="w-3 h-3" /> Công khai
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#87867F]">
-                          <EyeOff className="w-3 h-3" /> Riêng tư
-                        </span>
-                      )}
-                    </div>
                     <button
                       type="button"
                       onClick={() => navigate(`/teacher/question-banks/${bank.id}`)}
@@ -581,22 +552,6 @@ export function QuestionBankDashboard() {
                         </button>
                         <button
                           type="button"
-                          className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50"
-                          disabled={togglePublicMutation.isPending}
-                          onClick={() => void handleTogglePublic(bank)}
-                        >
-                          {bank.isPublic ? (
-                            <>
-                              <EyeOff className="w-3 h-3 inline mr-1 align-text-bottom" /> Riêng tư
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="w-3 h-3 inline mr-1 align-text-bottom" /> Công khai
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
                           className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
                           onClick={() => {
                             setMode('edit');
@@ -647,15 +602,6 @@ export function QuestionBankDashboard() {
                       >
                         {bank.name}
                       </button>
-                      {bank.isPublic ? (
-                        <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 font-[Be_Vietnam_Pro] text-[11px] font-medium text-emerald-700">
-                          <Eye className="w-3 h-3" /> Công khai
-                        </span>
-                      ) : (
-                        <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F]">
-                          <EyeOff className="w-3 h-3" /> Riêng tư
-                        </span>
-                      )}
                     </div>
                     <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] line-clamp-1 mb-1">
                       {bank.description?.trim() || 'Chưa có mô tả.'}
@@ -679,14 +625,6 @@ export function QuestionBankDashboard() {
                       onClick={() => navigate(`/teacher/question-banks/${bank.id}`)}
                     >
                       Chi tiết
-                    </button>
-                    <button
-                      type="button"
-                      className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50"
-                      disabled={togglePublicMutation.isPending}
-                      onClick={() => void handleTogglePublic(bank)}
-                    >
-                      {bank.isPublic ? 'Riêng tư' : 'Công khai'}
                     </button>
                     <button
                       type="button"

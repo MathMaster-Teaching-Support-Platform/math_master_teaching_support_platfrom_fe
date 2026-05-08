@@ -3,8 +3,6 @@ import {
   BookOpen,
   ChevronLeft,
   Database,
-  Eye,
-  EyeOff,
   GraduationCap,
   LayoutGrid,
   ListChecks,
@@ -38,7 +36,6 @@ import { useGetQuestionsByBank } from '../../hooks/useQuestion';
 import {
   useDeleteQuestionBank,
   useGetQuestionBankById,
-  useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
 import '../../styles/qb-design-system.css';
@@ -116,7 +113,6 @@ export function QuestionBankDetailPage() {
 
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
-  const togglePublicMutation = useToggleQuestionBankPublicStatus();
 
   const bank = data?.result;
   const questions = useMemo<QuestionResponse[]>(
@@ -209,25 +205,6 @@ export function QuestionBankDetailPage() {
     }
   }
 
-  async function handleTogglePublic() {
-    if (!bank) return;
-    try {
-      await togglePublicMutation.mutateAsync(bank.id);
-      showToast({
-        type: 'success',
-        message: bank.isPublic
-          ? `Đã chuyển "${bank.name}" thành riêng tư.`
-          : `Đã chia sẻ "${bank.name}" công khai.`,
-      });
-    } catch (err) {
-      showToast({
-        type: 'error',
-        message:
-          err instanceof Error ? err.message : 'Không thể đổi trạng thái chia sẻ của ngân hàng.',
-      });
-    }
-  }
-
   const hasFilters =
     !!search ||
     statusFilter !== 'ALL' ||
@@ -290,17 +267,6 @@ export function QuestionBankDetailPage() {
                         <h1 className="font-[Playfair_Display] text-xl sm:text-[22px] font-medium text-[#141413] leading-tight">
                           {bank.name}
                         </h1>
-                        {bank.isPublic ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
-                            <Eye className="w-3 h-3" aria-hidden />
-                            Công khai
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F4ED] border border-[#E8E6DC] font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#5E5D59]">
-                            <EyeOff className="w-3 h-3" aria-hidden />
-                            Riêng tư
-                          </span>
-                        )}
                       </div>
                       <div className="mt-1.5 space-y-1.5 max-w-3xl">
                         {bank.description?.trim() ? (
@@ -332,19 +298,6 @@ export function QuestionBankDetailPage() {
                     >
                       <RefreshCw className="w-3.5 h-3.5" aria-hidden />
                       Làm mới
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50"
-                      onClick={() => void handleTogglePublic()}
-                      disabled={togglePublicMutation.isPending}
-                    >
-                      {bank.isPublic ? (
-                        <EyeOff className="w-3.5 h-3.5" aria-hidden />
-                      ) : (
-                        <Eye className="w-3.5 h-3.5" aria-hidden />
-                      )}
-                      {bank.isPublic ? 'Riêng tư' : 'Công khai'}
                     </button>
                     <button
                       type="button"
