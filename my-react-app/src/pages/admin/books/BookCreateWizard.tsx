@@ -48,6 +48,11 @@ const BookCreateWizard: React.FC = () => {
     navigate(`/admin/books/${newId}/wizard`, { replace: true });
   };
 
+  const handleSelectBook = (selectedId: string) => {
+    setBookId(selectedId);
+    navigate(`/admin/books/${selectedId}/wizard`, { replace: true });
+  };
+
   return (
     <DashboardLayout role="admin" user={mockAdmin} contentClassName="dashboard-content--flush-bleed">
       <div className="px-6 py-8 lg:px-8">
@@ -123,8 +128,10 @@ const BookCreateWizard: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
           {stepIdx === 0 && (
             <BookUploadStep
+              key={book?.id ?? 'new-book'}
               book={book}
               onCreated={handleBookCreated}
+              onSelectBook={handleSelectBook}
               onUploaded={() => setStepIdx(1)}
             />
           )}
