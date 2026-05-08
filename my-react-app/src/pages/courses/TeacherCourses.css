@@ -351,15 +351,13 @@
 }
 
 .module-layout-container .cover-title {
-  position: relative;
-  z-index: 2;
-  margin: 0;
-  padding: 0 1rem 0.9rem;
+  margin: 0 0 0.35rem;
+  padding: 0;
   font-size: 1rem;
   font-weight: 700;
   font-family: 'Be Vietnam Pro', sans-serif;
   letter-spacing: 0;
-  color: #ffffff;
+  color: #141413;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -368,7 +366,6 @@
   text-overflow: ellipsis;
   word-break: break-word;
   min-height: calc(1.35em * 2);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .module-layout-container .course-heading {
@@ -1818,7 +1815,7 @@
 }
 
 .module-layout-container .teacher-courses-page .cover-title {
-  color: #2e2d2a;
+  color: #141413;
 }
 
 /* StudentCourses specific polish */

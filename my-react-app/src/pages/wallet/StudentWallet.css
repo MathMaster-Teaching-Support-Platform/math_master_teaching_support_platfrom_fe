@@ -1139,6 +1139,7 @@
   background: none;
   border: 1.5px solid #e5e7eb;
   border-radius: 7px;
+  padding: 0;
   width: 26px;
   height: 26px;
   display: flex;
