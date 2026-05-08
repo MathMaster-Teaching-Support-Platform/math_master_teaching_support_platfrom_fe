@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Globe2, Lock, Sparkles } from 'lucide-react';
+import { Lock, Sparkles } from 'lucide-react';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import type { SchoolGradeResponse, SubjectResponse } from '../../types/academic.types';
 import { AcademicStructureService } from '../../services/api/academic-structure.service';
