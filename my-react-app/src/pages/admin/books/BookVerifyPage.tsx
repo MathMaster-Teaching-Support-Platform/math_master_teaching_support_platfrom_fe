@@ -98,13 +98,16 @@ const shouldSendAuthHeaderForImage = (url: string): boolean => {
 
 const buildAssetCandidates = (url: string): string[] => {
   if (!url) return [];
-  const candidates = [url];
+  const candidates: string[] = [];
   const booksPathRegex = /\/api\/v1\/crawl-data\/static\/books\/([^/]+)\/pages\/([^/?#]+)$/i;
   const match = booksPathRegex.exec(url);
   if (match) {
     const bookId = match[1];
     const fileName = match[2];
+    // Prefer normalized images path; many runs don't keep /static/books/.../pages files.
     candidates.push(`${globalThis.location.origin}/api/v1/crawl-data/static/images/${bookId}/${fileName}`);
+  } else {
+    candidates.push(url);
   }
   return Array.from(new Set(candidates));
 };
@@ -915,7 +918,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   const isSaving = updatePage.isPending;
   const rawPreviewImageSrc =
-    page.rawImageUrl ??
     blocks.find((b) => b.type === 'image' || b.type === 'figure')?.imageUrl ??
     blocks.find((b) => b.type === 'image' || b.type === 'figure')?.thumbnailUrl ??
     blocks.find((b) => b.type === 'image' || b.type === 'figure')?.imagePath ??
