@@ -10,7 +10,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Download,
-  Layers,
   Package,
   RefreshCw,
   Search,
