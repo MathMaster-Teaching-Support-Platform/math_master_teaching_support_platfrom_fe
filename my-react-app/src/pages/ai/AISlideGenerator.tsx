@@ -150,16 +150,8 @@ const OUTPUT_FORMAT_LABELS: Partial<Record<LessonSlideOutputFormat, string>> = {
   LATEX: 'Latex',
 };
 
-const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
-  OMML: 'OMML (Office Equation)',
-  IMAGE: 'Image (render cong thuc thanh anh)',
-  PLAIN_TEXT: 'Plain Text',
-};
-
 const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
   OUTPUT_FORMAT_LABELS[format] || 'Text';
-
-const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
 
 const formatFileSize = (sizeInBytes: number): string => {
   if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
@@ -1001,6 +993,18 @@ const AISlideGenerator: React.FC = () => {
     };
   }, [isGeneratedPreviewOpen]);
 
+  // Hide navbar & sidebar when generating content
+  useEffect(() => {
+    if (generatingContent) {
+      document.body.classList.add('slide-preview-open');
+    } else {
+      document.body.classList.remove('slide-preview-open');
+    }
+    return () => {
+      document.body.classList.remove('slide-preview-open');
+    };
+  }, [generatingContent]);
+
   useEffect(() => {
     const previewsToLoad = templates;
 
@@ -1392,11 +1396,7 @@ const AISlideGenerator: React.FC = () => {
         }
       }
 
-      setSuccess(
-        outputFormatForPptx === 'LATEX'
-          ? 'PPTX đã sẵn sàng! Đã xuất theo chế độ LATEX.'
-          : `PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`
-      );
+      setSuccess(outputFormatForPptx === 'LATEX' ? 'Slide đã sẵn sàng!' : `Slide đã sẵn sàng!`);
       setActiveWizardStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
@@ -2024,7 +2024,6 @@ const AISlideGenerator: React.FC = () => {
                     required
                     className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 resize-none"
                   />
-                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1">Bắt buộc.</p>
                 </div>
 
                 {selectedLesson && selectedTemplate && (
@@ -2194,7 +2193,7 @@ const AISlideGenerator: React.FC = () => {
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {generatingPptx ? (
-                      <LoadingSpinner label="Đang tạo PPTX..." />
+                      <LoadingSpinner label="Đang tạo Slide..." />
                     ) : (
                       <>
                         <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận & tạo PPTX
@@ -2253,7 +2252,7 @@ const AISlideGenerator: React.FC = () => {
                   disabled={!preparedPptxBlob}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <Download className="w-3.5 h-3.5" /> Tải PPTX về máy
+                  <Download className="w-3.5 h-3.5" /> Tải Slide
                 </button>
               </div>
             </div>
@@ -2546,13 +2545,13 @@ const AISlideGenerator: React.FC = () => {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {generatingContent && (
         <div
-          className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-[#141413]/60 backdrop-blur-sm flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Đang tạo nội dung AI"
         >
-          <div className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-sm p-8 flex flex-col items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#E8E6DC] flex items-center justify-center">
+          <div className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_80px] w-full max-w-sm p-8 flex flex-col items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-[#E8E6DC] flex items-center justify-center animate-[ai-icon-pulse_2s_ease-in-out_infinite]">
               <Sparkles className="w-6 h-6 text-[#7C6FAB]" />
             </div>
             <div className="text-center">
@@ -2564,19 +2563,20 @@ const AISlideGenerator: React.FC = () => {
               </p>
             </div>
             <div className="w-full h-1.5 bg-[#E8E6DC] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#7C6FAB] rounded-full animate-[indeterminate_1.5s_ease_infinite]"
-                style={{ width: '60%' }}
-              />
+              <div className="h-full bg-[#7C6FAB] rounded-full animate-[ai-progress_2s_ease-in-out_infinite]" />
             </div>
-            <div className="flex flex-col items-center gap-1" aria-hidden="true">
+            <div className="flex flex-col items-center gap-1.5 w-full" aria-hidden="true">
               {[
                 'Phân tích bài học',
                 'Dựng dàn ý',
                 'Tối ưu biểu thức toán',
                 'Hoàn tất nội dung',
-              ].map((step) => (
-                <span key={step} className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5]">
+              ].map((step, i) => (
+                <span
+                  key={step}
+                  className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5] animate-[ai-step-pulse_2.4s_ease-in-out_infinite]"
+                  style={{ animationDelay: `${i * 0.5}s` }}
+                >
                   {step}
                 </span>
               ))}
@@ -2621,7 +2621,7 @@ const AISlideGenerator: React.FC = () => {
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
                   <div className="w-10 h-10 rounded-full border-2 border-[#E8E6DC] border-t-[#7C6FAB] animate-spin" />
                   <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
-                    Đang tải preview...
+                    Đang tải slide...
                   </p>
                 </div>
               )}
