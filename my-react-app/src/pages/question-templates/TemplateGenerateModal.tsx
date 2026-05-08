@@ -1,8 +1,13 @@
 import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
+import { useToast } from '../../context/ToastContext';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
+import { QuestionTemplateApiError } from '../../services/questionTemplateService';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
+
+const NO_TOKEN_TOAST =
+  'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
 
 type Props = {
   isOpen: boolean;
@@ -22,6 +27,7 @@ export function TemplateGenerateModal({
   const [error, setError] = useState<string | null>(null);
 
   const generateMutation = useGenerateQuestions();
+  const { showToast } = useToast();
 
   if (!isOpen) return null;
 
@@ -50,6 +56,15 @@ export function TemplateGenerateModal({
       const warnSuffix = warnings.length ? ` (cảnh báo: ${warnings.length})` : '';
       onGenerated(`Đã tạo ${total}/${count} câu hỏi vào hàng chờ duyệt${warnSuffix}.`);
     } catch (err) {
+      // Out-of-tokens / no-subscription errors get a toast, no inline error
+      // (per spec). Other errors keep the inline message.
+      if (
+        err instanceof QuestionTemplateApiError &&
+        (err.code === 1167 || err.code === 1166)
+      ) {
+        showToast({ type: 'error', message: NO_TOKEN_TOAST });
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Không thể tạo câu hỏi.');
     }
   }

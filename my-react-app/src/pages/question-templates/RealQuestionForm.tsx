@@ -8,6 +8,11 @@ import {
   type BlueprintFromRealQuestionResponse,
 } from '../../types/questionTemplate';
 import { useBlueprintFromRealQuestion } from '../../hooks/useQuestionTemplate';
+import { useToast } from '../../context/ToastContext';
+import { QuestionTemplateApiError } from '../../services/questionTemplateService';
+
+const NO_TOKEN_TOAST =
+  'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
 import { TypeSelector } from '../../components/question-templates/TypeSelector';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import MathText from '../../components/common/MathText';
@@ -110,6 +115,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
   >(null);
 
   const blueprintMutation = useBlueprintFromRealQuestion();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -279,6 +285,15 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
       }
       onBlueprintReady(request, blueprint);
     } catch (err) {
+      // Out-of-tokens / no-subscription errors get a toast, no inline error
+      // (per spec). Other errors keep the inline message.
+      if (
+        err instanceof QuestionTemplateApiError &&
+        (err.code === 1167 || err.code === 1166)
+      ) {
+        showToast({ type: 'error', message: NO_TOKEN_TOAST });
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Có lỗi khi gọi AI.');
     }
   }
