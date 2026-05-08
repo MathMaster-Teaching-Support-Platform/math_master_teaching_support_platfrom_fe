@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
@@ -63,6 +63,9 @@ export function TemplateGenerateModal({
               {template.name}
             </p>
           </div>
+          <button className="icon-btn" onClick={onClose} aria-label="Đóng">
+            <X size={16} />
+          </button>
         </div>
 
         <form onSubmit={submit}>

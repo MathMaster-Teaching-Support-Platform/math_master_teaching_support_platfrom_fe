@@ -10,21 +10,15 @@ export function TypeSelector({ selectedType, onChange, disabled = false }: Reado
   const types = [
     {
       value: QuestionType.MULTIPLE_CHOICE,
-      icon: '📝',
-      label: 'MCQ',
-      subtitle: 'Trắc nghiệm',
+      label: 'Trắc nghiệm',
     },
     {
       value: QuestionType.TRUE_FALSE,
-      icon: '✓✗',
-      label: 'TF',
-      subtitle: 'Đúng/Sai',
+      label: 'Đúng/Sai',
     },
     {
       value: QuestionType.SHORT_ANSWER,
-      icon: '✏️',
-      label: 'SA',
-      subtitle: 'Trả lời ngắn',
+      label: 'Trả lời ngắn',
     },
   ];
 
@@ -64,9 +58,7 @@ export function TypeSelector({ selectedType, onChange, disabled = false }: Reado
               }
             }}
           >
-            <div style={{ fontSize: '24px', marginBottom: 4 }}>{type.icon}</div>
-            <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: 2 }}>{type.label}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>{type.subtitle}</div>
+            <div style={{ fontWeight: 600, fontSize: '14px' }}>{type.label}</div>
           </button>
         ))}
       </div>
