@@ -2,13 +2,7 @@
 // `com.fptu.math_master.dto.{request,response}` for the textbook OCR pipeline.
 // Keep in lockstep with BE — fields are JSON-serialized as-is.
 
-export type BookStatus =
-  | 'DRAFT'
-  | 'MAPPING'
-  | 'READY'
-  | 'OCR_RUNNING'
-  | 'OCR_DONE'
-  | 'OCR_FAILED';
+export type BookStatus = 'DRAFT' | 'MAPPING' | 'READY' | 'OCR_RUNNING' | 'OCR_DONE' | 'OCR_FAILED';
 
 export interface BookPdfPreviewUrlResponse {
   url: string;

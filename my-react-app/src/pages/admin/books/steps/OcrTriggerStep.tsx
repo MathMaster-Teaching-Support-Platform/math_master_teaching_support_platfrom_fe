@@ -1,16 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Loader2,
-  Rocket,
   AlertCircle,
-  CheckCircle2,
-  RefreshCw,
-  PlayCircle,
   ArrowRight,
+  CheckCircle2,
   Info,
+  Loader2,
   OctagonAlert,
+  PlayCircle,
+  RefreshCw,
+  Rocket,
 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   bookKeys,
   useBookProgress,
@@ -118,9 +118,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
     try {
       await refreshVerification.mutateAsync();
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'Không thể đồng bộ trạng thái xác minh.'
-      );
+      setError(e instanceof Error ? e.message : 'Không thể đồng bộ trạng thái xác minh.');
     }
   };
 
@@ -140,8 +138,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
   const verifiedLessons = progress?.verifiedLessons ?? 0;
 
   const pagePct = totalPages > 0 ? Math.round((verifiedPages / totalPages) * 100) : 0;
-  const lessonPct =
-    totalLessons > 0 ? Math.round((verifiedLessons / totalLessons) * 100) : 0;
+  const lessonPct = totalLessons > 0 ? Math.round((verifiedLessons / totalLessons) * 100) : 0;
 
   return (
     <div className="space-y-5">
@@ -151,8 +148,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
         </h2>
         <p className="text-sm text-slate-500">
           Kiểm tra lại thông tin rồi bấm chạy. Quá trình có thể vài phút — chỉ quét các{' '}
-          <strong>bài đã gán trang</strong> ở Bước 2. Bạn có thể đóng trình duyệt: tiến độ được lưu và khi
-          quay lại vẫn xem được (miễn là máy chủ đã nhận đường truyền trước đó).
+          <strong>bài đã gán trang</strong> ở Bước 2. Bạn có thể đóng trình duyệt: tiến độ được lưu
+          và khi quay lại vẫn xem được (miễn là máy chủ đã nhận đường truyền trước đó).
         </p>
       </div>
 
@@ -191,10 +188,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
             Thiết lập OCR
           </div>
           <Row label="Tổng số trang PDF" value={String(book.totalPages ?? '?')} />
-          <Row
-            label="Khoảng OCR"
-            value={`${book.ocrPageFrom ?? '?'} – ${book.ocrPageTo ?? '?'}`}
-          />
+          <Row label="Khoảng OCR" value={`${book.ocrPageFrom ?? '?'} – ${book.ocrPageTo ?? '?'}`} />
           <Row label="Số bài đã mapping" value={String(book.mappedLessonCount ?? 0)} />
           <Row
             label="Trạng thái"
@@ -202,9 +196,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
               <span
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[uiStatus]}`}
               >
-                {uiStatus === 'OCR_RUNNING' && (
-                  <Loader2 size={12} className="animate-spin" />
-                )}
+                {uiStatus === 'OCR_RUNNING' && <Loader2 size={12} className="animate-spin" />}
                 {STATUS_LABEL[uiStatus]}
               </span>
             }
@@ -214,15 +206,15 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
 
       {!book.pdfPath && (
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-700">
-          <Info size={16} className="mt-0.5" /> Chưa có file PDF. Hãy quay lại Bước 1 để
-          upload trước.
+          <Info size={16} className="mt-0.5" /> Chưa có file PDF. Hãy quay lại Bước 1 để upload
+          trước.
         </div>
       )}
 
       {(book.mappedLessonCount ?? 0) === 0 && (
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-700">
-          <Info size={16} className="mt-0.5" /> Chưa có bài học nào được mapping. Hãy quay
-          lại Bước 2.
+          <Info size={16} className="mt-0.5" /> Chưa có bài học nào được mapping. Hãy quay lại Bước
+          2.
         </div>
       )}
 
@@ -280,9 +272,9 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
                     </>
                   ) : (
                     <>
-                      Bạn có thể đợi vài giây và dùng nút «Làm mới», hoặc nhờ quản trị bật lại dịch vụ
-                      quét sách. Nếu muốn dừng hẳn, dùng «Hủy tác vụ» — trạng thái sách vẫn được đặt lại
-                      trên hệ thống kể cả khi máy chủ quét chưa chạy lại.
+                      Bạn có thể đợi vài giây và dùng nút «Làm mới», hoặc nhờ quản trị bật lại dịch
+                      vụ quét sách. Nếu muốn dừng hẳn, dùng «Hủy tác vụ» — trạng thái sách vẫn được
+                      đặt lại trên hệ thống kể cả khi máy chủ quét chưa chạy lại.
                     </>
                   )}
                 </p>
@@ -320,9 +312,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
               <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
                 {progress.lessons.map((l: LessonProgress) => {
                   const lp =
-                    l.totalPages > 0
-                      ? Math.round((l.verifiedPages / l.totalPages) * 100)
-                      : 0;
+                    l.totalPages > 0 ? Math.round((l.verifiedPages / l.totalPages) * 100) : 0;
                   return (
                     <div
                       key={l.lessonId}
@@ -422,8 +412,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onComplete }) => {
                   Hủy tác vụ OCR?
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  OCR đang chạy trên máy chủ. Hủy sẽ gửi lệnh dừng và đặt lại trạng thái sách về «Sẵn
-                  sàng OCR». Một số trang có thể đã được xử lý — bạn có thể chạy lại OCR sau.
+                  OCR đang chạy trên máy chủ. Hủy sẽ gửi lệnh dừng và đặt lại trạng thái sách về
+                  «Sẵn sàng OCR». Một số trang có thể đã được xử lý — bạn có thể chạy lại OCR sau.
                 </p>
               </div>
             </div>
@@ -507,7 +497,11 @@ const OCR_PIPELINE_STEPS: ReadonlyArray<{ phaseKey: string; title: string; hint:
     title: 'Lưu kết quả',
     hint: 'Ghi nội dung đã quét vào kho dữ liệu của khóa học.',
   },
-  { phaseKey: 'done', title: 'Hoàn tất bước quét', hint: 'Có thể sang bước kiểm duyệt từng trang.' },
+  {
+    phaseKey: 'done',
+    title: 'Hoàn tất bước quét',
+    hint: 'Có thể sang bước kiểm duyệt từng trang.',
+  },
 ];
 
 function activeOcrStepIndex(phase: string | null | undefined): number {
@@ -561,8 +555,8 @@ const OcrPipelineLivePanel: React.FC<{
             Máy đang quét nội dung{cachedHint}
           </div>
           <div className="text-[11px] text-slate-600 mt-0.5">
-            Khác với phần «Trang đã hoàn thành kiểm duyệt» bên dưới — chỉ bật sau khi bạn xác nhận từng
-            trang.
+            Khác với phần «Trang đã hoàn thành kiểm duyệt» bên dưới — chỉ bật sau khi bạn xác nhận
+            từng trang.
           </div>
         </div>
         {runner ? (

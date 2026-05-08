@@ -1,6 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types';
-import type { Page } from '../../types/common.types';
 import type {
   BookLessonPageResponse,
   BookPdfPreviewUrlResponse,
@@ -12,6 +11,7 @@ import type {
   OcrTriggerResponse,
   UpdateBookRequest,
 } from '../../types/book.types';
+import type { Page } from '../../types/common.types';
 import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
@@ -53,9 +53,7 @@ export class BookService {
     return handle<BookResponse>(res, 'Failed to fetch book');
   }
 
-  static async search(
-    params: BookSearchParams = {}
-  ): Promise<ApiResponse<Page<BookResponse>>> {
+  static async search(params: BookSearchParams = {}): Promise<ApiResponse<Page<BookResponse>>> {
     const query = new URLSearchParams();
     if (params.schoolGradeId) query.set('schoolGradeId', params.schoolGradeId);
     if (params.subjectId) query.set('subjectId', params.subjectId);
@@ -73,10 +71,7 @@ export class BookService {
     return handle<Page<BookResponse>>(res, 'Failed to search books');
   }
 
-  static async update(
-    bookId: string,
-    req: UpdateBookRequest
-  ): Promise<ApiResponse<BookResponse>> {
+  static async update(bookId: string, req: UpdateBookRequest): Promise<ApiResponse<BookResponse>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_DETAIL(bookId)}`, {
       method: 'PUT',
       headers: jsonHeaders(requireToken()),
@@ -85,10 +80,7 @@ export class BookService {
     return handle<BookResponse>(res, 'Failed to update book');
   }
 
-  static async setPdfPath(
-    bookId: string,
-    pdfPath: string
-  ): Promise<ApiResponse<BookResponse>> {
+  static async setPdfPath(bookId: string, pdfPath: string): Promise<ApiResponse<BookResponse>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PDF_PATH(bookId)}`, {
       method: 'PATCH',
       headers: jsonHeaders(requireToken()),
@@ -97,9 +89,7 @@ export class BookService {
     return handle<BookResponse>(res, 'Failed to set PDF path');
   }
 
-  static async getPdfPreviewUrl(
-    bookId: string
-  ): Promise<ApiResponse<BookPdfPreviewUrlResponse>> {
+  static async getPdfPreviewUrl(bookId: string): Promise<ApiResponse<BookPdfPreviewUrlResponse>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PDF_PREVIEW_URL(bookId)}`, {
       method: 'GET',
       headers: jsonHeaders(requireToken()),
@@ -107,10 +97,7 @@ export class BookService {
     return handle<BookPdfPreviewUrlResponse>(res, 'Failed to get PDF preview URL');
   }
 
-  static async uploadPdf(
-    bookId: string,
-    file: File
-  ): Promise<ApiResponse<BookResponse>> {
+  static async uploadPdf(bookId: string, file: File): Promise<ApiResponse<BookResponse>> {
     const token = requireToken();
     const form = new FormData();
     form.append('file', file);
@@ -130,9 +117,7 @@ export class BookService {
     return handle<void>(res, 'Failed to delete book');
   }
 
-  static async getPageMapping(
-    bookId: string
-  ): Promise<ApiResponse<BookLessonPageResponse[]>> {
+  static async getPageMapping(bookId: string): Promise<ApiResponse<BookLessonPageResponse[]>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_PAGE_MAPPING(bookId)}`, {
       method: 'GET',
       headers: jsonHeaders(requireToken()),
@@ -177,10 +162,10 @@ export class BookService {
   }
 
   static async refreshVerification(bookId: string): Promise<ApiResponse<void>> {
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.BOOK_REFRESH_VERIFICATION(bookId)}`,
-      { method: 'POST', headers: jsonHeaders(requireToken()) }
-    );
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_REFRESH_VERIFICATION(bookId)}`, {
+      method: 'POST',
+      headers: jsonHeaders(requireToken()),
+    });
     return handle<void>(res, 'Failed to refresh verification');
   }
 }

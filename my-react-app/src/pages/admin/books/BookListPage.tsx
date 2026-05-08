@@ -1,18 +1,18 @@
+import {
+  AlertCircle,
+  BookOpenText,
+  CheckCircle2,
+  ListTree,
+  Loader2,
+  PenSquare,
+  PlayCircle,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Plus,
-  Loader2,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  PenSquare,
-  Trash2,
-  PlayCircle,
-  ListTree,
-  RefreshCw,
-  BookOpenText,
-} from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../../data/mockData';
 import { useBookList, useDeleteBook } from '../../../hooks/useBooks';
@@ -88,13 +88,9 @@ const BookListPage: React.FC = () => {
   const { data, isLoading, isFetching, refetch } = useBookList(params);
   const deleteBook = useDeleteBook();
 
-  const allBooks: BookResponse[] = useMemo(
-    () => data?.result?.content ?? [],
-    [data]
-  );
+  const allBooks: BookResponse[] = useMemo(() => data?.result?.content ?? [], [data]);
   const dedupedBooks = useMemo(() => {
-    const normalize = (value: string | null | undefined) =>
-      (value ?? '').trim().toLowerCase();
+    const normalize = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
 
     const byIdentity = new Map<string, BookResponse>();
     for (const b of allBooks) {
@@ -159,7 +155,11 @@ const BookListPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout role="admin" user={mockAdmin} contentClassName="dashboard-content--flush-bleed">
+    <DashboardLayout
+      role="admin"
+      user={mockAdmin}
+      contentClassName="dashboard-content--flush-bleed"
+    >
       <div className="px-6 py-8 lg:px-8">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -291,9 +291,7 @@ const BookListPage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
             <span>
-              {totalElements > 0
-                ? `${filteredBooks.length} sách hiển thị`
-                : 'Chưa có sách phù hợp'}
+              {totalElements > 0 ? `${filteredBooks.length} sách hiển thị` : 'Chưa có sách phù hợp'}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -347,11 +345,7 @@ const BookListPage: React.FC = () => {
                 {filteredBooks.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/50">
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => goToWizard(b)}
-                        className="text-left"
-                      >
+                      <button type="button" onClick={() => goToWizard(b)} className="text-left">
                         <div className="font-medium text-slate-800 hover:text-blue-700">
                           {b.title}
                         </div>

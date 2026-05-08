@@ -1,12 +1,9 @@
+import { AlertCircle, ListTree, Loader2, Save, Trash2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Loader2, Save, AlertCircle, Trash2, ListTree } from 'lucide-react';
 import { useBookPageMapping, useSavePageMapping } from '../../../../hooks/useBooks';
 import { useChaptersBySubject } from '../../../../hooks/useChapters';
 import { useLessonsByChapter } from '../../../../hooks/useLessons';
-import type {
-  BookResponse,
-  PageMappingItem,
-} from '../../../../types/book.types';
+import type { BookResponse, PageMappingItem } from '../../../../types/book.types';
 
 interface Props {
   book: BookResponse;
