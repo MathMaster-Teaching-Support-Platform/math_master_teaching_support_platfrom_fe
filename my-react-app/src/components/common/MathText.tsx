@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -7,6 +8,130 @@ interface MathTextProps {
 }
 
 type TextPart = string | { type: 'math'; content: string };
+type RenderablePart = string | { type: 'image'; alt: string; src: string; title?: string };
+
+function splitMarkdownImageParts(value: string): RenderablePart[] {
+  const parts: RenderablePart[] = [];
+  const imagePattern = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = imagePattern.exec(value);
+
+  while (match) {
+    const [full, alt, src, title] = match;
+    if (match.index > lastIndex) {
+      parts.push(value.slice(lastIndex, match.index));
+    }
+    parts.push({
+      type: 'image',
+      alt: alt ?? '',
+      src: src ?? '',
+      title: title || undefined,
+    });
+    lastIndex = match.index + full.length;
+    match = imagePattern.exec(value);
+  }
+
+  if (lastIndex < value.length) {
+    parts.push(value.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [value];
+}
+
+function renderInlineFormattedText(value: string) {
+  // Supported lightweight inline tokens:
+  // - **bold**
+  // - *italic*
+  // - __underline__
+  // - ~~strike~~
+  // - `code`
+  // - [color=#RRGGBB]text[/color]
+  const matchers = [
+    { kind: 'code' as const, regex: /`([^`]+)`/ },
+    { kind: 'color' as const, regex: /\[color=([^\]]+)\]([\s\S]*?)\[\/color\]/ },
+    { kind: 'bold' as const, regex: /\*\*([^*]+)\*\*/ },
+    { kind: 'underline' as const, regex: /__([^_]+)__/ },
+    { kind: 'strike' as const, regex: /~~([^~]+)~~/ },
+    { kind: 'italic' as const, regex: /\*(?!\*)([^*]+?)\*(?!\*)/ },
+  ];
+
+  let remaining = value;
+  const nodes: ReactNode[] = [];
+  let keySeq = 0;
+
+  while (remaining.length > 0) {
+    let best:
+      | {
+          index: number;
+          kind: (typeof matchers)[number]['kind'];
+          match: RegExpExecArray;
+          matcherIndex: number;
+        }
+      | undefined;
+
+    for (let mi = 0; mi < matchers.length; mi += 1) {
+      const { kind, regex } = matchers[mi];
+      const m = regex.exec(remaining);
+      if (!m || m.index == null) continue;
+      if (!best || m.index < best.index) {
+        best = { index: m.index, kind, match: m, matcherIndex: mi };
+      }
+    }
+
+    if (!best) {
+      nodes.push(remaining);
+      break;
+    }
+
+    if (best.index > 0) nodes.push(remaining.slice(0, best.index));
+
+    const full = best.match[0];
+    if (best.kind === 'code') {
+      nodes.push(
+        <code
+          key={`fmt-${keySeq++}`}
+          className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-100 font-mono text-[0.92em]"
+        >
+          {best.match[1]}
+        </code>
+      );
+    } else if (best.kind === 'color') {
+      const color = best.match[1];
+      const inner = best.match[2] ?? '';
+      nodes.push(
+        <span key={`fmt-${keySeq++}`} style={{ color }}>
+          {renderInlineFormattedText(inner)}
+        </span>
+      );
+    } else if (best.kind === 'bold') {
+      nodes.push(
+        <strong key={`fmt-${keySeq++}`}>{renderInlineFormattedText(best.match[1])}</strong>
+      );
+    } else if (best.kind === 'underline') {
+      nodes.push(
+        <span key={`fmt-${keySeq++}`} className="underline">
+          {renderInlineFormattedText(best.match[1])}
+        </span>
+      );
+    } else if (best.kind === 'strike') {
+      nodes.push(
+        <span key={`fmt-${keySeq++}`} className="line-through opacity-90">
+          {renderInlineFormattedText(best.match[1])}
+        </span>
+      );
+    } else if (best.kind === 'italic') {
+      nodes.push(
+        <em key={`fmt-${keySeq++}`}>{renderInlineFormattedText(best.match[1])}</em>
+      );
+    } else {
+      nodes.push(full);
+    }
+
+    remaining = remaining.slice(best.index + full.length);
+  }
+
+  return <>{nodes}</>;
+}
 
 function countUnescapedDollar(value: string): number {
   let count = 0;
@@ -105,15 +230,41 @@ export default function MathText({ text, block = false }: Readonly<MathTextProps
 
   // If block mode, render as block math
   if (block) {
-    const cleanText = sanitizeMathContent(normalizedInput.replaceAll(/^\$/, '').replaceAll(/\$$/, ''));
+    const withoutLeading = normalizedInput.startsWith('$') ? normalizedInput.slice(1) : normalizedInput;
+    const withoutTrailing = withoutLeading.endsWith('$')
+      ? withoutLeading.slice(0, -1)
+      : withoutLeading;
+    const cleanText = sanitizeMathContent(withoutTrailing);
     return <BlockMath math={cleanText} renderError={() => <span>{text}</span>} />;
   }
 
   const parts = splitInlineMathParts(normalizedInput);
 
-  // If no math found, return plain text
+  // If no math found, still render markdown image + inline formatting tokens.
   if (parts.length === 1 && typeof parts[0] === 'string') {
-    return <span>{parts[0]}</span>;
+    const renderableParts = splitMarkdownImageParts(parts[0]);
+    return (
+      <span>
+        {renderableParts.map((item, ii) => {
+          if (typeof item === 'string') {
+            return (
+              <span key={`plain-txt-${ii}`}>
+                {renderInlineFormattedText(item)}
+              </span>
+            );
+          }
+          return (
+            <img
+              key={`plain-img-${item.src}-${item.alt}-${item.title ?? ''}-${ii}`}
+              src={item.src}
+              alt={item.alt || 'image'}
+              title={item.title ?? item.alt}
+              className="inline-block max-w-full max-h-[260px] object-contain rounded align-middle"
+            />
+          );
+        })}
+      </span>
+    );
   }
 
   // Render mixed text and math
@@ -122,7 +273,29 @@ export default function MathText({ text, block = false }: Readonly<MathTextProps
       {parts.map((part) => {
         const key = typeof part === 'string' ? `text-${part}` : `math-${part.content}`;
         if (typeof part === 'string') {
-          return <span key={key}>{part}</span>;
+          const renderableParts = splitMarkdownImageParts(part);
+          return (
+            <span key={key}>
+              {renderableParts.map((item, ii) => {
+                if (typeof item === 'string') {
+                  return (
+                    <span key={`txt-${ii}`}>
+                      {renderInlineFormattedText(item)}
+                    </span>
+                  );
+                }
+                return (
+                  <img
+                    key={`img-${item.src}-${item.alt}-${item.title ?? ''}`}
+                    src={item.src}
+                    alt={item.alt || 'image'}
+                    title={item.title ?? item.alt}
+                    className="inline-block max-w-full max-h-[260px] object-contain rounded align-middle"
+                  />
+                );
+              })}
+            </span>
+          );
         } else {
           const safeMath = sanitizeMathContent(part.content);
           return <InlineMath key={key} math={safeMath} renderError={() => <span>{`$${part.content}$`}</span>} />;

@@ -3,7 +3,6 @@ import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
   BarChart3,
-  BookMarked,
   BookOpen,
   Bot,
   ChevronDown,
@@ -167,8 +166,7 @@ const adminGroups: MenuGroup[] = [
   {
     label: 'OCR',
     items: [
-      { path: '/admin/ocr/books', icon: ScanText, label: 'Sách SGK' },
-      { path: '/admin/ocr/content', icon: BookMarked, label: 'Kho nội dung' },
+      { path: '/admin/books', icon: ScanText, label: 'Sách giáo khoa' },
     ],
   },
 ];
