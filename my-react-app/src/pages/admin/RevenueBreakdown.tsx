@@ -28,35 +28,26 @@ import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
 import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
+import {
+  formatInBusinessTz,
+  getBusinessDayKey,
+  getBusinessDayLabel,
+  getBusinessHourKey,
+  getBusinessMonthKey,
+  getBusinessMonthLabel,
+  toLocalDateOnly,
+} from '../../utils/dateTime';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import './RevenueBreakdown.css';
 
 type RevenueGroupBy = 'hour' | 'day' | 'month';
 type RevenueQuickRange = '1d' | '1w' | '1m' | '1y' | null;
 
-const pad2 = (value: number): string => String(value).padStart(2, '0');
-
-const toDateOnly = (date: Date): string => date.toISOString().split('T')[0];
 
 const parseUtcDate = (dateStr: string): Date => new Date(`${dateStr}T00:00:00Z`);
 
 const inclusiveDayDiff = (from: Date, to: Date): number =>
   Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-
-const formatUtcDayKey = (date: Date): string =>
-  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
-
-const formatUtcMonthKey = (date: Date): string =>
-  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}`;
-
-const formatUtcHourKey = (date: Date): string =>
-  `${formatUtcDayKey(date)} ${pad2(date.getUTCHours())}:00`;
-
-const formatUtcDayLabel = (date: Date): string =>
-  `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}`;
-
-const formatUtcMonthLabel = (date: Date): string =>
-  `${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
 
 const computeAutoGroupBy = (fromStr: string, toStr: string): RevenueGroupBy => {
   const from = parseUtcDate(fromStr);
@@ -78,8 +69,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: RevenueGroupB
       const current = new Date(base);
       current.setUTCHours(base.getUTCHours() + idx);
       return {
-        key: formatUtcHourKey(current),
-        label: `${pad2(current.getUTCHours())}:00`,
+        key: getBusinessHourKey(current),
+        label: `${formatInBusinessTz(current, { hour: '2-digit', hour12: false })}:00`,
       };
     });
   }
@@ -91,8 +82,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: RevenueGroupB
 
     while (current.getTime() <= end.getTime()) {
       buckets.push({
-        key: formatUtcMonthKey(current),
-        label: formatUtcMonthLabel(current),
+        key: getBusinessMonthKey(current),
+        label: getBusinessMonthLabel(current),
       });
       current.setUTCMonth(current.getUTCMonth() + 1);
     }
@@ -105,8 +96,8 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: RevenueGroupB
 
   while (current.getTime() <= to.getTime()) {
     buckets.push({
-      key: formatUtcDayKey(current),
-      label: formatUtcDayLabel(current),
+      key: getBusinessDayKey(current),
+      label: getBusinessDayLabel(current),
     });
     current.setUTCDate(current.getUTCDate() + 1);
   }
@@ -115,21 +106,25 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: RevenueGroupB
 };
 
 const formatLedgerLabel = (key: string, groupBy: RevenueGroupBy): string => {
-  if (groupBy === 'month') return `${key.split('-')[1]}/${key.split('-')[0]}`;
+  if (groupBy === 'month') return formatInBusinessTz(key, { month: '2-digit', year: 'numeric' });
   if (groupBy === 'hour') {
-    const [datePart, timePart] = key.split(' ');
-    const [year, month, day] = datePart.split('-');
-    return `${timePart} ${day}/${month}/${year}`;
+    return formatInBusinessTz(key, {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour12: false,
+    });
   }
-  const [year, month, day] = key.split('-');
-  return `${day}/${month}/${year}`;
+  return formatInBusinessTz(key, { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 const RevenueBreakdown: React.FC = () => {
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>(() => {
     const now = new Date();
-    const to = toDateOnly(now);
-    const from = toDateOnly(new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000));
+    const to = toLocalDateOnly(now);
+    const from = toLocalDateOnly(new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000));
     return { from, to };
   });
   const [quickRange, setQuickRange] = useState<RevenueQuickRange>('1m');
@@ -229,8 +224,8 @@ const RevenueBreakdown: React.FC = () => {
       fromUtc.setUTCDate(1);
     }
 
-    const toStr = toDateOnly(toUtc);
-    const fromStr = toDateOnly(fromUtc);
+    const toStr = toLocalDateOnly(toUtc);
+    const fromStr = toLocalDateOnly(fromUtc);
 
     setDateRange({ from: fromStr, to: toStr });
     setQuickRange(range);
@@ -459,7 +454,7 @@ const RevenueBreakdown: React.FC = () => {
       <motion.div className="main-chart-card" variants={itemVariants}>
         <div className="main-chart-card__head">
           <h2>Biểu đồ theo thời gian</h2>
-          <p>Xếp chồng hai nguồn: gói đăng ký (tím) và hoa hồng khóa học (lục)</p>
+          <p>Gói đăng ký (tím) và Hoa hồng khóa học (lục)</p>
         </div>
         <div className="chart-container">
           <RevenueBreakdownChart data={allBuckets} groupBy={groupBy} />
@@ -625,7 +620,7 @@ const RevenueBreakdown: React.FC = () => {
           <div className="insight-item insight-item--courses">
             <h4>Hoa hồng khóa học</h4>
             <p>
-              Phần doanh thu nền tảng từ các giao dịch mua khóa học (theo tỷ lệ đã cấu hình).
+              Phần doanh thu nền tảng từ các giao dịch mua khóa học.
             </p>
           </div>
         </div>

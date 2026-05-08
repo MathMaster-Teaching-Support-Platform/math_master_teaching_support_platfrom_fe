@@ -33,6 +33,7 @@ import {
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
 import './admin-mgmt-shell.css';
+import { formatInBusinessTz } from '../../utils/dateTime';
 import './UserManagement.css';
 
 const ROLE_FILTER_MAP: Record<'all' | 'admin' | 'teacher' | 'student', ListUsersParams['role']> = {
@@ -539,14 +540,15 @@ const UserManagement: React.FC = () => {
                               </span>
                             </td>
                             <td className="email-cell">{user.email}</td>
-                            <td>{new Date(user.createdDate).toLocaleDateString('vi-VN')}</td>
+                            <td>{formatInBusinessTz(user.createdDate, { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                             <td>
                               {user.lastLogin
-                                ? new Date(user.lastLogin).toLocaleString('vi-VN', {
+                                ? formatInBusinessTz(user.lastLogin, {
                                     day: '2-digit',
                                     month: '2-digit',
                                     hour: '2-digit',
                                     minute: '2-digit',
+                                    hour12: false,
                                   })
                                 : '\u2014'}
                             </td>

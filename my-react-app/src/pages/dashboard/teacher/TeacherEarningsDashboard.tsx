@@ -9,6 +9,7 @@ import {
   formatGrowth,
 } from '../../../services/api/teacher-earnings.service';
 import { WalletService } from '../../../services/api/wallet.service';
+import { formatInBusinessTz } from '../../../utils/dateTime';
 import './TeacherEarningsDashboard.css';
 
 const TeacherEarningsDashboard: React.FC = () => {
@@ -245,7 +246,7 @@ const TeacherEarningsDashboard: React.FC = () => {
                         {tx.description || 'Thu nhập từ khóa học'}
                       </div>
                       <div className="transaction-date">
-                        {new Date(tx.createdAt).toLocaleDateString('vi-VN')}
+                        {formatInBusinessTz(tx.createdAt, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </div>
                     </div>
                     <div className={`transaction-amount ${tx.status.toLowerCase()}`}>

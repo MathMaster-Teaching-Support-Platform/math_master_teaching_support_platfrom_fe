@@ -98,10 +98,10 @@ export const cashFlowService = {
 export const formatVND = (amount: number): string =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
+import { formatInBusinessTz } from '../utils/dateTime';
+
 export const formatDate = (dateStr: string): string =>
-  new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
-    new Date(dateStr)
-  );
+  formatInBusinessTz(dateStr, { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 export const formatTrend = (trend: number | null): string => {
   if (trend === null) return '—';

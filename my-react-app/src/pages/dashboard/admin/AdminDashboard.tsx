@@ -24,6 +24,7 @@ import {
   type SystemService,
 } from '../../../services/api/admin-dashboard.service';
 import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
+import { formatInBusinessTz } from '../../../utils/dateTime';
 
 function applyApiResult<T>(
   settled: PromiseSettledResult<{ code: number; result: T }>,
@@ -234,7 +235,7 @@ const AdminDashboard: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-5 py-3.5 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
-                  {new Date(user.createdDate).toLocaleDateString('vi-VN')}
+                  {formatInBusinessTz(user.createdDate, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </td>
                 <td className="px-5 py-3.5">
                   <span
