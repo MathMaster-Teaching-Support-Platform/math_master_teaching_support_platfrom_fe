@@ -14,7 +14,6 @@ import {
   Save,
   Timer,
   Trophy,
-  X,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
