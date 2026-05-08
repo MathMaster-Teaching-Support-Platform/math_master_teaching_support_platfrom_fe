@@ -12,7 +12,6 @@ import {
   BookOpen,
   ChevronDown,
   Clock,
-  Eye,
   FileText,
   GripVertical,
   Layout,
@@ -443,14 +442,14 @@ function UploadVideoModal({
         provider === 'MINISTRY'
           ? { lessonId, videoTitle, orderIndex, isFreePreview, durationSeconds }
           : {
-            sectionId,
-            customTitle,
-            customDescription,
-            videoTitle,
-            orderIndex,
-            isFreePreview,
-            durationSeconds,
-          };
+              sectionId,
+              customTitle,
+              customDescription,
+              videoTitle,
+              orderIndex,
+              isFreePreview,
+              durationSeconds,
+            };
 
       await VideoUploadService.uploadVideo(courseId, file!, extraData, {
         onProgress: (pct) => setProgress(pct),
@@ -480,7 +479,7 @@ function UploadVideoModal({
         <div className="clt-modal-header">
           <div>
             <h3 id="clt-upload-lesson-title">Thêm bài học video</h3>
-            <p>Chọn bài học (hoặc phần nội dung) và tải lên video giảng dạy.</p>
+            <p>Chọn bài học và tải lên video giảng dạy.</p>
           </div>
           <button
             type="button"
@@ -678,7 +677,7 @@ function UploadVideoModal({
                 onChange={(e) => setIsFreePreview(e.target.checked)}
                 disabled={uploading}
               />
-              <span style={{ fontSize: '0.9rem' }}>Cho phép xem thử miễn phí</span>
+              <span style={{ fontSize: '0.9rem' }}> Cho phép xem thử miễn phí</span>
             </label>
           </div>
 
@@ -1059,9 +1058,12 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           lessons: [],
           type: groupType,
           firstSeenIndex: index,
-          orderIndex: groupType === 'SECTION'
-            ? sectionOrderMap.get(groupId)
-            : (groupType === 'CHAPTER' ? dbChapter?.orderIndex : undefined),
+          orderIndex:
+            groupType === 'SECTION'
+              ? sectionOrderMap.get(groupId)
+              : groupType === 'CHAPTER'
+                ? dbChapter?.orderIndex
+                : undefined,
         };
       }
       groupsMap[groupId].lessons.push(lesson);
@@ -1172,85 +1174,86 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             : '';
 
       return (
-      <div key={group.id} className="curriculum-group">
-        <div
-          className="section-header"
-          onClick={() => toggleSection(group.id)}
-          style={isSidebar ? { padding: '0.65rem 1rem', background: '#f5f4ed' } : {}}
-        >
-          <div className="section-title-area clt-section-title-area">
-            <ChevronDown
-              size={isSidebar ? 14 : 18}
-              className="clt-section-chevron"
-              style={{
-                transform: collapsedSections[group.id] ? 'rotate(-90deg)' : 'none',
-                transition: 'transform 0.2s',
-              }}
-            />
-            <div className="clt-section-heading-stack">
-              <div
-                className={`clt-section-heading-row${sectionLabelText ? '' : ' clt-section-heading-row--solo'}`}
-              >
-                {sectionLabelText ? (
-                  <span className="section-label clt-chapter-label">
-                    {sectionLabelText}
+        <div key={group.id} className="curriculum-group">
+          <div
+            className="section-header"
+            onClick={() => toggleSection(group.id)}
+            style={isSidebar ? { padding: '0.65rem 1rem', background: '#f5f4ed' } : {}}
+          >
+            <div className="section-title-area clt-section-title-area">
+              <ChevronDown
+                size={isSidebar ? 14 : 18}
+                className="clt-section-chevron"
+                style={{
+                  transform: collapsedSections[group.id] ? 'rotate(-90deg)' : 'none',
+                  transition: 'transform 0.2s',
+                }}
+              />
+              <div className="clt-section-heading-stack">
+                <div
+                  className={`clt-section-heading-row${sectionLabelText ? '' : ' clt-section-heading-row--solo'}`}
+                >
+                  {sectionLabelText ? (
+                    <span className="section-label clt-chapter-label">{sectionLabelText}</span>
+                  ) : null}
+                  <span
+                    className="section-title clt-chapter-title-text"
+                    style={isSidebar ? { fontSize: '0.82rem' } : {}}
+                  >
+                    {group.title}
                   </span>
-                ) : null}
-                <span className="section-title clt-chapter-title-text" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
-                  {group.title}
-                </span>
-              </div>
-              {group.description ? (
-                <p className="section-description clt-section-description">{group.description}</p>
-              ) : null}
-            </div>
-          </div>
-          {!isSidebar && (
-            <div className="section-meta">
-              <span>{group.lessons.length} bài học</span>
-              {group.type === 'SECTION' && !readOnly && (
-                <div className="row" style={{ gap: '0.5rem', marginLeft: '1rem' }}>
-                  <button
-                    className="btn secondary"
-                    style={{ padding: '0.2rem 0.4rem' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRenameTarget({ id: group.id, value: group.title });
-                    }}
-                  >
-                    <Pencil size={12} />
-                  </button>
-                  <button
-                    className="btn danger"
-                    style={{ padding: '0.2rem 0.4rem' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteTarget({ k: 'section', sectionId: group.id, title: group.title });
-                    }}
-                  >
-                    <Trash2 size={12} />
-                  </button>
                 </div>
-              )}
+                {group.description ? (
+                  <p className="section-description clt-section-description">{group.description}</p>
+                ) : null}
+              </div>
             </div>
-          )}
-        </div>
-        <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
-          <div className="lessons-inner">
-            {!isSidebar && !readOnly && group.lessons.length > 1 && (
-              <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
-                <LessonReorderStrip
-                  title="Sắp xếp bài học trong phần"
-                  lessons={group.lessons}
-                  disabled={reorderMutation.isPending}
-                  onReordered={persistReorder}
-                />
+            {!isSidebar && (
+              <div className="section-meta">
+                <span>{group.lessons.length} bài học</span>
+                {group.type === 'SECTION' && !readOnly && (
+                  <div className="row" style={{ gap: '0.5rem', marginLeft: '1rem' }}>
+                    <button
+                      className="btn secondary"
+                      style={{ padding: '0.2rem 0.4rem' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRenameTarget({ id: group.id, value: group.title });
+                      }}
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      className="btn danger"
+                      style={{ padding: '0.2rem 0.4rem' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget({ k: 'section', sectionId: group.id, title: group.title });
+                      }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
-            {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
+          </div>
+          <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
+            <div className="lessons-inner">
+              {!isSidebar && !readOnly && group.lessons.length > 1 && (
+                <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
+                  <LessonReorderStrip
+                    title="Sắp xếp bài học trong phần"
+                    lessons={group.lessons}
+                    disabled={reorderMutation.isPending}
+                    onReordered={persistReorder}
+                  />
+                </div>
+              )}
+              {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
+            </div>
           </div>
         </div>
-      </div>
       );
     });
   };
@@ -1267,21 +1270,21 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           style={
             isSidebar
               ? {
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                background: isPlaying ? '#f1f5f9' : '#ffffff',
-                cursor: 'pointer',
-                borderLeft: isPlaying ? '3px solid #64748b' : '3px solid transparent',
-                borderBottom: '1px solid #f0eee6',
-                transition: 'all 0.2s ease',
-              }
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1rem',
+                  background: isPlaying ? '#f1f5f9' : '#ffffff',
+                  cursor: 'pointer',
+                  borderLeft: isPlaying ? '3px solid #64748b' : '3px solid transparent',
+                  borderBottom: '1px solid #f0eee6',
+                  transition: 'all 0.2s ease',
+                }
               : {
-                cursor: 'pointer',
-                borderColor: isPlaying ? '#94a3b8' : undefined,
-                boxShadow: isPlaying ? '0 4px 12px rgba(71, 85, 105, 0.12)' : undefined,
-              }
+                  cursor: 'pointer',
+                  borderColor: isPlaying ? '#94a3b8' : undefined,
+                  boxShadow: isPlaying ? '0 4px 12px rgba(71, 85, 105, 0.12)' : undefined,
+                }
           }
         >
           <div
@@ -1458,7 +1461,10 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 </div>
               ))}
               {materialsList.length === 0 && (
-                <p className="muted" style={{ fontSize: '0.8rem', fontStyle: 'italic', margin: '0 0 8px' }}>
+                <p
+                  className="muted"
+                  style={{ fontSize: '0.8rem', fontStyle: 'italic', margin: '0 0 8px' }}
+                >
                   Chưa có tài liệu đính kèm cho bài học này.
                 </p>
               )}
@@ -1542,141 +1548,107 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         /* Integrated Player Layout — white shell aligned with admin course review panels */
         <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-3 md:p-5">
           <div className="player-container">
-          {/* Main Player Area */}
-          <div className="player-main">
-            <InlinePlayer
-              courseId={courseId}
-              courseLessonId={playingLessonId}
-              title={(() => {
-                const l = lessons.find((x) => x.id === playingLessonId);
-                if (!l) return 'Bài học';
-                if (l.lessonTitle && l.videoTitle && l.lessonTitle !== l.videoTitle) {
-                  return `${l.lessonTitle} - ${l.videoTitle}`;
-                }
-                return l.lessonTitle ?? l.videoTitle ?? 'Bài học';
-              })()}
-              onLessonComplete={() => {
-                const currentIndex = lessons.findIndex((l) => l.id === playingLessonId);
-                if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
-                  const nextLesson = lessons[currentIndex + 1];
-                  setPlayingLessonId(nextLesson.id);
-                }
-              }}
-            />
+            {/* Main Player Area */}
+            <div className="player-main">
+              <InlinePlayer
+                courseId={courseId}
+                courseLessonId={playingLessonId}
+                title={(() => {
+                  const l = lessons.find((x) => x.id === playingLessonId);
+                  if (!l) return 'Bài học';
+                  if (l.lessonTitle && l.videoTitle && l.lessonTitle !== l.videoTitle) {
+                    return `${l.lessonTitle} - ${l.videoTitle}`;
+                  }
+                  return l.lessonTitle ?? l.videoTitle ?? 'Bài học';
+                })()}
+                onLessonComplete={() => {
+                  const currentIndex = lessons.findIndex((l) => l.id === playingLessonId);
+                  if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
+                    const nextLesson = lessons[currentIndex + 1];
+                    setPlayingLessonId(nextLesson.id);
+                  }
+                }}
+              />
 
-            {/* Resources Tab below video */}
-            <div className="data-card" style={{ padding: '1.25rem' }}>
-              <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Paperclip size={18} className="text-slate-500" aria-hidden /> Tài liệu bài học
-              </h4>
-              {lessons.find((l) => l.id === playingLessonId)?.materials ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                  {parseLessonMaterials(
-                    lessons.find((l) => l.id === playingLessonId)?.materials
-                  ).map((m: LessonMaterial) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() =>
-                        void handleDownloadMaterial(
-                          lessons.find((l) => l.id === playingLessonId)!,
-                          m
-                        )
-                      }
-                      className="sc-cta-btn"
-                      style={{
-                        fontSize: '0.82rem',
-                        padding: '8px 16px',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <FileText size={14} /> {m.name}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="muted" style={{ fontSize: '0.88rem', fontStyle: 'italic' }}>
-                  Bài học này chưa có tài liệu đính kèm.
-                </p>
-              )}
+              {/* Resources Tab below video */}
+              <div className="data-card" style={{ padding: '1.25rem' }}>
+                <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Paperclip size={18} className="text-slate-500" aria-hidden /> Tài liệu bài học
+                </h4>
+                {lessons.find((l) => l.id === playingLessonId)?.materials ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {parseLessonMaterials(
+                      lessons.find((l) => l.id === playingLessonId)?.materials
+                    ).map((m: LessonMaterial) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() =>
+                          void handleDownloadMaterial(
+                            lessons.find((l) => l.id === playingLessonId)!,
+                            m
+                          )
+                        }
+                        className="sc-cta-btn"
+                        style={{
+                          fontSize: '0.82rem',
+                          padding: '8px 16px',
+                          border: '1px solid #e2e8f0',
+                        }}
+                      >
+                        <FileText size={14} /> {m.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted" style={{ fontSize: '0.88rem', fontStyle: 'italic' }}>
+                    Bài học này chưa có tài liệu đính kèm.
+                  </p>
+                )}
+              </div>
+
+              <LessonDiscussionPanel courseId={courseId} lessonId={playingLessonId} />
+
+              <button
+                className="btn secondary"
+                onClick={() => setPlayingLessonId(null)}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                Thoát chế độ xem
+              </button>
             </div>
 
-            <LessonDiscussionPanel courseId={courseId} lessonId={playingLessonId} />
-
-            <button
-              className="btn secondary"
-              onClick={() => setPlayingLessonId(null)}
-              style={{ alignSelf: 'flex-start' }}
-            >
-              Thoát chế độ xem
-            </button>
-          </div>
-
-          {/* Sidebar Curriculum */}
-          <div className="data-card player-sidebar">
-            <div
-              style={{
-                padding: '1.25rem 1.5rem',
-                borderBottom: '1px solid #e8e6dc',
-                background: 'linear-gradient(to right, #f8fafc, #ffffff)',
-                flexShrink: 0,
-              }}
-            >
-              <h4
+            {/* Sidebar Curriculum */}
+            <div className="data-card player-sidebar">
+              <div
                 style={{
-                  margin: 0,
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  color: '#141413',
-                  letterSpacing: '-0.01em',
+                  padding: '1.25rem 1.5rem',
+                  borderBottom: '1px solid #e8e6dc',
+                  background: 'linear-gradient(to right, #f8fafc, #ffffff)',
+                  flexShrink: 0,
                 }}
               >
-                Nội dung khóa học
-              </h4>
+                <h4
+                  style={{
+                    margin: 0,
+                    fontSize: '1rem',
+                    fontWeight: 800,
+                    color: '#141413',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Nội dung khóa học
+                </h4>
+              </div>
+              <div style={{ maxHeight: 'calc(100vh - 240px)', overflowY: 'auto' }}>
+                {renderCurriculum(true)}
+              </div>
             </div>
-            <div style={{ maxHeight: 'calc(100vh - 240px)', overflowY: 'auto' }}>
-              {renderCurriculum(true)}
-            </div>
-          </div>
           </div>
         </div>
       ) : (
         /* Regular Dashboard List Layout */
         <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-4 md:p-6 space-y-5">
-          {/* Stats */}
-          <div className="stats-grid">
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap" aria-hidden>
-                <FileText size={20} />
-              </div>
-              <div className="stat-card__text">
-                <h3>{lessons.length}</h3>
-                <p>Tổng bài học</p>
-                <span className="stat-card__sub">đã upload</span>
-              </div>
-            </div>
-            <div className="stat-card stat-amber">
-              <div className="stat-icon-wrap" aria-hidden>
-                <Eye size={20} />
-              </div>
-              <div className="stat-card__text">
-                <h3>{lessons.filter((l) => l.isFreePreview).length}</h3>
-                <p>Xem thử miễn phí</p>
-                <span className="stat-card__sub">bài học</span>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap" aria-hidden>
-                <Video size={20} />
-              </div>
-              <div className="stat-card__text">
-                <h3>{lessons.filter((l) => l.videoUrl).length}</h3>
-                <p>Có video</p>
-                <span className="stat-card__sub">bài học</span>
-              </div>
-            </div>
-          </div>
-
           {!readOnly && (
             <div className="cdt-toolbar">
               {course.provider === 'CUSTOM' && (
