@@ -8,6 +8,14 @@ export interface BookPdfPreviewUrlResponse {
   url: string;
 }
 
+/** Result of uploading an image asset for an OCR content block (Step-4 verify wizard). */
+export interface BookPageImageResponse {
+  /** Stable, admin-protected URL the FE can save into the block. */
+  imageUrl: string;
+  /** Underlying MinIO object key — kept for parity with OCR-generated blocks. */
+  imagePath: string;
+}
+
 export interface BookResponse {
   id: string;
   schoolGradeId: string;
@@ -55,6 +63,15 @@ export interface UpdateBookRequest {
   totalPages?: number | null;
   ocrPageFrom?: number | null;
   ocrPageTo?: number | null;
+}
+
+export interface UpdateBookSeriesNameRequest {
+  name: string;
+}
+
+export interface BookSeriesResponse {
+  id: string;
+  name: string;
 }
 
 export interface PageMappingItem {

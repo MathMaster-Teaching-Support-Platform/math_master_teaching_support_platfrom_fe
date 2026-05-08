@@ -526,6 +526,10 @@ export const API_ENDPOINTS = {
   BOOK_THUMBNAIL: (bookId: string) => `/v1/books/${bookId}/thumbnail`,
   BOOK_PDF_UPLOAD: (bookId: string) => `/v1/books/${bookId}/pdf-upload`,
   BOOK_PDF_PREVIEW_URL: (bookId: string) => `/v1/books/${bookId}/pdf-preview-url`,
+  BOOK_PAGE_IMAGE_UPLOAD: (bookId: string) => `/v1/books/${bookId}/page-images`,
+  BOOK_PAGE_IMAGE_SERVE: (bookId: string, fileName: string) =>
+    `/v1/books/${bookId}/page-images/${fileName}`,
+  BOOK_SERIES_RENAME: (seriesId: string) => `/v1/books/series/${seriesId}/name`,
   BOOK_CONTENT: (bookId: string) => `/v1/books/${bookId}/content`,
   BOOK_LESSON_CONTENT: (bookId: string, lessonId: string) =>
     `/v1/books/${bookId}/lessons/${lessonId}/content`,

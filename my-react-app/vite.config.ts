@@ -10,7 +10,14 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // OCR/crawl-data goes to Python FastAPI service — must be listed before the general /api rule
+      // OCR static assets (images served by Python /static/**) MUST go through Spring Boot,
+      // because the BE proxy injects the X-Internal-API-Key header that Python requires.
+      // Direct browser → Python returns 403 Forbidden. Listed before the generic crawl-data rule.
+      '/api/v1/crawl-data/static': {
+        target: proxyTarget,
+        changeOrigin: true,
+      },
+      // OCR/crawl-data REST APIs go to Python FastAPI service — must be listed before the general /api rule
       // Frontend path:  /api/v1/crawl-data/books  →  rewrite  →  /api/v1/books  →  Python :8001
       '/api/v1/crawl-data': {
         target: ocrProxyTarget,

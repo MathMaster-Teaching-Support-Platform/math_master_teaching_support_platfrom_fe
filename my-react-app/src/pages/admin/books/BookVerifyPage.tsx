@@ -1,41 +1,74 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  Loader2,
-  AlertCircle,
-  Save,
-  RefreshCw,
-  ListTree,
-  FileText,
-  Plus,
-  Trash2,
   ChevronDown,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  FileText,
+  ImageOff,
+  ListTree,
+  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
+  RefreshCw,
+  Save,
+  Trash2,
+  Upload,
 } from 'lucide-react';
-import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../../components/common/MathText';
-import { mockAdmin } from '../../../data/mockData';
+import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../../config/api.config';
-import { AuthService } from '../../../services/api/auth.service';
+import { mockAdmin } from '../../../data/mockData';
 import {
   useBook,
   useBookContent,
+  useBookList,
   useBookPageMapping,
   usePageHistory,
   useRefreshVerification,
   useUpdatePage,
+  useUploadBookPageImage,
 } from '../../../hooks/useBooks';
+import { AuthService } from '../../../services/api/auth.service';
 import type {
+  BookLessonPageResponse,
+  BookStatus,
   ContentBlockDto,
   LessonContentResponse,
   LessonPageResponse,
 } from '../../../types/book.types';
+
+const CURRICULUM_SORT_FALLBACK = 999999;
+
+/** Chuẩn hóa UUID để khớp mapping ↔ content (một số tầng serialize UUID viết hoa). */
+function lessonLookupKey(lessonId: string | undefined | null): string {
+  return String(lessonId ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+const BOOK_STATUS_LABEL: Record<BookStatus, string> = {
+  DRAFT: 'Bản nháp',
+  MAPPING: 'Đang mapping',
+  READY: 'Sẵn sàng OCR',
+  OCR_RUNNING: 'Đang OCR',
+  OCR_DONE: 'OCR hoàn tất',
+  OCR_FAILED: 'OCR thất bại',
+};
+
+const BOOK_STATUS_TONE: Record<BookStatus, string> = {
+  DRAFT: 'bg-slate-100 text-slate-700 border-slate-200',
+  MAPPING: 'bg-amber-50 text-amber-700 border-amber-200',
+  READY: 'bg-blue-50 text-blue-700 border-blue-200',
+  OCR_RUNNING: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  OCR_DONE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  OCR_FAILED: 'bg-red-50 text-red-700 border-red-200',
+};
 
 const BLOCK_TYPES = [
   'text',
@@ -105,7 +138,9 @@ const buildAssetCandidates = (url: string): string[] => {
     const bookId = match[1];
     const fileName = match[2];
     // Prefer normalized images path; many runs don't keep /static/books/.../pages files.
-    candidates.push(`${globalThis.location.origin}/api/v1/crawl-data/static/images/${bookId}/${fileName}`);
+    candidates.push(
+      `${globalThis.location.origin}/api/v1/crawl-data/static/images/${bookId}/${fileName}`
+    );
   } else {
     candidates.push(url);
   }
@@ -198,19 +233,38 @@ interface BookVerifyContentProps {
   bookId: string;
   embedded?: boolean;
   onBack?: () => void;
+  /** Giống Bước 3: khi có nhiều cuốn trong bộ, đổi cuốn đang xác minh (wizard truyền để sync `activeBookId`). */
+  onSelectSeriesBook?: (bookId: string) => void;
 }
 
 export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   bookId,
   embedded = false,
   onBack,
+  onSelectSeriesBook,
 }) => {
+  const navigate = useNavigate();
   const { data: bookData, isLoading: bookLoading } = useBook(bookId);
   const { data: contentData, isLoading: contentLoading, refetch } = useBookContent(bookId);
   const { data: mappingData } = useBookPageMapping(bookId);
+  const seriesBooksQuery = useBookList({
+    bookSeriesId: bookData?.result?.bookSeriesId ?? undefined,
+    page: 0,
+    size: 100,
+  });
   const refreshVerification = useRefreshVerification(bookId ?? '');
 
   const book = bookData?.result;
+  const seriesBooks = seriesBooksQuery.data?.result?.content ?? [];
+  const seriesBooksSorted = useMemo(
+    () => [...seriesBooks].sort((a, b) => a.title.localeCompare(b.title, 'vi')),
+    [seriesBooks]
+  );
+  const activeBookIndex = seriesBooksSorted.findIndex((seriesBook) => seriesBook.id === bookId);
+  const activeBookOrderLabel =
+    seriesBooksSorted.length > 1 && activeBookIndex >= 0
+      ? `Cuốn ${activeBookIndex + 1}/${seriesBooksSorted.length} trong bộ`
+      : null;
   const lessons: LessonContentResponse[] = useMemo(() => contentData?.result ?? [], [contentData]);
 
   const [activeLessonId, setActiveLessonId] = useState<string>('');
@@ -219,15 +273,19 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   const [collapsedChapters, setCollapsedChapters] = useState<Record<string, boolean>>({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const lessonChapterMeta = useMemo(() => {
-    const meta = new Map<string, { chapterId: string; chapterTitle: string }>();
+  useEffect(() => {
+    setActiveLessonId('');
+    setActivePageNumber(null);
+    setCollapsedLessons({});
+    setCollapsedChapters({});
+  }, [bookId]);
+
+  const lessonMappingByLessonId = useMemo(() => {
+    const meta = new Map<string, BookLessonPageResponse>();
     for (const item of mappingData?.result ?? []) {
-      if (!meta.has(item.lessonId)) {
-        meta.set(item.lessonId, {
-          chapterId: item.chapterId,
-          chapterTitle: item.chapterTitle,
-        });
-      }
+      const key = lessonLookupKey(item.lessonId);
+      if (!key || meta.has(key)) continue;
+      meta.set(key, item);
     }
     return meta;
   }, [mappingData]);
@@ -235,21 +293,64 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   const lessonsByChapter = useMemo(() => {
     const map = new Map<
       string,
-      { chapterId: string; chapterTitle: string; lessons: LessonContentResponse[] }
+      {
+        chapterId: string;
+        chapterTitle: string;
+        chapterOrderIndex: number;
+        lessons: LessonContentResponse[];
+      }
     >();
     for (const lesson of lessons) {
-      const chapterMeta = lessonChapterMeta.get(lesson.lessonId);
-      const chapterId = chapterMeta?.chapterId ?? `unknown-${lesson.lessonId}`;
-      const chapterTitle = chapterMeta?.chapterTitle ?? 'Chương chưa xác định';
+      const row = lessonMappingByLessonId.get(lessonLookupKey(lesson.lessonId));
+      const chapterId = row?.chapterId ?? `unknown-${lesson.lessonId}`;
+      const chapterTitle = row?.chapterTitle ?? 'Chương chưa xác định';
+      const chapterOrderIndex = row?.chapterOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+      const lessonWithSortedPages: LessonContentResponse = {
+        ...lesson,
+        pages: [...lesson.pages].sort((a, b) => a.pageNumber - b.pageNumber),
+      };
       const existing = map.get(chapterId);
       if (existing) {
-        existing.lessons.push(lesson);
+        existing.lessons.push(lessonWithSortedPages);
       } else {
-        map.set(chapterId, { chapterId, chapterTitle, lessons: [lesson] });
+        map.set(chapterId, {
+          chapterId,
+          chapterTitle,
+          chapterOrderIndex,
+          lessons: [lessonWithSortedPages],
+        });
       }
     }
-    return Array.from(map.values());
-  }, [lessons, lessonChapterMeta]);
+    const chapters = Array.from(map.values()).sort(
+      (a, b) => a.chapterOrderIndex - b.chapterOrderIndex
+    );
+    for (const ch of chapters) {
+      ch.lessons.sort((a, b) => {
+        const ra = lessonMappingByLessonId.get(lessonLookupKey(a.lessonId));
+        const rb = lessonMappingByLessonId.get(lessonLookupKey(b.lessonId));
+        const la = ra?.lessonOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+        const lb = rb?.lessonOrderIndex ?? CURRICULUM_SORT_FALLBACK;
+        if (la !== lb) return la - lb;
+        return (a.lessonTitle ?? '').localeCompare(b.lessonTitle ?? '', 'vi');
+      });
+    }
+    return chapters;
+  }, [lessons, lessonMappingByLessonId]);
+
+  const showSeriesPanel =
+    Boolean(book?.bookSeriesId) &&
+    seriesBooksSorted.length > 1 &&
+    (typeof onSelectSeriesBook === 'function' || !embedded);
+
+  const handleSeriesVolumeClick = (selectedId: string) => {
+    if (onSelectSeriesBook) {
+      onSelectSeriesBook(selectedId);
+      return;
+    }
+    if (!embedded) {
+      navigate(`/admin/books/${selectedId}/verify`);
+    }
+  };
 
   const resolvedLessonId = activeLessonId || lessons[0]?.lessonId || '';
 
@@ -302,6 +403,14 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
           </p>
           {book && (
             <div className="mt-2 flex items-center gap-2 text-xs">
+              {activeBookOrderLabel && (
+                <>
+                  <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-blue-700">
+                    {activeBookOrderLabel}
+                  </span>
+                  <span className="text-slate-400">·</span>
+                </>
+              )}
               <StatusPill verified={book.verified} />
               <span className="text-slate-400">·</span>
               <span className="text-slate-500">{book.mappedLessonCount} bài đã mapping</span>
@@ -322,6 +431,50 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
           Đồng bộ trạng thái
         </button>
       </div>
+
+      {showSeriesPanel && (
+        <div className="border border-slate-200 rounded-lg mb-6">
+          <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b space-y-1">
+            <div>Các cuốn trong bộ — chọn cuốn để xác minh OCR</div>
+            <p className="font-normal text-[11px] text-slate-500">
+              Danh sách chương / bài / trang sách bên dưới áp dụng cho cuốn đang chọn (theo mapping
+              Bước 2).
+            </p>
+          </div>
+          <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
+            {seriesBooksSorted.map((seriesBook) => {
+              const isActive = seriesBook.id === bookId;
+              return (
+                <button
+                  key={seriesBook.id}
+                  type="button"
+                  onClick={() => handleSeriesVolumeClick(seriesBook.id)}
+                  className={[
+                    'w-full text-left px-3 py-2 flex items-center justify-between gap-3 text-sm transition',
+                    isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-slate-800 font-medium">{seriesBook.title}</div>
+                    <div className="text-[11px] text-slate-500">
+                      Trang OCR: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} · Đã
+                      map {seriesBook.mappedLessonCount ?? 0} bài
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${BOOK_STATUS_TONE[seriesBook.status]}`}
+                  >
+                    {seriesBook.status === 'OCR_RUNNING' && (
+                      <Loader2 size={12} className="animate-spin" />
+                    )}
+                    {BOOK_STATUS_LABEL[seriesBook.status]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {contentLoading ? (
         <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
@@ -473,7 +626,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                                       >
                                         <span className="inline-flex items-center gap-1">
                                           <FileText size={12} />
-                                          Trang {p.pageNumber}
+                                          Trang sách {p.pageNumber}
                                         </span>
                                         {p.verified ? (
                                           <CheckCircle2 size={12} className="text-emerald-500" />
@@ -503,7 +656,9 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                 bookId={bookId}
                 lessonId={resolvedLessonId}
                 lessonTitle={activeLesson?.lessonTitle ?? ''}
-                chapterTitle={lessonChapterMeta.get(resolvedLessonId)?.chapterTitle ?? ''}
+                chapterTitle={
+                  lessonMappingByLessonId.get(lessonLookupKey(resolvedLessonId))?.chapterTitle ?? ''
+                }
                 page={activePage}
               />
             ) : (
@@ -917,28 +1072,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
   };
 
   const isSaving = updatePage.isPending;
-  const rawPreviewImageSrc =
-    blocks.find((b) => b.type === 'image' || b.type === 'figure')?.imageUrl ??
-    blocks.find((b) => b.type === 'image' || b.type === 'figure')?.thumbnailUrl ??
-    blocks.find((b) => b.type === 'image' || b.type === 'figure')?.imagePath ??
-    '';
-  const resolvedRawPreviewImageSrc = resolveAssetUrl(rawPreviewImageSrc);
-  const [failedRawImageSrc, setFailedRawImageSrc] = useState<string | null>(null);
-  const isLikelyObjectKey =
-    Boolean(rawPreviewImageSrc) &&
-    !rawPreviewImageSrc.startsWith('http://') &&
-    !rawPreviewImageSrc.startsWith('https://') &&
-    !rawPreviewImageSrc.startsWith('data:') &&
-    !rawPreviewImageSrc.startsWith('blob:') &&
-    !rawPreviewImageSrc.startsWith('/');
-  const showRawPreviewImage =
-    Boolean(resolvedRawPreviewImageSrc) && failedRawImageSrc !== resolvedRawPreviewImageSrc;
 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-800">Trang {page.pageNumber}</div>
+          <div className="text-sm font-semibold text-slate-800">Trang sách {page.pageNumber}</div>
           <div className="text-[11px] text-slate-400">
             {blocks.length} block · OCR confidence:{' '}
             {page.ocrConfidence != null ? page.ocrConfidence.toFixed(2) : 'n/a'}
@@ -1036,6 +1175,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
               }}
             >
               <BlockEditor
+                bookId={bookId}
                 block={b}
                 index={idx}
                 total={blocks.length}
@@ -1069,30 +1209,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
                 {chapterTitle || 'Chương chưa xác định'}
               </p>
               <p className="text-sm font-semibold text-slate-700">{lessonTitle}</p>
-              <p className="text-xs text-slate-500">Trang {page.pageNumber}</p>
+              <p className="text-xs text-slate-500">Trang sách {page.pageNumber}</p>
             </div>
           </div>
-          {(showRawPreviewImage || rawPreviewImageSrc) && (
-            <div className="border border-slate-200 rounded p-2">
-              <div className="text-[11px] text-slate-400 mb-1">Ảnh gốc OCR</div>
-              {showRawPreviewImage ? (
-                <AuthenticatedImage
-                  src={resolvedRawPreviewImageSrc}
-                  alt={`Trang ${page.pageNumber}`}
-                  onError={() => setFailedRawImageSrc(resolvedRawPreviewImageSrc)}
-                  onLoad={() => setFailedRawImageSrc(null)}
-                  className="w-full max-h-[300px] object-contain rounded"
-                />
-              ) : (
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                  Không tải được ảnh xem trước từ URL hiện tại.
-                  {isLikelyObjectKey
-                    ? ' Giá trị hiện tại trông giống object key private, cần backend trả presigned URL.'
-                    : ' URL có thể hết hạn hoặc bị chặn CORS/quyền truy cập.'}
-                </div>
-              )}
-            </div>
-          )}
           <div className="border border-slate-200 rounded p-3 space-y-2 bg-slate-50/40 min-h-[200px]">
             {blocks.length === 0 ? (
               <div className="text-xs text-slate-400 italic">Chưa có nội dung.</div>
@@ -1114,7 +1233,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 w-full max-w-3xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-slate-900">
-                Lịch sử thay đổi · Trang {page.pageNumber}
+                Lịch sử thay đổi · Trang sách {page.pageNumber}
               </h3>
               <button
                 type="button"
@@ -1231,6 +1350,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 };
 
 interface BlockEditorProps {
+  bookId: string;
   block: ContentBlockDto;
   index: number;
   total: number;
@@ -1243,6 +1363,7 @@ interface BlockEditorProps {
 }
 
 const BlockEditor: React.FC<BlockEditorProps> = ({
+  bookId,
   block,
   index,
   total,
@@ -1257,6 +1378,56 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   const isImage = type === 'image' || type === 'figure';
   const [selectedColor, setSelectedColor] = useState('#2563eb');
   const [showColorPalette, setShowColorPalette] = useState(false);
+  const uploadImage = useUploadBookPageImage(bookId);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const currentImageRef = block.imageUrl ?? block.imagePath ?? '';
+  const resolvedImagePreviewSrc = resolveAssetUrl(block.imageUrl ?? block.imagePath ?? '');
+  const hasImage = Boolean(currentImageRef);
+
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [currentImageRef]);
+
+  const handleImageFileSelected = async (file: File | undefined | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('File phải là ảnh (PNG, JPG, WEBP, …).');
+      return;
+    }
+    setUploadError(null);
+    try {
+      const res = await uploadImage.mutateAsync(file);
+      const result = res.result;
+      if (!result || !result.imageUrl) {
+        setUploadError('Tải ảnh thất bại — phản hồi không hợp lệ.');
+        return;
+      }
+      onChange({ imageUrl: result.imageUrl, imagePath: result.imagePath, thumbnailUrl: '' });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Tải ảnh thất bại.');
+    }
+  };
+
+  const handleClearImage = () => {
+    onChange({ imageUrl: '', imagePath: '', thumbnailUrl: '' });
+    setUploadError(null);
+    if (imageFileInputRef.current) imageFileInputRef.current.value = '';
+  };
+
+  let uploadButtonLabel: string;
+  if (uploadImage.isPending) uploadButtonLabel = 'Đang tải...';
+  else if (hasImage) uploadButtonLabel = 'Thay ảnh khác';
+  else uploadButtonLabel = 'Tải ảnh lên';
+
+  let imagePlaceholderText: string;
+  if (hasImage) {
+    imagePlaceholderText = 'Không tải được ảnh hiện tại — bạn có thể tải lên ảnh mới để thay thế.';
+  } else {
+    imagePlaceholderText = 'Chưa có ảnh — bấm "Tải ảnh lên" để thêm minh hoạ.';
+  }
 
   const headingLabel = (block.label ?? '').trim();
   const headingMeta = (() => {
@@ -1477,14 +1648,77 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
       </div>
 
       {isImage ? (
-        <>
-          <input
-            type="text"
-            value={block.imageUrl ?? block.imagePath ?? ''}
-            onChange={(e) => onChange({ imageUrl: e.target.value })}
-            placeholder="URL ảnh"
-            className="w-full text-sm px-2 py-1 border border-slate-200 rounded"
-          />
+        <div className="space-y-2">
+          {hasImage && !imageLoadFailed ? (
+            <div className="rounded border border-slate-200 bg-slate-50 p-2 flex items-center justify-center">
+              <AuthenticatedImage
+                src={resolvedImagePreviewSrc}
+                alt={block.caption ?? 'Ảnh minh hoạ'}
+                className="max-h-[180px] w-auto object-contain rounded"
+                onError={() => setImageLoadFailed(true)}
+                onLoad={() => setImageLoadFailed(false)}
+              />
+            </div>
+          ) : (
+            <div className="rounded border border-dashed border-slate-300 bg-slate-50 px-3 py-6 flex flex-col items-center justify-center gap-1 text-slate-500">
+              <ImageOff size={20} className="text-slate-400" />
+              <span className="text-xs">{imagePlaceholderText}</span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className={[
+                'inline-flex items-center gap-1 px-2 py-1 rounded text-xs border transition cursor-pointer',
+                uploadImage.isPending
+                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
+              ].join(' ')}
+              title="Chọn ảnh từ máy của bạn"
+            >
+              {uploadImage.isPending ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Upload size={12} />
+              )}
+              {uploadButtonLabel}
+              <input
+                ref={imageFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadImage.isPending}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  void handleImageFileSelected(file);
+                  if (e.target) e.target.value = '';
+                }}
+              />
+            </label>
+            {hasImage && (
+              <button
+                type="button"
+                onClick={handleClearImage}
+                disabled={uploadImage.isPending}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                title="Bỏ ảnh hiện tại khỏi block"
+              >
+                <Trash2 size={12} /> Xoá ảnh
+              </button>
+            )}
+            {hasImage && (
+              <span className="text-[11px] text-slate-400">
+                Đã đính kèm ảnh — URL được ẩn để tránh lộ đường dẫn nội bộ.
+              </span>
+            )}
+          </div>
+
+          {uploadError && (
+            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+              {uploadError}
+            </div>
+          )}
+
           <input
             type="text"
             value={block.caption ?? ''}
@@ -1492,7 +1726,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
             placeholder="Chú thích (caption)"
             className="w-full text-sm px-2 py-1 border border-slate-200 rounded"
           />
-        </>
+        </div>
       ) : (
         <>
           {isHeading && (

@@ -4,18 +4,17 @@ import {
   CheckCircle2,
   ListTree,
   Loader2,
-  PenSquare,
-  PlayCircle,
   Plus,
   RefreshCw,
   Search,
-  Trash2,
+  FolderOpen,
+  Pencil,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../../data/mockData';
-import { useBookList, useDeleteBook } from '../../../hooks/useBooks';
+import { useBookList, useRenameBookSeries } from '../../../hooks/useBooks';
 import { useChaptersBySubject } from '../../../hooks/useChapters';
 import { useGrades } from '../../../hooks/useGrades';
 import { useLessonsByChapter } from '../../../hooks/useLessons';
@@ -62,6 +61,9 @@ const BookListPage: React.FC = () => {
   const [status, setStatus] = useState<BookStatus | ''>('');
   const [keyword, setKeyword] = useState('');
   const [pageIndex, setPageIndex] = useState(0);
+  const [renameTarget, setRenameTarget] = useState<{ seriesId: string; title: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState('');
 
   const grades = useGrades();
   const gradeLevel = useMemo(() => {
@@ -86,47 +88,63 @@ const BookListPage: React.FC = () => {
   );
 
   const { data, isLoading, isFetching, refetch } = useBookList(params);
-  const deleteBook = useDeleteBook();
+  const renameSeriesMutation = useRenameBookSeries();
 
   const allBooks: BookResponse[] = useMemo(() => data?.result?.content ?? [], [data]);
-  const dedupedBooks = useMemo(() => {
-    const normalize = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
-
-    const byIdentity = new Map<string, BookResponse>();
+  const seriesRows = useMemo(() => {
+    const bySeries = new Map<string, BookResponse[]>();
     for (const b of allBooks) {
-      const identityKey = [
-        b.schoolGradeId ?? '',
-        b.subjectId ?? '',
-        normalize(b.title),
-        normalize(b.publisher),
-        normalize(b.academicYear),
-      ].join('|');
-
-      const current = byIdentity.get(identityKey);
-      if (!current) {
-        byIdentity.set(identityKey, b);
-        continue;
-      }
-
-      const currentTime = new Date(current.createdAt ?? 0).getTime();
-      const nextTime = new Date(b.createdAt ?? 0).getTime();
-      if (nextTime >= currentTime) {
-        byIdentity.set(identityKey, b);
-      }
+      const key = b.bookSeriesId ?? b.id;
+      const existing = bySeries.get(key) ?? [];
+      existing.push(b);
+      bySeries.set(key, existing);
     }
-    return Array.from(byIdentity.values());
+    return Array.from(bySeries.entries()).map(([seriesId, books]) => {
+      const sortedBooks = [...books].sort((a, b) => {
+        const aTime = new Date(a.createdAt ?? 0).getTime();
+        const bTime = new Date(b.createdAt ?? 0).getTime();
+        return bTime - aTime;
+      });
+      const head = sortedBooks[0];
+      const mappedLessonCount = sortedBooks.reduce((sum, item) => sum + (item.mappedLessonCount ?? 0), 0);
+      const allVerified = sortedBooks.length > 0 && sortedBooks.every((item) => item.verified);
+      const hasRunning = sortedBooks.some((item) => item.status === 'OCR_RUNNING');
+      const hasFailed = sortedBooks.some((item) => item.status === 'OCR_FAILED');
+      const allDone = sortedBooks.length > 0 && sortedBooks.every((item) => item.status === 'OCR_DONE');
+      let status: BookStatus = head.status;
+      if (hasRunning) {
+        status = 'OCR_RUNNING';
+      } else if (hasFailed) {
+        status = 'OCR_FAILED';
+      } else if (allDone) {
+        status = 'OCR_DONE';
+      }
+      return {
+        seriesId,
+        books: sortedBooks,
+        title: head.bookSeriesName || head.title,
+        schoolGradeName: head.schoolGradeName,
+        subjectName: head.subjectName,
+        curriculumName: head.curriculumName,
+        publisher: head.publisher,
+        academicYear: head.academicYear,
+        mappedLessonCount,
+        verified: allVerified,
+        status,
+      };
+    });
   }, [allBooks]);
 
-  const filteredBooks = useMemo(() => {
+  const filteredSeries = useMemo(() => {
     const k = keyword.trim().toLowerCase();
-    if (!k) return dedupedBooks;
-    return dedupedBooks.filter(
-      (b) =>
-        b.title.toLowerCase().includes(k) ||
-        (b.publisher ?? '').toLowerCase().includes(k) ||
-        (b.academicYear ?? '').toLowerCase().includes(k)
+    if (!k) return seriesRows;
+    return seriesRows.filter(
+      (s) =>
+        s.title.toLowerCase().includes(k) ||
+        (s.publisher ?? '').toLowerCase().includes(k) ||
+        (s.academicYear ?? '').toLowerCase().includes(k)
     );
-  }, [dedupedBooks, keyword]);
+  }, [seriesRows, keyword]);
 
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
@@ -141,17 +159,44 @@ const BookListPage: React.FC = () => {
     setPageIndex(0);
   };
 
-  const handleDelete = async (book: BookResponse) => {
-    if (!confirm(`Xoá sách "${book.title}"? Hành động này không thể hoàn tác.`)) return;
-    try {
-      await deleteBook.mutateAsync(book.id);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Lỗi khi xoá sách.');
-    }
+  const goToWizard = (seriesId: string) => {
+    navigate(`/admin/books/${seriesId}/wizard`);
   };
 
-  const goToWizard = (book: BookResponse) => {
-    navigate(`/admin/books/${book.id}/wizard`);
+  const openRenameModal = (seriesId: string, currentTitle: string) => {
+    setRenameTarget({ seriesId, title: currentTitle });
+    setRenameValue(currentTitle);
+    setRenameError('');
+  };
+
+  const closeRenameModal = () => {
+    setRenameTarget(null);
+    setRenameValue('');
+    setRenameError('');
+  };
+
+  const handleSubmitRename = async () => {
+    if (!renameTarget) return;
+    const nextName = renameValue.trim();
+    if (!nextName) {
+      setRenameError('Tên bộ sách không được để trống.');
+      return;
+    }
+    if (nextName === renameTarget.title.trim()) {
+      closeRenameModal();
+      return;
+    }
+    try {
+      await renameSeriesMutation.mutateAsync({
+        seriesId: renameTarget.seriesId,
+        name: nextName,
+      });
+      closeRenameModal();
+    } catch (error) {
+      setRenameError(
+        error instanceof Error ? error.message : 'Không thể đổi tên bộ sách. Vui lòng thử lại.'
+      );
+    }
   };
 
   return (
@@ -167,11 +212,11 @@ const BookListPage: React.FC = () => {
               <BookOpenText size={20} />
             </div>
             <div>
-              <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
-                Sách giáo khoa
+              <h1 className="font-[Playfair_Display] text-[22px] text-[#141413]">
+                Bộ sách giáo khoa
               </h1>
               <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                Quản lý sách: tạo mới, mapping bài học, chạy OCR và xác minh nội dung.
+                Quản lý theo bộ sách: thêm cuốn, mapping bài học, chạy OCR và xác minh nội dung.
               </p>
             </div>
           </div>
@@ -180,7 +225,7 @@ const BookListPage: React.FC = () => {
             onClick={() => navigate('/admin/books/new')}
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
           >
-            <Plus size={16} /> Thêm sách
+            <Plus size={16} /> Thêm bộ sách
           </button>
         </div>
 
@@ -291,7 +336,7 @@ const BookListPage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
             <span>
-              {totalElements > 0 ? `${filteredBooks.length} sách hiển thị` : 'Chưa có sách phù hợp'}
+              {totalElements > 0 ? `${filteredSeries.length} bộ sách hiển thị` : 'Chưa có bộ sách phù hợp'}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -318,23 +363,24 @@ const BookListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {isLoading && (
+          <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+            <Loader2 size={20} className="animate-spin inline mr-2" /> Đang tải…
+          </div>
+        )}
+        {!isLoading && filteredSeries.length === 0 && (
+          <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
+            Không có bộ sách phù hợp. Bấm "Thêm bộ sách" để tạo mới.
+          </div>
+        )}
+        {!isLoading && filteredSeries.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          {isLoading ? (
-            <div className="p-10 text-center text-sm text-slate-500">
-              <Loader2 size={20} className="animate-spin inline mr-2" /> Đang tải…
-            </div>
-          ) : filteredBooks.length === 0 ? (
-            <div className="p-10 text-center text-sm text-slate-500">
-              Không có sách phù hợp. Bấm "Thêm sách" để tạo mới.
-            </div>
-          ) : (
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-xs text-slate-600">
                 <tr>
-                  <th className="text-left px-4 py-2 font-semibold">Tên sách</th>
+                  <th className="text-left px-4 py-2 font-semibold">Bộ sách</th>
                   <th className="text-left px-4 py-2 font-semibold">Khối · Môn · CT</th>
-                  <th className="text-left px-4 py-2 font-semibold">Trang</th>
+                  <th className="text-left px-4 py-2 font-semibold">Số cuốn</th>
                   <th className="text-left px-4 py-2 font-semibold">Mapping</th>
                   <th className="text-left px-4 py-2 font-semibold">Trạng thái</th>
                   <th className="text-left px-4 py-2 font-semibold">Verify</th>
@@ -342,48 +388,45 @@ const BookListPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredBooks.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/50">
+                {filteredSeries.map((s) => (
+                  <tr key={s.seriesId} className="hover:bg-slate-50/50">
                     <td className="px-4 py-3">
-                      <button type="button" onClick={() => goToWizard(b)} className="text-left">
+                      <button type="button" onClick={() => goToWizard(s.seriesId)} className="text-left">
                         <div className="font-medium text-slate-800 hover:text-blue-700">
-                          {b.title}
+                          {s.title}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {b.publisher ?? '—'} · {b.academicYear ?? '—'}
+                          {s.publisher ?? '—'} · {s.academicYear ?? '—'}
                         </div>
                       </button>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">
-                      <div>{b.schoolGradeName}</div>
+                      <div>{s.schoolGradeName}</div>
                       <div className="text-slate-400">
-                        {b.subjectName} · {b.curriculumName}
+                        {s.subjectName} · {s.curriculumName}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">
-                      <div>{b.totalPages ?? '?'} trang</div>
-                      <div className="text-slate-400">
-                        OCR {b.ocrPageFrom ?? '?'}–{b.ocrPageTo ?? '?'}
-                      </div>
+                      <div>{s.books.length} cuốn</div>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">
                       <span className="inline-flex items-center gap-1">
                         <ListTree size={12} className="text-slate-400" />
-                        {b.mappedLessonCount} bài
+                        {s.mappedLessonCount} bài
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[b.status]}`}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs ${STATUS_TONE[s.status]}`}
                       >
-                        {b.status === 'OCR_RUNNING' && (
+                        {s.status === 'OCR_RUNNING' && (
                           <Loader2 size={10} className="animate-spin" />
                         )}
-                        {STATUS_LABEL[b.status]}
+                        {STATUS_LABEL[s.status]}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {b.verified ? (
+                      {s.verified ? (
                         <span className="inline-flex items-center gap-1 text-xs text-emerald-700">
                           <CheckCircle2 size={12} /> Đã xác minh
                         </span>
@@ -395,42 +438,21 @@ const BookListPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-1">
-                        {b.status === 'OCR_DONE' && (
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/books/${b.id}/wizard`)}
-                            title="Xác minh nội dung"
-                            className="p-1.5 rounded hover:bg-emerald-50 text-emerald-600"
-                          >
-                            <CheckCircle2 size={14} />
-                          </button>
-                        )}
-                        {b.status !== 'OCR_DONE' && b.status !== 'OCR_RUNNING' && (
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/books/${b.id}/wizard`)}
-                            title="Tiếp tục thiết lập"
-                            className="p-1.5 rounded hover:bg-blue-50 text-blue-600"
-                          >
-                            <PlayCircle size={14} />
-                          </button>
-                        )}
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/books/${b.id}/wizard`)}
-                          title="Sửa metadata"
+                          onClick={() => openRenameModal(s.seriesId, s.title)}
+                          title="Đổi tên bộ sách"
                           className="p-1.5 rounded hover:bg-slate-100 text-slate-500"
                         >
-                          <PenSquare size={14} />
+                          <Pencil size={14} />
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(b)}
-                          title="Xoá"
-                          className="p-1.5 rounded hover:bg-red-50 text-red-500"
-                          disabled={deleteBook.isPending}
+                          onClick={() => navigate(`/admin/books/${s.seriesId}/wizard`)}
+                          title="Mở wizard bộ sách"
+                          className="p-1.5 rounded hover:bg-slate-100 text-slate-500"
                         >
-                          <Trash2 size={14} />
+                          <FolderOpen size={14} />
                         </button>
                       </div>
                     </td>
@@ -438,8 +460,8 @@ const BookListPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          )}
         </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -468,6 +490,57 @@ const BookListPage: React.FC = () => {
           </div>
         )}
       </div>
+      {renameTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-lg rounded-xl bg-white border border-slate-200 shadow-xl p-5">
+            <h2 className="text-lg font-semibold text-slate-900">Đổi tên bộ sách</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Cập nhật tên hiển thị ở danh sách `/admin/books`.
+            </p>
+            <div className="mt-4">
+              <label htmlFor="book-series-name" className="block text-sm text-slate-700 mb-1">
+                Tên bộ sách
+              </label>
+              <input
+                id="book-series-name"
+                type="text"
+                value={renameValue}
+                onChange={(e) => {
+                  setRenameValue(e.target.value);
+                  setRenameError('');
+                }}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm"
+                placeholder="Nhập tên bộ sách..."
+                autoFocus
+              />
+              {renameError && <p className="mt-2 text-xs text-red-600">{renameError}</p>}
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeRenameModal}
+                className="px-3 py-2 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSubmitRename()}
+                disabled={renameSeriesMutation.isPending}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-60"
+              >
+                {renameSeriesMutation.isPending ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Đang lưu...
+                  </>
+                ) : (
+                  'Lưu tên bộ'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

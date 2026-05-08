@@ -1,5 +1,5 @@
-import React from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
+import React from 'react';
 import { useBookPdfPreviewUrl } from '../../../hooks/useBooks';
 
 export type BookPdfPreviewProps = {
@@ -35,7 +35,7 @@ const BookPdfPreview: React.FC<BookPdfPreviewProps> = ({
           {localObjectUrl ? (
             <p className="text-xs text-slate-500">Bản xem trước từ file vừa chọn (chưa upload)</p>
           ) : (
-            <p className="text-xs text-slate-500">Đọc trực tiếp từ bản đã lưu trên máy chủ</p>
+            <p className="text-xs text-slate-500">Kiểm tra lại sách để chuẩn bị tiến hành OCR</p>
           )}
         </div>
         {src ? (
@@ -61,8 +61,8 @@ const BookPdfPreview: React.FC<BookPdfPreviewProps> = ({
 
         {errorServer ? (
           <div className="px-4 py-6 text-sm text-red-600">
-            Không lấy được liên kết xem PDF. Kiểm tra MinIO hoặc thử &quot;Mở tab mới&quot; sau khi tải
-            xong.
+            Không lấy được liên kết xem PDF. Kiểm tra MinIO hoặc thử &quot;Mở tab mới&quot; sau khi
+            tải xong.
           </div>
         ) : null}
 

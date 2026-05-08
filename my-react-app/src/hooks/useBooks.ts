@@ -94,6 +94,17 @@ export function useUpdateBook(bookId: string) {
   });
 }
 
+export function useRenameBookSeries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ seriesId, name }: { seriesId: string; name: string }) =>
+      BookService.renameSeries(seriesId, { name }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
+    },
+  });
+}
+
 export function useUploadBookPdf(bookId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -102,6 +113,18 @@ export function useUploadBookPdf(bookId: string) {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.pdfPreviewUrl(bookId) });
     },
+  });
+}
+
+/**
+ * Upload an image for an OCR content block (Step-4 verify wizard).
+ *
+ * The new image URL/key is returned and the caller is responsible for patching it onto the block;
+ * page persistence still happens through the existing PATCH page endpoint when admins press Save.
+ */
+export function useUploadBookPageImage(bookId: string) {
+  return useMutation({
+    mutationFn: (file: File) => BookService.uploadPageImage(bookId, file),
   });
 }
 
