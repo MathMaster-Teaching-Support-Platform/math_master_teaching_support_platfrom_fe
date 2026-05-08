@@ -744,7 +744,7 @@ export default function StudentPublicSlides() {
             {/* Footer */}
             <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-[#F0EEE6] bg-white">
               <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5] hidden sm:block">
-                File PPTX sẽ được tải về thiết bị của bạn
+                File Slide sẽ được tải về thiết bị của bạn
               </p>
               <div className="flex items-center gap-2 ml-auto">
                 <button
@@ -761,7 +761,7 @@ export default function StudentPublicSlides() {
                   onClick={() => void handleDownloadSlide(previewSlideId)}
                 >
                   <Download className="w-3.5 h-3.5" />
-                  {downloadingSlideId === previewSlideId ? 'Đang tải...' : 'Tải PPTX'}
+                  {downloadingSlideId === previewSlideId ? 'Đang tải...' : 'Tải Slide'}
                 </button>
               </div>
             </div>

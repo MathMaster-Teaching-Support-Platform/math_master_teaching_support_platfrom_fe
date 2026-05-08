@@ -140,7 +140,7 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Failed to fetch chapters': 'Không thể tải danh sách chương.',
   'Failed to fetch lessons': 'Không thể tải danh sách bài học.',
   'Failed to generate slide content': 'Không thể tạo nội dung slide.',
-  'Failed to generate PPTX': 'Không thể tạo file PPTX.',
+  'Failed to generate Slide': 'Không thể tạo Slide.',
   'Failed to render slide preview': 'Không thể tạo ảnh xem trước slide.',
   'Failed to fetch generated slides': 'Không thể tải danh sách slide đã tạo.',
   'Failed to download generated slide': 'Không thể tải xuống slide.',

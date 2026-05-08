@@ -2196,7 +2196,7 @@ const AISlideGenerator: React.FC = () => {
                       <LoadingSpinner label="Đang tạo Slide..." />
                     ) : (
                       <>
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận & tạo PPTX
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận & tạo Slide
                       </>
                     )}
                   </button>
