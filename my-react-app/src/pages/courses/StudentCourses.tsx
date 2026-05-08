@@ -6,8 +6,10 @@ import {
   Award,
   BookOpen,
   ChevronRight,
+  GraduationCap,
   LoaderCircle,
   Search,
+  Star,
   TrendingUp,
   X,
 } from 'lucide-react';
@@ -73,12 +75,21 @@ const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
 // ─── Enrollment Card ──────────────────────────────────────────────────────────
 const EnrollmentCard: React.FC<{
   enrollment: EnrollmentResponse;
+  courseMeta?: CourseResponse;
   index: number;
   isOpening: boolean;
   onOpen: (enrollmentId: string) => void;
-}> = ({ enrollment, index, isOpening, onOpen }) => {
+}> = ({ enrollment, courseMeta, index, isOpening, onOpen }) => {
   const completionRate = enrollment.completionRate ?? 0;
   const enrolledCourseThumbnailUrl = enrollment.courseThumbnailUrl;
+  const title = enrollment.courseTitle ?? courseMeta?.title ?? `${UI_TEXT.COURSE} chưa đặt tên`;
+  const gradeLabel =
+    typeof courseMeta?.gradeLevel === 'number'
+      ? `Lớp ${courseMeta.gradeLevel}`
+      : 'Lớp đang cập nhật';
+  const ratingValue = Number(courseMeta?.rating ?? 0).toFixed(1);
+  const description =
+    courseMeta?.description?.trim() || `Chưa có mô tả cho ${UI_TEXT.COURSE.toLowerCase()} này.`;
 
   return (
     <motion.article
@@ -134,9 +145,24 @@ const EnrollmentCard: React.FC<{
         >
           {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
         </span>
-        <h3 className="cover-title">{enrollment.courseTitle}</h3>
       </div>
       <div className="course-body">
+        <h3 className="cover-title">{title}</h3>
+        <p className="course-desc">{description}</p>
+        <div className="course-metrics">
+          <div className="metric">
+            <GraduationCap size={13} />
+            <span>{gradeLabel}</span>
+          </div>
+          <div className="metric">
+            <Star size={13} />
+            <span>{ratingValue}</span>
+          </div>
+          <div className="metric">
+            <BookOpen size={13} />
+            <span>{enrollment.totalLessons ?? 0} bài</span>
+          </div>
+        </div>
         <div>
           <div
             style={{
@@ -247,6 +273,10 @@ const StudentCourses: React.FC = () => {
     [publicCoursesData]
   );
 
+  const publicCourseMap = useMemo(() => {
+    return new Map(publicCourses.map((course) => [course.id, course]));
+  }, [publicCourses]);
+
   const filteredEnrollments = useMemo(
     () =>
       enrollments.filter(
@@ -271,14 +301,22 @@ const StudentCourses: React.FC = () => {
     }
   }, [browsePage, safeBrowsePage]);
 
-  const stats = useMemo(
-    () => ({
-      active: enrollments.filter((e) => e.status === 'ACTIVE').length,
+  const stats = useMemo(() => {
+    const activeEnrollments = enrollments.filter((e) => e.status === 'ACTIVE');
+    const completed = activeEnrollments.filter((e) => {
+      const totalLessons = e.totalLessons ?? 0;
+      const completedLessons = e.completedLessons ?? 0;
+      if (totalLessons > 0 && completedLessons >= totalLessons) return true;
+      return (e.completionRate ?? 0) >= 100;
+    }).length;
+
+    return {
+      active: activeEnrollments.length,
+      completed,
+      incomplete: Math.max(activeEnrollments.length - completed, 0),
       total: enrollments.length,
-      browse: publicCourses.length,
-    }),
-    [enrollments, publicCourses.length]
-  );
+    };
+  }, [enrollments]);
 
   const enrolledCourseIds = useMemo(
     () => new Set(enrollments.filter((e) => e.status === 'ACTIVE').map((e) => e.courseId)),
@@ -386,15 +424,15 @@ const StudentCourses: React.FC = () => {
                       color: 'text-[#4F7EF7]',
                     },
                     {
-                      label: 'Tổng ghi danh',
-                      value: stats.total,
+                      label: 'Đã Hoàn Thành',
+                      value: stats.completed,
                       Icon: TrendingUp,
                       bg: 'bg-[#ECFDF5]',
                       color: 'text-[#2EAD7A]',
                     },
                     {
-                      label: 'Trên trang khám phá',
-                      value: stats.browse,
+                      label: 'Chưa hoàn thành',
+                      value: stats.incomplete,
                       Icon: Award,
                       bg: 'bg-[#FFF7ED]',
                       color: 'text-[#E07B39]',
@@ -532,14 +570,19 @@ const StudentCourses: React.FC = () => {
                   <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                     Đang học{' '}
-                    <strong className="text-[#141413] font-semibold tabular-nums">{stats.active}</strong>
+                    <strong className="text-[#141413] font-semibold tabular-nums">
+                      {stats.active}
+                    </strong>
                   </span>
                 </div>
               )}
 
               {/* ── Loading skeletons ── */}
               {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                  aria-busy="true"
+                >
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div
                       key={i}
@@ -558,6 +601,7 @@ const StudentCourses: React.FC = () => {
                         <EnrollmentCard
                           key={enrollment.id}
                           enrollment={enrollment}
+                          courseMeta={publicCourseMap.get(enrollment.courseId)}
                           index={i}
                           isOpening={openingEnrollmentId === enrollment.id}
                           onOpen={openEnrollmentDetails}

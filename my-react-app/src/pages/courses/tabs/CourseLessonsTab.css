@@ -87,13 +87,21 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
+  padding: 0;
   border: none;
   border-radius: 12px;
   background: #f1f5f9;
   color: #475569;
+  line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s ease;
+}
+
+.clt-icon-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .clt-icon-btn:hover:not(:disabled) {
