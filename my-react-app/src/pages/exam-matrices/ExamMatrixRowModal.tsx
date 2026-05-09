@@ -9,10 +9,24 @@ import { useGetQuestionBankMatrixStats } from '../../hooks/useQuestionBank';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { ExamMatrixRowRequest } from '../../types/examMatrix';
 
+
+const CAP_RANGES: Record<1 | 2 | 3, { min: number; max: number }> = {
+  1: { min: 1, max: 5 },
+  2: { min: 6, max: 9 },
+  3: { min: 10, max: 12 },
+};
+
+const CAP_LABELS: Record<1 | 2 | 3, { name: string; sub: string }> = {
+  1: { name: 'Cấp 1', sub: 'Tiểu học' },
+  2: { name: 'Cấp 2', sub: 'THCS' },
+  3: { name: 'Cấp 3', sub: 'THPT' },
+};
+
 type Props = {
   isOpen: boolean;
   matrixId: string;
   matrixGradeLevel?: string;
+  lockedSchoolLevel?: 1 | 2 | 3 | null;
   subjectId?: string;
   bankId?: string;
   onClose: () => void;
@@ -23,6 +37,7 @@ export function ExamMatrixRowModal({
   isOpen,
   matrixId,
   matrixGradeLevel,
+  lockedSchoolLevel,
   subjectId,
   bankId,
   onClose,
@@ -58,17 +73,52 @@ export function ExamMatrixRowModal({
   const chosenChapterCount =
     chapterId && bankCountByChapter.has(chapterId) ? bankCountByChapter.get(chapterId)! : null;
 
-  // Sort grades by level
-  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
+  // Resolve effective school level: prop from parent (rows/matrix) OR derive from matrixGradeLevel.
+  const effectiveLevel = useMemo((): 1 | 2 | 3 | null => {
+    if (lockedSchoolLevel) return lockedSchoolLevel;
+    const n = Number(matrixGradeLevel || 0);
+    if (n >= 1 && n <= 5) return 1;
+    if (n >= 6 && n <= 9) return 2;
+    if (n >= 10 && n <= 12) return 3;
+    return null;
+  }, [lockedSchoolLevel, matrixGradeLevel]);
+
+  // Filter grades to the same school level (cấp) as existing rows, then sort asc.
+  const filteredSortedGrades = useMemo(() => {
+    const range = effectiveLevel ? CAP_RANGES[effectiveLevel] : null;
+    return [...grades]
+      .filter((g) => !range || (g.level >= range.min && g.level <= range.max))
+      .sort((a, b) => a.level - b.level);
+  }, [grades, effectiveLevel]);
+
+  const lockedCapInfo = useMemo(() => {
+    if (!lockedSchoolLevel) return null;
+    const { min, max } = CAP_RANGES[lockedSchoolLevel];
+    const { name, sub } = CAP_LABELS[lockedSchoolLevel];
+    return { name, sub, range: `Lớp ${min}–${max}` };
+  }, [lockedSchoolLevel]);
+
+
+  // Sort chapters ascending by orderIndex, then by title/name.
+  const sortedChapters = useMemo(
+    () =>
+      [...chapters].sort((a, b) => {
+        if (a.orderIndex != null && b.orderIndex != null) return a.orderIndex - b.orderIndex;
+        if (a.orderIndex != null) return -1;
+        if (b.orderIndex != null) return 1;
+        return (a.title || a.name || '').localeCompare(b.title || b.name || '');
+      }),
+    [chapters]
+  );
 
   const chapterLabel = useMemo(() => {
-    const selected = chapters.find((item) => item.id === chapterId);
+    const selected = sortedChapters.find((item) => item.id === chapterId);
     return selected?.title || selected?.name || chapterId;
-  }, [chapters, chapterId]);
+  }, [sortedChapters, chapterId]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setGradeLevel(matrixGradeLevel ?? '');
+    setGradeLevel(matrixGradeLevel != null ? String(matrixGradeLevel) : '');
     setSelectedSubjectId(subjectId ?? '');
     setError(null);
     setChapterId('');
@@ -76,14 +126,14 @@ export function ExamMatrixRowModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (chapters.length > 0 && !chapterId) {
-      setChapterId(chapters[0].id);
+    if (sortedChapters.length > 0 && !chapterId) {
+      setChapterId(sortedChapters[0].id);
       return;
     }
-    if (chapters.length === 0) {
+    if (sortedChapters.length === 0) {
       setChapterId('');
     }
-  }, [isOpen, chapters, chapterId]);
+  }, [isOpen, sortedChapters, chapterId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -151,27 +201,67 @@ export function ExamMatrixRowModal({
               {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Grade Selection */}
-                <div>
-                  <label className="label">Lớp</label>
-                  <select
-                    className="select"
-                    value={gradeLevel}
-                    onChange={(event) => {
-                      setGradeLevel(event.target.value);
-                      setSelectedSubjectId('');
-                      setChapterId('');
+                {/* School-level lock banner */}
+                {lockedCapInfo && (
+                  <div
+                    style={{
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: 8,
+                      padding: '8px 12px',
+                      fontSize: 12,
+                      color: '#1d4ed8',
+                      lineHeight: 1.6,
                     }}
-                    disabled={isLoadingGrades}
-                    style={{ width: '100%' }}
                   >
-                    <option value="">Chọn lớp</option>
-                    {sortedGrades.map((grade) => (
-                      <option key={grade.id} value={String(grade.level)}>
-                        {grade.name || `Lớp ${grade.level}`}
-                      </option>
-                    ))}
-                  </select>
+                    <strong>
+                      📌 Cấp học đã được khóa: {lockedCapInfo.name} ({lockedCapInfo.sub}) —{' '}
+                      {lockedCapInfo.range}
+                    </strong>
+                    <br />
+                    Theo quy định của Bộ GD&ĐT, một ma trận đề kiểm tra chỉ được phép bao gồm nội
+                    dung từ{' '}
+                    <strong>cùng một cấp học</strong>. Ma trận này đã có dòng thuộc{' '}
+                    {lockedCapInfo.name}, vì vậy chỉ hiển thị{' '}
+                    <strong>{lockedCapInfo.range}</strong> trong danh sách lớp bên dưới.
+                  </div>
+                )}
+
+                {/* Grade Selection — chips only, level is determined by the matrix */}
+                <div>
+                  <label className="label" style={{ marginBottom: 8, display: 'block' }}>
+                    Lớp
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {filteredSortedGrades.map((g) => {
+                      const val = String(g.level);
+                      const active = gradeLevel === val;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          disabled={isLoadingGrades}
+                          onClick={() => {
+                            setGradeLevel(val);
+                            setSelectedSubjectId('');
+                            setChapterId('');
+                          }}
+                          style={{
+                            padding: '5px 14px',
+                            borderRadius: 20,
+                            border: active ? '2px solid #C96442' : '1px solid #e2e8f0',
+                            background: active ? '#C96442' : '#f8fafc',
+                            color: active ? '#fff' : '#141413',
+                            fontWeight: active ? 600 : 400,
+                            fontSize: 13,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {g.name || `Lớp ${g.level}`}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Subject Selection */}
@@ -224,7 +314,7 @@ export function ExamMatrixRowModal({
                     ) : (
                       <>
                         <option value="">Chọn chủ đề</option>
-                        {chapters.map((chapter) => {
+                        {sortedChapters.map((chapter) => {
                           const inBank = bankCountByChapter.get(chapter.id);
                           const suffix =
                             showBankPanel && inBank !== undefined
@@ -259,7 +349,7 @@ export function ExamMatrixRowModal({
               </div>
 
               <p className="muted" style={{ marginTop: 16 }}>
-                Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ câu hỏi trực tiếp
+                Sau khi thêm dòng, bạn có thể chỉnh sửa số câu theo từng độ khó câu hỏi trực tiếp
                 trong bảng ma trận.
               </p>
             </div>

@@ -102,7 +102,7 @@ export function QuestionBankTreeSection({
     <section className="qbts">
       <header className="qbts__header">
         <div className="qbts__header-text">
-          <h3 className="qbts__title">Theo chương và mức độ câu hỏi</h3>
+          <h3 className="qbts__title">Theo chương và độ khó câu hỏi</h3>
           {tree && (
             <p className="qbts__subtitle">
               {tree.schoolGradeName ?? 'Chưa gắn lớp'}

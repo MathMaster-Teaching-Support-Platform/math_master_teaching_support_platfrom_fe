@@ -132,7 +132,7 @@ export function CanonicalQuestionModal({
               </label>
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Mức độ câu hỏi
+                  Độ khó câu hỏi
                 </p>
                 <select
                   className="select"

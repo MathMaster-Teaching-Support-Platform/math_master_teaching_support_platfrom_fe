@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import { translateApiError } from '../utils/errorCodes';
 import { AuthService } from './api/auth.service';
 import type {
     BatchUpsertMatrixRowCellsRequest,
@@ -26,8 +27,8 @@ const getAuthHeaders = (): Record<string, string> => {
 async function handleResponse<T>(res: Response): Promise<ExamMatrixApiResponse<T>> {
     if (!res.ok) {
         const errorBody = await res.json().catch(() => ({}));
-        const msg = (errorBody as { message?: string }).message || `HTTP ${res.status}`;
-        throw new Error(msg);
+        const raw = errorBody as { message?: string; code?: number };
+        throw new Error(translateApiError(raw.message || `HTTP ${res.status}`, raw.code));
     }
     return res.json();
 }

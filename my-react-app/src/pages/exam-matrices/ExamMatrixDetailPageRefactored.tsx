@@ -68,7 +68,6 @@ export default function ExamMatrixDetailPageRefactored() {
   const [validation, setValidation] = useState<MatrixValidationReport | null>(null);
   const [rowModalOpen, setRowModalOpen] = useState(false);
   const [validating, setValidating] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [exportBusy, setExportBusy] = useState<'excel' | 'pdf' | null>(null);
   const { showToast } = useToast();
 
@@ -99,21 +98,17 @@ export default function ExamMatrixDetailPageRefactored() {
 
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
 
-  async function refreshMatrix() {
-    setRefreshing(true);
-    try {
-      await Promise.all([refetch(), refetchTable()]);
-    } finally {
-      setRefreshing(false);
-    }
-  }
-
   async function runValidation() {
     if (!matrixId) return;
     setValidating(true);
     try {
       const result = await examMatrixService.validateMatrix(matrixId);
       setValidation(result.result ?? null);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể kiểm tra ma trận đề.',
+      });
     } finally {
       setValidating(false);
     }
@@ -136,8 +131,15 @@ export default function ExamMatrixDetailPageRefactored() {
   async function removeMatrix() {
     if (!matrixId) return;
     if (!globalThis.confirm('Bạn có chắc muốn xóa ma trận này?')) return;
-    await deleteMutation.mutateAsync(matrixId);
-    navigate('/teacher/exam-matrices', { replace: true });
+    try {
+      await deleteMutation.mutateAsync(matrixId);
+      navigate('/teacher/exam-matrices', { replace: true });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xóa ma trận đề.',
+      });
+    }
   }
 
   async function handleApprove() {
@@ -163,8 +165,16 @@ export default function ExamMatrixDetailPageRefactored() {
   async function handleReset() {
     if (!matrix?.id) return;
     if (!globalThis.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
-    await resetMutation.mutateAsync(matrix.id);
-    await refetch();
+    try {
+      await resetMutation.mutateAsync(matrix.id);
+      showToast({ type: 'success', message: 'Đã đặt lại ma trận về trạng thái nháp.' });
+      await refetch();
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.',
+      });
+    }
   }
 
   function handleExportExcel() {
@@ -341,11 +351,7 @@ export default function ExamMatrixDetailPageRefactored() {
                         {matrix.subjectName}
                       </span>
                     )}
-                    {(matrix.gradeLevel || table?.gradeLevel) && (
-                      <span className="exam-matrix-meta-chip" title="Khối / lớp">
-                        Lớp {matrix.gradeLevel || table?.gradeLevel}
-                      </span>
-                    )}
+                   
                     {typeof matrix.rowCount === 'number' && (
                       <span className="muted" style={{ fontSize: 13 }}>
                         {matrix.rowCount} dòng trong ma trận
@@ -358,18 +364,7 @@ export default function ExamMatrixDetailPageRefactored() {
                   className="row exam-matrix-detail-actions"
                   style={{ marginTop: 18, gap: 8, flexWrap: 'wrap' }}
                 >
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => void refreshMatrix()}
-                    disabled={refreshing}
-                  >
-                    <RefreshCw
-                      size={14}
-                      className={refreshing ? 'exam-matrix-nav-spin' : undefined}
-                    />
-                    {refreshing ? 'Đang làm mới...' : 'Làm mới'}
-                  </button>
+                  
                   <button
                     type="button"
                     className="btn secondary btn--tint-emerald"
@@ -512,20 +507,9 @@ export default function ExamMatrixDetailPageRefactored() {
                 <div style={{ flex: '1 1 260px', minWidth: 0 }}>
                   <div className="row" style={{ alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <h3 style={{ marginBottom: 4 }}>Bảng ma trận đề</h3>
-                    {canEdit && (
-                      <span
-                        className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF7ED] font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#9a3412] border border-[#FDBA74] uppercase tracking-wide"
-                        title="Chỉ lưu khi bấm «Lưu thay đổi» trên bảng"
-                      >
-                        Chỉnh sửa · Lưu tay
-                      </span>
-                    )}
+                    
                   </div>
-                  <p className="muted font-[Be_Vietnam_Pro]" style={{ fontSize: 13, marginTop: 6 }}>
-                    {canEdit
-                      ? 'Click ô · Enter xác nhận · «Lưu thay đổi» / «Hủy» trên bảng.'
-                      : 'Chỉ xem theo chuẩn phân bố đề.'}
-                  </p>
+                  
                 </div>
                 {canEdit && (
                   <button type="button" className="btn" onClick={() => setRowModalOpen(true)}>

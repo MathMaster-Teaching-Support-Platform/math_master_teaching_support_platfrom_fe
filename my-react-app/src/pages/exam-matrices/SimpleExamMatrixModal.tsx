@@ -26,6 +26,12 @@ type ChapterCounts = {
 
 const EMPTY_COUNTS: ChapterCounts = { enabled: false, nb: 0, th: 0, vd: 0, vdc: 0 };
 
+const SCHOOL_LEVELS = [
+  { cap: 1 as const, label: 'Cấp 1', sub: 'Tiểu học', min: 1, max: 5 },
+  { cap: 2 as const, label: 'Cấp 2', sub: 'THCS', min: 6, max: 9 },
+  { cap: 3 as const, label: 'Cấp 3', sub: 'THPT', min: 10, max: 12 },
+];
+
 /**
  * Happy-case matrix builder modal.
  *
@@ -44,6 +50,7 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
   const [pointsPerQuestion, setPointsPerQuestion] = useState<string>('0.25');
   const [isReusable, setIsReusable] = useState(false);
 
+  const [selectedSchoolLevel, setSelectedSchoolLevel] = useState<1 | 2 | 3 | null>(null);
   const [gradeLevel, setGradeLevel] = useState<string>('');
   const [subjectId, setSubjectId] = useState<string>('');
   const [chapters, setChapters] = useState<ChapterResponse[]>([]);
@@ -66,10 +73,14 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
   const grades = useMemo(() => gradesData?.result ?? [], [gradesData]);
   const subjects = useMemo(() => subjectsData?.result ?? [], [subjectsData]);
 
-  const sortedGrades = useMemo(
-    () => [...grades].sort((a, b) => a.level - b.level),
-    [grades]
-  );
+  const gradesForLevel = useMemo(() => {
+    if (!selectedSchoolLevel) return [];
+    const lvl = SCHOOL_LEVELS.find((l) => l.cap === selectedSchoolLevel)!;
+    return [...grades]
+      .filter((g): g is typeof g & { gradeLevel: number } => typeof g.gradeLevel === 'number')
+      .filter((g) => g.gradeLevel >= lvl.min && g.gradeLevel <= lvl.max)
+      .sort((a, b) => a.gradeLevel - b.gradeLevel);
+  }, [grades, selectedSchoolLevel]);
 
   // Reset on open/close.
   useEffect(() => {
@@ -78,6 +89,7 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
     setDescription('');
     setPointsPerQuestion('0.25');
     setIsReusable(false);
+    setSelectedSchoolLevel(null);
     setGradeLevel('');
     setSubjectId('');
     setChapters([]);
@@ -269,56 +281,108 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
               </label>
             </div>
 
-            <div className="row" style={{ gap: 12 }}>
-              <label style={{ flex: 1 }}>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Lớp <span style={{ color: 'var(--mod-danger, #dc2626)' }}>*</span>
-                </p>
-                <select
-                  className="input"
-                  required
-                  value={gradeLevel}
-                  disabled={loadingGrades}
-                  onChange={(e) => {
-                    setGradeLevel(e.target.value);
-                    setSubjectId('');
-                  }}
-                >
-                  <option value="">{loadingGrades ? 'Đang tải...' : '— Chọn lớp —'}</option>
-                  {sortedGrades.map((g) => (
-                    <option key={g.id} value={String(g.level)}>
-                      {g.name || `Lớp ${g.level}`}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p className="muted" style={{ marginBottom: 2 }}>
+                Lớp <span style={{ color: 'var(--mod-danger, #dc2626)' }}>*</span>
+              </p>
 
-              <label style={{ flex: 1 }}>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Môn học <span style={{ color: 'var(--mod-danger, #dc2626)' }}>*</span>
-                </p>
-                <select
-                  className="input"
-                  required
-                  value={subjectId}
-                  disabled={!gradeLevel || loadingSubjects}
-                  onChange={(e) => setSubjectId(e.target.value)}
-                >
-                  <option value="">
-                    {!gradeLevel
-                      ? 'Chọn lớp trước'
-                      : loadingSubjects
-                        ? 'Đang tải...'
-                        : '— Chọn môn học —'}
-                  </option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {/* Cấp tabs */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {SCHOOL_LEVELS.map((lvl) => {
+                  const active = selectedSchoolLevel === lvl.cap;
+                  return (
+                    <button
+                      key={lvl.cap}
+                      type="button"
+                      disabled={loadingGrades}
+                      onClick={() => {
+                        setSelectedSchoolLevel(lvl.cap);
+                        setGradeLevel('');
+                        setSubjectId('');
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '7px 10px',
+                        borderRadius: 8,
+                        border: active ? '2px solid #C96442' : '1px solid #E8E6DC',
+                        background: active ? '#FFF4F0' : '#FAF9F5',
+                        color: active ? '#C96442' : '#5E5D59',
+                        fontWeight: active ? 600 : 400,
+                        fontSize: 13,
+                        cursor: 'pointer',
+                        lineHeight: 1.3,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span style={{ display: 'block', fontWeight: 600 }}>{lvl.label}</span>
+                      <span style={{ fontSize: 11, opacity: 0.75 }}>{lvl.sub}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Grade chips */}
+              {selectedSchoolLevel && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {gradesForLevel.length === 0 && (
+                    <span className="muted" style={{ fontSize: 13 }}>Không có lớp nào.</span>
+                  )}
+                  {gradesForLevel.map((g) => {
+                    const val = String(g.gradeLevel);
+                    const active = gradeLevel === val;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => {
+                          setGradeLevel(val);
+                          setSubjectId('');
+                        }}
+                        style={{
+                          padding: '5px 14px',
+                          borderRadius: 20,
+                          border: active ? '2px solid #C96442' : '1px solid #E8E6DC',
+                          background: active ? '#C96442' : '#FAF9F5',
+                          color: active ? '#fff' : '#141413',
+                          fontWeight: active ? 600 : 400,
+                          fontSize: 13,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {g.name || `Lớp ${g.gradeLevel}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Môn học <span style={{ color: 'var(--mod-danger, #dc2626)' }}>*</span>
+              </p>
+              <select
+                className="input"
+                required
+                value={subjectId}
+                disabled={!gradeLevel || loadingSubjects}
+                onChange={(e) => setSubjectId(e.target.value)}
+              >
+                <option value="">
+                  {!gradeLevel
+                    ? 'Chọn lớp trước'
+                    : loadingSubjects
+                      ? 'Đang tải...'
+                      : '— Chọn môn học —'}
+                </option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>

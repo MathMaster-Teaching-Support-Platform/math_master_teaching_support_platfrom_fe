@@ -11,7 +11,6 @@ import {
   Library,
   List,
   Loader2,
-  Lock,
   RefreshCw,
   RotateCcw,
   Ruler,
@@ -21,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueries } from '@tanstack/react-query';
 import Pagination from '../../components/common/Pagination';
 import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -29,6 +29,7 @@ import { mockTeacher } from '../../data/mockData';
 import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
+  examMatrixKeys,
   useApproveMatrix,
   useCreateExamMatrix,
   useDeleteExamMatrix,
@@ -36,12 +37,14 @@ import {
   useResetMatrix,
   useUpdateExamMatrix,
 } from '../../hooks/useExamMatrix';
+import { examMatrixService } from '../../services/examMatrixService';
 import {
   MatrixStatus,
   type ExamMatrixRequest,
   type ExamMatrixResponse,
+  type ExamMatrixTableResponse,
 } from '../../types/examMatrix';
-import { examMatrixMatchesCurriculum } from '../../utils/curriculumFilter';
+import type { SchoolGrade } from '../../types/lessonSlide.types';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
 
 const coverGradients = [
@@ -59,7 +62,6 @@ const filters: Array<'ALL' | MatrixStatus> = [
   'ALL',
   MatrixStatus.DRAFT,
   MatrixStatus.APPROVED,
-  MatrixStatus.LOCKED,
 ];
 
 const filterLabel: Record<'ALL' | MatrixStatus, string> = {
@@ -72,9 +74,35 @@ const filterLabel: Record<'ALL' | MatrixStatus, string> = {
 function statusBadgeClasses(status: MatrixStatus): string {
   if (status === MatrixStatus.APPROVED)
     return 'inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700';
-  if (status === MatrixStatus.LOCKED)
-    return 'inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#64748b]';
   return 'inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#87867F]';
+}
+
+function tableMatchesCurriculum(
+  table: ExamMatrixTableResponse,
+  gradeId: string,
+  subjectId: string,
+  grades: SchoolGrade[]
+): boolean {
+  // Subject: table.subjectId is a UUID string from BE
+  if (subjectId && table.subjectId !== subjectId) return false;
+  if (!gradeId) return true;
+
+  const g = grades.find((x) => x.id === gradeId);
+  if (!g) return true;
+
+  // table.gradeLevel arrives as Integer from BE (a JS number at runtime,
+  // even though FE types it as string?). Compare numerically.
+  if (table.gradeLevel != null && Number(table.gradeLevel) === g.gradeLevel) return true;
+
+  // Fall back: rows carry schoolGradeName (e.g. "Lớp 12") — extract the digit.
+  const digitFrom = (name: string | null | undefined): number | null => {
+    const d = (name ?? '').match(/\d+/)?.[0];
+    return d ? Number(d) : null;
+  };
+
+  return (table.chapters ?? []).some((ch) =>
+    (ch.rows ?? []).some((r) => digitFrom(r.schoolGradeName ?? r.schoolGrade) === g.gradeLevel)
+  );
 }
 
 export function ExamMatrixDashboard() {
@@ -121,12 +149,31 @@ export function ExamMatrixDashboard() {
   const { showToast } = useToast();
 
   const matrices = useMemo(() => data?.result?.content ?? [], [data]);
-  const filteredMatrices = useMemo(
-    () =>
-      matrices.filter((m) => examMatrixMatchesCurriculum(m, mfGradeId, mfSubjectId, schoolGrades)),
-    [matrices, mfGradeId, mfSubjectId, schoolGrades]
-  );
   const curriculumFilterActive = Boolean(mfGradeId || mfSubjectId);
+
+  // Fetch table data (rows) for each matrix on the current page only when the
+  // curriculum filter is active — rows carry gradeLevel/subjectId that the list
+  // endpoint does not expose at the top level.
+  const tableQueries = useQueries({
+    queries: matrices.map((m) => ({
+      queryKey: examMatrixKeys.table(m.id),
+      queryFn: () => examMatrixService.getExamMatrixTable(m.id),
+      enabled: curriculumFilterActive,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const tableQueriesLoading = curriculumFilterActive && tableQueries.some((q) => q.isLoading);
+
+  const filteredMatrices = useMemo(() => {
+    if (!curriculumFilterActive) return matrices;
+    return matrices.filter((_, idx) => {
+      const table = tableQueries[idx]?.data?.result;
+      if (!table) return false;
+      return tableMatchesCurriculum(table, mfGradeId, mfSubjectId, schoolGrades);
+    });
+  }, [matrices, tableQueries, curriculumFilterActive, mfGradeId, mfSubjectId, schoolGrades]);
+
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -135,14 +182,12 @@ export function ExamMatrixDashboard() {
     totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
   const stats = useMemo(() => {
-    const src = curriculumFilterActive ? filteredMatrices : matrices;
     return {
-      total: curriculumFilterActive ? filteredMatrices.length : effectiveTotalElements,
-      draft: src.filter((m) => m.status === MatrixStatus.DRAFT).length,
-      approved: src.filter((m) => m.status === MatrixStatus.APPROVED).length,
-      locked: src.filter((m) => m.status === MatrixStatus.LOCKED).length,
+      total: effectiveTotalElements,
+      draft: matrices.filter((m) => m.status === MatrixStatus.DRAFT).length,
+      approved: matrices.filter((m) => m.status === MatrixStatus.APPROVED).length,
     };
-  }, [matrices, filteredMatrices, curriculumFilterActive, effectiveTotalElements]);
+  }, [matrices, effectiveTotalElements]);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('vi-VN', {
@@ -189,11 +234,9 @@ export function ExamMatrixDashboard() {
     return (
       <span className={statusBadgeClasses(status)}>
         {status === MatrixStatus.APPROVED && <CheckCircle2 className="w-3 h-3" />}
-        {status === MatrixStatus.LOCKED && <Lock className="w-3 h-3" />}
         {status === MatrixStatus.DRAFT && <FileText className="w-3 h-3" />}
         {status === MatrixStatus.DRAFT && ' Nháp'}
         {status === MatrixStatus.APPROVED && ' Đã phê duyệt'}
-        {status === MatrixStatus.LOCKED && ' Đã khóa'}
       </span>
     );
   }
@@ -289,28 +332,8 @@ export function ExamMatrixDashboard() {
             </div>
           </div>
 
-          <CurriculumHierarchyFilter
-            gradeId={mfGradeId}
-            subjectId={mfSubjectId}
-            chapterId=""
-            lessonId=""
-            depth="subject"
-            onGradeChange={(id) => {
-              setMfGradeId(id);
-              setMfSubjectId('');
-            }}
-            onSubjectChange={setMfSubjectId}
-            onChapterChange={() => {}}
-            onLessonChange={() => {}}
-            footnote={
-              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
-                Lọc áp dụng cho các ma trận trên trang hiện tại (theo lớp/môn đã ghi trong ma trận).
-              </p>
-            }
-          />
-
           {/* ── Stats ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {(
               [
                 {
@@ -333,13 +356,6 @@ export function ExamMatrixDashboard() {
                   Icon: CheckCircle2,
                   bg: 'bg-[#ECFDF5]',
                   color: 'text-[#2EAD7A]',
-                },
-                {
-                  label: 'Đã khóa',
-                  value: stats.locked,
-                  Icon: Lock,
-                  bg: 'bg-[#F5F3FF]',
-                  color: 'text-[#9B6FE0]',
                 },
               ] as const
             ).map(({ label, value, Icon, bg, color }) => (
@@ -406,7 +422,7 @@ export function ExamMatrixDashboard() {
                     </p>
                   </div>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 leading-relaxed">
-                    Định nghĩa mức độ câu hỏi, chương, số câu và điểm.
+                    Định nghĩa độ khó câu hỏi, chương, số câu và điểm.
                   </p>
                 </div>
                 <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4 flex flex-col gap-2 hover:border-[#D1CFC5] transition-colors">
@@ -449,33 +465,13 @@ export function ExamMatrixDashboard() {
           </section>
 
           {/* ── Toolbar ── */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
-              <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
-              <input
-                className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
-                placeholder="Tìm ma trận..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button
-                  type="button"
-                  aria-label="Xóa tìm kiếm"
-                  onClick={() => setSearch('')}
-                  className="text-[#87867F] hover:text-[#141413] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </label>
-
-            <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0 flex-wrap">
+          <div className="flex flex-col gap-3">
+            {/* Row 1: filters */}
+            <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl self-start flex-wrap">
               {filters.map((filter) => {
                 let count = stats.total;
                 if (filter === MatrixStatus.DRAFT) count = stats.draft;
                 else if (filter === MatrixStatus.APPROVED) count = stats.approved;
-                else if (filter === MatrixStatus.LOCKED) count = stats.locked;
                 return (
                   <button
                     key={filter}
@@ -493,45 +489,91 @@ export function ExamMatrixDashboard() {
               })}
             </div>
 
-            {effectiveTotalElements > 0 && (
-              <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Hiển thị lưới"
-                  title="Lưới"
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                    viewMode === 'grid'
-                      ? 'bg-white shadow-md text-[#141413]'
-                      : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
-                  }`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  aria-label="Hiển thị danh sách"
-                  title="Danh sách"
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                    viewMode === 'list'
-                      ? 'bg-white shadow-md text-[#141413]'
-                      : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            {/* Row 2: curriculum filter (filters by grade/subject stored in matrix rows) */}
+            <CurriculumHierarchyFilter
+              gradeId={mfGradeId}
+              subjectId={mfSubjectId}
+              chapterId=""
+              lessonId=""
+              depth="subject"
+              onGradeChange={(id) => {
+                setMfGradeId(id);
+                setMfSubjectId('');
+              }}
+              onSubjectChange={setMfSubjectId}
+              onChapterChange={() => {}}
+              onLessonChange={() => {}}
+              footnote={
+                <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                  {tableQueriesLoading && (
+                    <span className="ml-2 text-[#C96442]">Đang tải dữ liệu hàng…</span>
+                  )}
+                </p>
+              }
+            />
 
-            <button
-              type="button"
-              onClick={() => void refetch()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors flex-shrink-0"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Làm mới
-            </button>
+            {/* Row 3: search + view toggle + refresh */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+                <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
+                <input
+                  className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
+                  placeholder="Tìm ma trận..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    aria-label="Xóa tìm kiếm"
+                    onClick={() => setSearch('')}
+                    className="text-[#87867F] hover:text-[#141413] transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </label>
+
+              {effectiveTotalElements > 0 && (
+                <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Hiển thị lưới"
+                    title="Lưới"
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      viewMode === 'grid'
+                        ? 'bg-white shadow-md text-[#141413]'
+                        : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
+                    }`}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    aria-label="Hiển thị danh sách"
+                    title="Danh sách"
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      viewMode === 'list'
+                        ? 'bg-white shadow-md text-[#141413]'
+                        : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => void refetch()}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors flex-shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Làm mới
+              </button>
+            </div>
           </div>
 
           {!isLoading && !isError && effectiveTotalElements > 0 && (
@@ -554,12 +596,6 @@ export function ExamMatrixDashboard() {
                 {' '}
                 Nháp{' '}
                 <strong className="text-[#141413] font-semibold">{stats.draft}</strong>
-              </span>
-              <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 inline-block" />
-                {' '}
-                Khóa{' '}
-                <strong className="text-[#141413] font-semibold">{stats.locked}</strong>
               </span>
             </div>
           )}
@@ -636,17 +672,13 @@ export function ExamMatrixDashboard() {
             </div>
           )}
 
-          {!isLoading &&
-            !isError &&
-            matrices.length > 0 &&
-            filteredMatrices.length === 0 &&
-            curriculumFilterActive && (
-              <div className="flex flex-col items-center justify-center py-14 gap-2 px-4">
-                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center">
-                  Không có ma trận khớp lớp/môn đã chọn trên trang này.
-                </p>
-              </div>
-            )}
+          {!isLoading && !isError && matrices.length > 0 && filteredMatrices.length === 0 && curriculumFilterActive && !tableQueriesLoading && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2 px-4">
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center">
+                Không có ma trận nào có chương thuộc lớp/môn đã chọn trên trang này.
+              </p>
+            </div>
+          )}
 
           {!isLoading && !isError && matrices.length > 0 && viewMode === 'grid' && filteredMatrices.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

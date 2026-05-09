@@ -348,7 +348,7 @@ export function EnhancedQuestionFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2 uppercase tracking-wide">
-                  Mức độ câu hỏi <span className="text-red-500">*</span>
+                  Độ khó câu hỏi <span className="text-red-500">*</span>
                 </label>
                 <select
                   className={selectCls}

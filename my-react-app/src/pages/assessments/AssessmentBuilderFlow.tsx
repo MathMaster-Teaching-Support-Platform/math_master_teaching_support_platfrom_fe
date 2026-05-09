@@ -237,7 +237,7 @@ export function AssessmentBuilderFlowBody() {
     {
       path: '/teacher/question-templates',
       title: 'Mẫu câu hỏi',
-      subtitle: 'Định dạng & ma trận mức độ câu hỏi',
+      subtitle: 'Định dạng & ma trận',
       Icon: LayoutTemplate,
       iconClass:
         'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-amber-200/70',

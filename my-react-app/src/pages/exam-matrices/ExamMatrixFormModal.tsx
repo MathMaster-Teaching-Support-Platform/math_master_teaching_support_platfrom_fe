@@ -4,6 +4,12 @@ import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
 import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
 
+const SCHOOL_LEVELS = [
+  { cap: 1 as const, label: 'Cấp 1', sub: 'Tiểu học', min: 1, max: 5 },
+  { cap: 2 as const, label: 'Cấp 2', sub: 'THCS', min: 6, max: 9 },
+  { cap: 3 as const, label: 'Cấp 3', sub: 'THPT', min: 10, max: 12 },
+];
+
 type Props = {
   isOpen: boolean;
   mode: 'create' | 'edit';
@@ -33,6 +39,7 @@ export function ExamMatrixFormModal({
     numberOfParts: 1,
     parts: [{ partNumber: 1, questionType: 'MULTIPLE_CHOICE', name: 'Phần 1: Trắc nghiệm' }],
   });
+  const [selectedSchoolLevel, setSelectedSchoolLevel] = useState<1 | 2 | 3 | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -52,6 +59,7 @@ export function ExamMatrixFormModal({
       numberOfParts: initialParts.length,
       parts: initialParts,
     });
+    setSelectedSchoolLevel(null);
     setError(null);
     setSaving(false);
   }, [initialData, isOpen]);
@@ -69,9 +77,13 @@ export function ExamMatrixFormModal({
     setError(null);
     try {
       if (mode === 'create') {
+        const lvl = selectedSchoolLevel
+          ? SCHOOL_LEVELS.find((l) => l.cap === selectedSchoolLevel)
+          : null;
         await onSubmit({
           name: normalizedName,
           parts: formData.parts,
+          gradeLevel: lvl ? lvl.min : undefined,
         });
       } else {
         await onSubmit({
@@ -118,11 +130,7 @@ export function ExamMatrixFormModal({
               >
                 {isCreate ? 'Tạo ma trận đề' : 'Chỉnh sửa ma trận đề'}
               </h3>
-              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mt-0.5">
-                {isCreate
-                  ? 'Chỉ cần đặt tên — cột phân bố sẽ thêm trong trang chi tiết.'
-                  : 'Cập nhật thông tin và mục tiêu của ma trận.'}
-              </p>
+              
             </div>
           </div>
           <ModalCloseButton onClick={onClose} />
@@ -153,6 +161,48 @@ export function ExamMatrixFormModal({
                 autoFocus
               />
             </div>
+
+            {isCreate && (
+              <div className="flex flex-col gap-2">
+                <span className={labelCls}>
+                  Cấp học{' '}
+                  <span className="text-red-500 font-normal">
+                    (tùy chọn — giới hạn lớp khi thêm dòng)
+                  </span>
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {SCHOOL_LEVELS.map((lvl) => {
+                    const active = selectedSchoolLevel === lvl.cap;
+                    return (
+                      <button
+                        key={lvl.cap}
+                        type="button"
+                        onClick={() =>
+                          setSelectedSchoolLevel(active ? null : lvl.cap)
+                        }
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          borderRadius: 8,
+                          border: active ? '2px solid #C96442' : '1px solid #E8E6DC',
+                          background: active ? '#FFF4F0' : '#FAF9F5',
+                          color: active ? '#C96442' : '#5E5D59',
+                          fontWeight: active ? 600 : 400,
+                          fontSize: 13,
+                          cursor: 'pointer',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        <span style={{ display: 'block', fontWeight: 700 }}>{lvl.label}</span>
+                        <span style={{ fontSize: 11, opacity: 0.7 }}>
+                          {lvl.sub} · Lớp {lvl.min}–{lvl.max}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <PartConfigSection
               value={formData.parts || []}

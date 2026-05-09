@@ -61,6 +61,26 @@ export default function ExamMatrixDetailPage() {
   const table = tableData?.result;
   const chapters = useMemo(() => table?.chapters ?? [], [table]);
 
+  // Derive which school level (cấp) is already in use from existing row data.
+  // This is used to restrict grade selection when adding new rows.
+  const lockedSchoolLevel = useMemo((): 1 | 2 | 3 | null => {
+    const capFromGrade = (n: number): 1 | 2 | 3 | null => {
+      if (n >= 1 && n <= 5) return 1;
+      if (n >= 6 && n <= 9) return 2;
+      if (n >= 10 && n <= 12) return 3;
+      return null;
+    };
+    for (const ch of chapters) {
+      for (const row of ch.rows) {
+        const name = row.schoolGradeName ?? row.schoolGrade ?? '';
+        const n = Number((name.match(/\d+/) ?? [])[0] || 0);
+        const cap = capFromGrade(n);
+        if (cap) return cap;
+      }
+    }
+    return capFromGrade(Number(matrix?.gradeLevel ?? table?.gradeLevel));
+  }, [chapters, matrix, table]);
+
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
 
   async function refreshMatrix() {
@@ -78,6 +98,11 @@ export default function ExamMatrixDetailPage() {
     try {
       const result = await examMatrixService.validateMatrix(matrixId);
       setValidation(result.result ?? null);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể kiểm tra ma trận đề.',
+      });
     } finally {
       setValidating(false);
     }
@@ -92,8 +117,15 @@ export default function ExamMatrixDetailPage() {
   async function removeMatrix() {
     if (!matrixId) return;
     if (!globalThis.confirm('Bạn có chắc muốn xóa ma trận này?')) return;
-    await deleteMutation.mutateAsync(matrixId);
-    navigate('/teacher/exam-matrices', { replace: true });
+    try {
+      await deleteMutation.mutateAsync(matrixId);
+      navigate('/teacher/exam-matrices', { replace: true });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xóa ma trận đề.',
+      });
+    }
   }
 
   async function handleApprove() {
@@ -119,8 +151,16 @@ export default function ExamMatrixDetailPage() {
   async function handleReset() {
     if (!matrix?.id) return;
     if (!globalThis.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
-    await resetMutation.mutateAsync(matrix.id);
-    await refetch();
+    try {
+      await resetMutation.mutateAsync(matrix.id);
+      showToast({ type: 'success', message: 'Đã đặt lại ma trận về trạng thái nháp.' });
+      await refetch();
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.',
+      });
+    }
   }
 
   async function handleCellChange(
@@ -390,6 +430,7 @@ export default function ExamMatrixDetailPage() {
               isOpen={rowModalOpen}
               matrixId={matrixId}
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
+              lockedSchoolLevel={lockedSchoolLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
               onClose={() => {
                 setRowModalOpen(false);
