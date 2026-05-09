@@ -275,7 +275,7 @@ export function QuestionBankDashboard() {
                   color: 'text-[#4F7EF7]',
                 },
                 {
-                  label: 'Câu hỏi (trang)',
+                  label: 'Câu hỏi',
                   value: pageStats.questionsOnPage,
                   Icon: BookOpen,
                   bg: 'bg-[#F5F3FF]',
@@ -303,9 +303,7 @@ export function QuestionBankDashboard() {
               </div>
             ))}
           </div>
-          <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#B0AEA5] mt-1">
-            &quot;Câu hỏi (trang)&quot; tính trên trang hiện tại; &quot;Tổng ngân hàng&quot; là tổng theo bộ lọc đang áp dụng.
-          </p>
+         
 
           <CurriculumHierarchyFilter
             depth="subject"

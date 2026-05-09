@@ -380,11 +380,41 @@
 }
 
 .qb-scope .qbts-level__question {
-  padding: 0.55rem 0.65rem;
+  position: relative;
+  padding: 0.55rem 2.4rem 0.55rem 0.65rem;
   background: var(--qb-surface);
   border: 1px solid var(--qb-border);
   border-radius: var(--qb-radius-md);
   word-break: break-word;
+}
+
+.qb-scope .qbts-level__question-remove {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--qb-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.qb-scope .qbts-level__question-remove:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.qb-scope .qbts-level__question-remove:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 1px;
 }
 
 .qb-scope .qbts-level__question-meta {

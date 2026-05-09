@@ -428,7 +428,8 @@ export function MatrixTable({
   // Update cell value (local only — gửi máy chủ khi bấm «Lưu thay đổi»)
   const updateCellValue = useCallback((rowId: string, partNumber: number, level: MatrixLevel, newValue: number) => {
     const cellId = makeCellId(rowId, partNumber, level);
-    const clampedValue = Math.max(0, Math.floor(newValue));
+    // Clamp to [0, 50] — 50 is the per-cell maximum question count.
+    const clampedValue = Math.min(50, Math.max(0, Math.floor(newValue)));
 
     setLocalCells((prev) => {
       const next = new Map(prev);
@@ -704,10 +705,12 @@ export function MatrixTable({
               const isFirstRowInChapter = !prevFr || prevFr.chapter !== chapter;
               const chapterRowSpan = chapter.rows.length;
 
+              const isEmptyRow = rowTotal === 0;
               return (
                 <tr
                   key={row.rowId}
-                  className={`matrix-row ${sortedChapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}`}
+                  className={`matrix-row ${sortedChapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}${isEmptyRow ? ' matrix-row--empty' : ''}`}
+                  title={isEmptyRow ? 'Hàng không được trống — đặt ít nhất 1 câu trước khi phê duyệt.' : undefined}
                 >
                   {showGradeCell && (
                     <td className="matrix-td matrix-td--grade" rowSpan={gradeSpan}>
@@ -752,6 +755,7 @@ export function MatrixTable({
                                 ref={inputRef}
                                 type="number"
                                 min="0"
+                                max="50"
                                 className="matrix-cell-input"
                                 value={editValue}
                                 onChange={(e) => setEditValue(e.target.value)}

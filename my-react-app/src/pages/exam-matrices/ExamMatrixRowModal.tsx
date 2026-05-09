@@ -29,6 +29,8 @@ type Props = {
   lockedSchoolLevel?: 1 | 2 | 3 | null;
   subjectId?: string;
   bankId?: string;
+  /** Chapter IDs that are already used by existing rows — blocked from re-adding. */
+  usedChapterIds?: string[];
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -40,9 +42,14 @@ export function ExamMatrixRowModal({
   lockedSchoolLevel,
   subjectId,
   bankId,
+  usedChapterIds,
   onClose,
   onSuccess,
 }: Readonly<Props>) {
+  const usedChapterSet = useMemo(
+    () => new Set((usedChapterIds ?? []).filter(Boolean)),
+    [usedChapterIds]
+  );
   const [gradeLevel, setGradeLevel] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
@@ -126,14 +133,17 @@ export function ExamMatrixRowModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (sortedChapters.length > 0 && !chapterId) {
-      setChapterId(sortedChapters[0].id);
-      return;
-    }
     if (sortedChapters.length === 0) {
       setChapterId('');
+      return;
     }
-  }, [isOpen, sortedChapters, chapterId]);
+    // Skip already-used chapters when picking the default; if the current
+    // pick has since been taken, advance to the next free one.
+    if (!chapterId || usedChapterSet.has(chapterId)) {
+      const firstFree = sortedChapters.find((c) => !usedChapterSet.has(c.id));
+      setChapterId(firstFree?.id ?? '');
+    }
+  }, [isOpen, sortedChapters, chapterId, usedChapterSet]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -150,6 +160,11 @@ export function ExamMatrixRowModal({
 
     if (!chapterId) {
       setError('Vui lòng chọn chủ đề.');
+      return;
+    }
+
+    if (usedChapterSet.has(chapterId)) {
+      setError('Chương này đã có trong ma trận. Mỗi chương chỉ được thêm một lần.');
       return;
     }
 
@@ -316,13 +331,21 @@ export function ExamMatrixRowModal({
                         <option value="">Chọn chủ đề</option>
                         {sortedChapters.map((chapter) => {
                           const inBank = bankCountByChapter.get(chapter.id);
-                          const suffix =
+                          const isUsed = usedChapterSet.has(chapter.id);
+                          const bankSuffix =
                             showBankPanel && inBank !== undefined
                               ? ` — ${inBank} câu trong kho`
                               : '';
+                          const usedSuffix = isUsed ? ' — đã thêm' : '';
                           return (
-                            <option key={chapter.id} value={chapter.id}>
-                              {(chapter.title || chapter.name || chapter.id) + suffix}
+                            <option
+                              key={chapter.id}
+                              value={chapter.id}
+                              disabled={isUsed}
+                            >
+                              {(chapter.title || chapter.name || chapter.id) +
+                                bankSuffix +
+                                usedSuffix}
                             </option>
                           );
                         })}

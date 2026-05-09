@@ -536,7 +536,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                 <section className="data-card data-card--info">
                   <h3 className="data-card__title" style={{ marginTop: 0 }}>Xem trước câu hỏi</h3>
                   <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 12 }}>
-                    Đây là nội dung sẽ được gửi cho AI để phân tích và tạo Blueprint.
+                    Đây là nội dung sẽ được gửi cho AI để phân tích và tạo mẫu câu hỏi.
                   </p>
 
                   <div style={{ marginBottom: 12 }}>
@@ -705,7 +705,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                 ) : (
                   <>
                     <Sparkles size={14} style={{ marginRight: 6 }} />
-                    Phân tích &amp; tạo Blueprint
+                    Phân tích &amp; tạo mẫu câu hỏi
                   </>
                 )}
               </button>

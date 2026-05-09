@@ -64,6 +64,9 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Chapters that failed the empty-row check on the most recent submit attempt.
+  // Cleared as soon as the user edits a row.
+  const [emptyRowIds, setEmptyRowIds] = useState<Set<string>>(new Set());
 
   const { data: gradesData, isLoading: loadingGrades } = useGrades(isOpen);
   const { data: subjectsData, isLoading: loadingSubjects } = useSubjectsByGrade(
@@ -96,6 +99,7 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
     setCounts({});
     setDefaultBankId('');
     setError(null);
+    setEmptyRowIds(new Set());
   }, [isOpen]);
 
   // Load chapters when subject changes.
@@ -172,6 +176,12 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
       ...prev,
       [chapterId]: { ...EMPTY_COUNTS, ...prev[chapterId], ...patch },
     }));
+    setEmptyRowIds((prev) => {
+      if (!prev.has(chapterId)) return prev;
+      const next = new Set(prev);
+      next.delete(chapterId);
+      return next;
+    });
   }
 
   async function submit(event: React.BaseSyntheticEvent) {
@@ -191,11 +201,16 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
       return;
     }
 
+    // Empty-row guard: any enabled chapter with sum=0 blocks submission.
+    const emptyEnabledChapters = new Set<string>();
     const chapterPayload: BuildSimpleExamMatrixRequest['chapters'] = [];
     for (const [chapterId, c] of Object.entries(counts)) {
       if (!c.enabled) continue;
       const sum = (c.nb ?? 0) + (c.th ?? 0) + (c.vd ?? 0) + (c.vdc ?? 0);
-      if (sum <= 0) continue;
+      if (sum <= 0) {
+        emptyEnabledChapters.add(chapterId);
+        continue;
+      }
       chapterPayload.push({
         chapterId,
         nb: c.nb || 0,
@@ -205,10 +220,18 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
       });
     }
 
+    if (emptyEnabledChapters.size > 0) {
+      setEmptyRowIds(emptyEnabledChapters);
+      setError('Hàng không được trống');
+      return;
+    }
+
     if (chapterPayload.length === 0) {
       setError('Hãy chọn ít nhất một chương và đặt số câu cho mỗi mức độ.');
       return;
     }
+
+    setEmptyRowIds(new Set());
 
     const payload: BuildSimpleExamMatrixRequest = {
       name: name.trim(),
@@ -455,8 +478,17 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
                     {chapters.map((ch) => {
                       const c = counts[ch.id] ?? EMPTY_COUNTS;
                       const sum = (c.nb ?? 0) + (c.th ?? 0) + (c.vd ?? 0) + (c.vdc ?? 0);
+                      const isOffender = emptyRowIds.has(ch.id);
                       return (
-                        <tr key={ch.id} style={{ borderTop: '1px solid #e5e7eb' }}>
+                        <tr
+                          key={ch.id}
+                          title={isOffender ? 'Hàng không được trống' : undefined}
+                          style={{
+                            borderTop: '1px solid #e5e7eb',
+                            background: isOffender ? '#fef2f2' : undefined,
+                            boxShadow: isOffender ? 'inset 4px 0 0 #dc2626' : undefined,
+                          }}
+                        >
                           <td style={cellStyle}>
                             <input
                               type="checkbox"
@@ -475,13 +507,14 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
                               <input
                                 type="number"
                                 min="0"
+                                max="50"
                                 className="input"
                                 style={{ width: 70 }}
                                 disabled={!c.enabled}
                                 value={c[lvl] || 0}
                                 onChange={(e) =>
                                   update(ch.id, {
-                                    [lvl]: Math.max(0, Number(e.target.value) || 0),
+                                    [lvl]: Math.min(50, Math.max(0, Number(e.target.value) || 0)),
                                   })
                                 }
                               />

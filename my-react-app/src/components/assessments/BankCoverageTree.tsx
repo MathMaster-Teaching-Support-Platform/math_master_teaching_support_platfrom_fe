@@ -38,6 +38,16 @@ const COG_BG: Record<CognitiveLevelVi, string> = {
   VAN_DUNG_CAO: 'bct-cog--vdc',
 };
 
+const QUESTION_TYPE_LABEL: Record<string, string> = {
+  MULTIPLE_CHOICE: 'Trắc nghiệm',
+  MCQ: 'Trắc nghiệm',
+  TRUE_FALSE: 'Đúng/Sai',
+  TRUE_FALSE_CLAUSES: 'Đúng/Sai',
+  SHORT_ANSWER: 'Trả lời ngắn',
+  FILL_BLANK: 'Điền khuyết',
+  ESSAY: 'Tự luận',
+};
+
 export function BankCoverageTree({ banks, gaps }: BankCoverageTreeProps) {
   const [trees, setTrees] = useState<Record<string, QuestionBankTreeResponse | null>>(
     {}
@@ -93,22 +103,21 @@ export function BankCoverageTree({ banks, gaps }: BankCoverageTreeProps) {
     }
   }, [banks, expanded.size]);
 
-  // Index gaps by (chapterId|level) for quick lookup. Multiple cells with
-  // different question types collapse into a single shortage line per (chapter,
-  // level) since the FE shows the most-restrictive gap.
-  const gapByChapterLevel = useMemo(() => {
-    if (!gaps) return new Map<string, BankCoverageCell>();
-    const map = new Map<string, BankCoverageCell>();
+  // Index gaps by (chapterId|level). Multiple question types at the same
+  // (chapter, level) each get their own shortage chip so the user can see
+  // 'thiếu Trắc nghiệm' and 'thiếu Đúng/Sai' separately when both apply.
+  const gapsByChapterLevel = useMemo(() => {
+    if (!gaps) return new Map<string, BankCoverageCell[]>();
+    const map = new Map<string, BankCoverageCell[]>();
     for (const cell of gaps) {
       if (cell.available >= cell.required) continue;
       if (!cell.chapterId || !cell.cognitiveLevel) continue;
       // Normalise "TRUE_FALSE_CLAUSES" placeholder back to a stable label.
       const level = cell.cognitiveLevel.replace('TRUE_FALSE_CLAUSES', 'TRUE_FALSE');
       const key = `${cell.chapterId}|${level}`;
-      const prev = map.get(key);
-      if (!prev || cell.required - cell.available > prev.required - prev.available) {
-        map.set(key, cell);
-      }
+      const list = map.get(key) ?? [];
+      list.push(cell);
+      map.set(key, list);
     }
     return map;
   }, [gaps]);
@@ -158,11 +167,11 @@ export function BankCoverageTree({ banks, gaps }: BankCoverageTreeProps) {
             {isExpanded && (
               <div className="bct-bank__body">
                 {isLoading && (
-                  <p className="bct-bank__loading">Đang tải cấu trúc bank…</p>
+                  <p className="bct-bank__loading">Đang tải cấu trúc ngân hàng…</p>
                 )}
 
                 {!isLoading && (!tree || tree.chapters.length === 0) && (
-                  <p className="bct-bank__loading">Bank chưa có chương nào.</p>
+                  <p className="bct-bank__loading">ngân hàng chưa có chương nào.</p>
                 )}
 
                 {!isLoading && tree && tree.chapters.length > 0 && (
@@ -182,22 +191,34 @@ export function BankCoverageTree({ banks, gaps }: BankCoverageTreeProps) {
                           {COG_ORDER.map((level) => {
                             const bucket = ch.buckets[level];
                             const count = bucket?.count ?? 0;
-                            const gap = gapByChapterLevel.get(`${ch.chapterId}|${level}`);
+                            const cellGaps =
+                              gapsByChapterLevel.get(`${ch.chapterId}|${level}`) ?? [];
+                            const hasGap = cellGaps.length > 0;
                             return (
                               <li
                                 key={level}
-                                className={`bct-cog ${COG_BG[level]} ${gap ? 'bct-cog--gap' : ''}`}
+                                className={`bct-cog ${COG_BG[level]} ${hasGap ? 'bct-cog--gap' : ''}`}
                               >
                                 <span className="bct-cog__label">
                                   {COG_FULL[level]}
                                 </span>
                                 <span className="bct-cog__count">{count}</span>
-                                {gap && (
-                                  <span className="bct-cog__gap" title="Thiếu">
-                                    <AlertTriangle size={11} />
-                                    cần {gap.required}, có {gap.available}
-                                  </span>
-                                )}
+                                {cellGaps.map((gap, gi) => {
+                                  const typeLabel = gap.questionType
+                                    ? QUESTION_TYPE_LABEL[gap.questionType] ?? gap.questionType
+                                    : null;
+                                  return (
+                                    <span
+                                      key={`${gap.questionType ?? 'gap'}-${gi}`}
+                                      className="bct-cog__gap"
+                                      title={`Thiếu${typeLabel ? ' ' + typeLabel : ''}`}
+                                    >
+                                      <AlertTriangle size={11} />
+                                      {typeLabel && <strong>{typeLabel}</strong>}
+                                      {' '}cần {gap.required}, có {gap.available}
+                                    </span>
+                                  );
+                                })}
                               </li>
                             );
                           })}

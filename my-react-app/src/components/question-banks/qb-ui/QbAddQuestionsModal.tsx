@@ -65,6 +65,8 @@ export function QbAddQuestionsModal({
   const [keyword, setKeyword] = useState('');
   const [chapterFilter, setChapterFilter] = useState('');
   const [cognitiveFilter, setCognitiveFilter] = useState<'' | CognitiveLevelVi>('');
+  // FE-only — narrows the current page in-memory; BE has no status param.
+  const [statusFilter, setStatusFilter] = useState<'' | 'UNDER_REVIEW' | 'APPROVED'>('');
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -82,6 +84,7 @@ export function QbAddQuestionsModal({
     setPage(0);
     setSelectedIds(new Set());
     setErrorMsg(null);
+    setStatusFilter('');
     if (bucketContext) {
       // Bucket-driven open: filter dropdowns mirror the bucket so the user can
       // see/override (Bỏ lọc clears bucket back to free filter mode).
@@ -133,10 +136,14 @@ export function QbAddQuestionsModal({
     isOpen && !!bankId
   );
 
-  const questions = useMemo<QuestionResponse[]>(
+  const allQuestions = useMemo<QuestionResponse[]>(
     () => data?.result?.content ?? [],
     [data]
   );
+  const questions = useMemo<QuestionResponse[]>(() => {
+    if (!statusFilter) return allQuestions;
+    return allQuestions.filter((q) => q.questionStatus === statusFilter);
+  }, [allQuestions, statusFilter]);
 
   const totalPages =
     data?.result?.totalPages ??
@@ -175,6 +182,7 @@ export function QbAddQuestionsModal({
     setKeyword('');
     setChapterFilter('');
     setCognitiveFilter('');
+    setStatusFilter('');
     setPage(0);
   }
 
@@ -191,7 +199,8 @@ export function QbAddQuestionsModal({
     }
   }
 
-  const hasActiveFilter = !!keyword || !!chapterFilter || !!cognitiveFilter;
+  const hasActiveFilter =
+    !!keyword || !!chapterFilter || !!cognitiveFilter || !!statusFilter;
 
   return (
     <QbModal
@@ -283,6 +292,19 @@ export function QbAddQuestionsModal({
                 {opt.label}
               </option>
             ))}
+          </select>
+
+          <select
+            className="qb-select qb-add-q-modal__select"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as '' | 'UNDER_REVIEW' | 'APPROVED')
+            }
+            aria-label="Lọc theo trạng thái"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="UNDER_REVIEW">Chờ duyệt</option>
+            <option value="APPROVED">Đã duyệt</option>
           </select>
 
           {hasActiveFilter && !bucketContext && (

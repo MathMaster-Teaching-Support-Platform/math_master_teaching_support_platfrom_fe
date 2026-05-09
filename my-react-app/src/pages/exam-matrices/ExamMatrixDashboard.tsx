@@ -711,11 +711,7 @@ export function ExamMatrixDashboard() {
                     </p>
                     {(matrix.gradeLevel || matrix.subjectName) && (
                       <div className="flex flex-wrap gap-1.5">
-                        {matrix.gradeLevel && (
-                          <span className="inline-flex px-2 py-0.5 rounded-full bg-white border border-[#E8E6DC] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59]">
-                            Lớp {matrix.gradeLevel}
-                          </span>
-                        )}
+                        
                         {matrix.subjectName && (
                           <span className="inline-flex px-2 py-0.5 rounded-full bg-white border border-[#E8E6DC] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59]">
                             {matrix.subjectName}
