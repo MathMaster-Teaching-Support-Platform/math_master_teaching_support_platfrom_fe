@@ -42,6 +42,19 @@ const COG_FULL_LABEL: Record<string, string> = {
   TRUE_FALSE_CLAUSES: 'Đúng/Sai (theo mệnh đề)',
 };
 
+// Question-type labels for the shortage notification. Kept here (rather than
+// imported) because the file already owns COG_FULL_LABEL; BE returns the raw
+// enum (MULTIPLE_CHOICE / TRUE_FALSE / SHORT_ANSWER) and we Vi-label on the FE.
+const QUESTION_TYPE_LABEL: Record<string, string> = {
+  MULTIPLE_CHOICE: 'Trắc nghiệm',
+  MCQ: 'Trắc nghiệm',
+  TRUE_FALSE: 'Đúng/Sai',
+  TRUE_FALSE_CLAUSES: 'Đúng/Sai',
+  SHORT_ANSWER: 'Trả lời ngắn',
+  FILL_BLANK: 'Điền khuyết',
+  ESSAY: 'Tự luận',
+};
+
 export function AssessmentBuilderFlowBody() {
   const navigate = useNavigate();
   const [selectedMatrixId, setSelectedMatrixId] = useState('');
@@ -401,7 +414,6 @@ export function AssessmentBuilderFlowBody() {
               {readyMatrices.map((matrix) => (
                 <option key={matrix.id} value={matrix.id}>
                   {matrix.name}
-                  {matrix.gradeLevel ? ` (Lớp ${matrix.gradeLevel})` : ''}
                 </option>
               ))}
             </select>
@@ -496,19 +508,36 @@ export function AssessmentBuilderFlowBody() {
 
               {!coverageError && shortageCells.length > 0 && (
                 <ul className="abf-gap-list">
-                  {shortageCells.map((cell, idx) => (
-                    <li key={idx} className="abf-gap-item">
-                      <AlertTriangle size={13} />
-                      <span>
-                        Bank thiếu <strong>{cell.chapterTitle ?? 'Chương ?'}</strong>
-                        {' – '}
-                        <strong>
-                          {COG_FULL_LABEL[cell.cognitiveLevel ?? ''] ?? cell.cognitiveLevel}
-                        </strong>
-                        : cần {cell.required} câu, hiện có {cell.available}.
-                      </span>
-                    </li>
-                  ))}
+                  {shortageCells.map((cell, idx) => {
+                    const missing = Math.max(cell.required - cell.available, 0);
+                    const typeLabel = cell.questionType
+                      ? QUESTION_TYPE_LABEL[cell.questionType] ?? cell.questionType
+                      : null;
+                    const cogLabel =
+                      COG_FULL_LABEL[cell.cognitiveLevel ?? ''] ?? cell.cognitiveLevel;
+                    return (
+                      <li
+                        key={idx}
+                        className="abf-gap-item"
+                        title={`Cần ${cell.required} câu, hiện có ${cell.available}.`}
+                      >
+                        <AlertTriangle size={13} />
+                        <span>
+                          Bank thiếu <strong>{missing}</strong> câu
+                          {typeLabel && (
+                            <>
+                              {' '}
+                              <strong>{typeLabel}</strong>
+                            </>
+                          )}
+                          {' — '}
+                          <strong>{cell.chapterTitle ?? 'Chương ?'}</strong>
+                          {' — '}
+                          <strong>{cogLabel}</strong>
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
 
