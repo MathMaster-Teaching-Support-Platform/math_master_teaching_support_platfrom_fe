@@ -2281,7 +2281,9 @@ const BlockPreview: React.FC<{ bookId: string; block: ContentBlockDto }> = ({ bo
           <div className="text-xs text-slate-400 italic">[Ảnh chưa có URL]</div>
         )}
         {block.caption && (
-          <figcaption className="text-xs text-slate-500 mt-1">{block.caption}</figcaption>
+          <figcaption className="text-xs text-slate-500 mt-1">
+            <MathText text={block.caption} bookOcr />
+          </figcaption>
         )}
       </figure>
     );
@@ -2291,7 +2293,7 @@ const BlockPreview: React.FC<{ bookId: string; block: ContentBlockDto }> = ({ bo
     return (
       <div className="overflow-x-auto py-1">
         {tex ? (
-          <MathText text={`$$${tex}$$`} block />
+          <MathText text={tex} block bookOcr />
         ) : (
           <span className="text-xs text-slate-400 italic">[Công thức trống]</span>
         )}
@@ -2340,7 +2342,7 @@ const BlockPreview: React.FC<{ bookId: string; block: ContentBlockDto }> = ({ bo
     const headingClass = `${headingClassByLevel[level] ?? headingClassByLevel[4]} ${kindAccent}`;
     return (
       <div className={headingClass}>
-        <MathText text={block.content ?? ''} />
+        <MathText text={block.content ?? ''} bookOcr />
       </div>
     );
   }
@@ -2351,14 +2353,14 @@ const BlockPreview: React.FC<{ bookId: string; block: ContentBlockDto }> = ({ bo
           {block.exerciseType ?? 'Bài tập'} {block.exerciseNum ?? ''}
         </div>
         <div className="text-sm text-slate-700">
-          <MathText text={block.content ?? ''} />
+          <MathText text={block.content ?? ''} bookOcr />
         </div>
       </div>
     );
   }
   return (
     <div className="text-sm text-slate-700">
-      <MathText text={block.content ?? ''} />
+      <MathText text={block.content ?? ''} bookOcr />
     </div>
   );
 };
