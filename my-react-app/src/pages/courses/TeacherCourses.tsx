@@ -143,7 +143,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
     const original = Number(form.originalPrice) > 0 ? Number(form.originalPrice) : 10000;
     const percent =
-      Number.isInteger(discountPercent) && discountPercent >= 5 ? discountPercent : 10;
+      Number.isInteger(discountPercent) && discountPercent >= 0 ? discountPercent : 10;
     setOriginalThousandInput(String(Math.round(original / 1000)));
     handlePriceChange(original, percent);
   };
@@ -183,7 +183,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   const isDiscountPercentValid =
     pricingMode === 'free' ||
     (Number.isInteger(discountPercent) &&
-      discountPercent >= 5 &&
+      discountPercent >= 0 &&
       discountPercent <= 100 &&
       discountPercent % 5 === 0);
 
@@ -556,10 +556,10 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                               autoComplete="off"
                               value={discountPercent === 0 ? '' : String(discountPercent)}
                               onChange={(e) => handleDiscountPercentInput(e.target.value)}
-                              placeholder="5, 10, 15...100"
+                              placeholder="0, 5, 10...100"
                             />
                             <p className={`form-hint ${!isDiscountPercentValid ? 'is-error' : ''}`}>
-                              Giảm giá: số nguyên từ 5 đến 100, chia hết cho 5.
+                              Giảm giá: số nguyên từ 0 đến 100, chia hết cho 5.
                             </p>
                           </div>
                         </div>
