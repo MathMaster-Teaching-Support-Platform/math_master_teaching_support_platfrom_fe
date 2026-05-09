@@ -1,14 +1,12 @@
 import {
   AlertCircle,
   CheckCircle2,
-  Clock,
   FileText,
   GripVertical,
   Plus,
   Search,
   Star,
   Trash2,
-  Users,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -37,19 +35,7 @@ interface CourseAssessmentsTabProps {
   readOnly?: boolean;
 }
 
-const typeLabel: Record<string, string> = {
-  QUIZ: 'Trắc nghiệm (Thường xuyên)',
-  HOMEWORK: 'Bài tập (Thường xuyên)',
-  TEST: 'Kiểm tra (Định kỳ)',
-  EXAM: 'Thi (Cuối kỳ)',
-};
 
-const typeCategory: Record<string, 'formative' | 'summative'> = {
-  QUIZ: 'formative',
-  HOMEWORK: 'formative',
-  TEST: 'summative',
-  EXAM: 'summative',
-};
 
 const statusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
@@ -73,7 +59,7 @@ function AddAssessmentModal({
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [orderIndex] = useState(existingAssessmentIds.length + 1);
-  const [isRequired, setIsRequired] = useState(true);
+  const [isRequired] = useState(true);
   const [allowOutOfCourseLessons, setAllowOutOfCourseLessons] = useState(provider === 'CUSTOM');
   const [error, setError] = useState('');
 
@@ -235,7 +221,6 @@ function AddAssessmentModal({
           {!isLoading && filtered.length > 0 && (
             <div className="flex flex-col gap-3 mt-4">
               {filtered.map((assessment) => {
-                const category = typeCategory[assessment.assessmentType] || 'formative';
                 const isSelected = selectedId === assessment.assessmentId;
                 return (
                   <div
@@ -366,14 +351,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
     setFilterLessonId('');
   };
 
-  const fmtDate = (d?: string | null) => {
-    if (!d) return null;
-    return new Date(d).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+
 
   return (
     <div className="cat-container assessments-tab course-detail-tab">
@@ -504,46 +482,31 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413] leading-snug mb-1.5">
+                    <h3 className="font-[Playfair_Display] text-[1.25rem] font-bold text-[#141413] leading-tight mb-2">
                       {assessment.assessmentTitle ?? 'Không có tiêu đề'}
                     </h3>
 
                     {/* Description */}
                     {assessment.assessmentDescription && (
-                      <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] leading-relaxed line-clamp-2 mb-2">
+                      <p className="font-[Be_Vietnam_Pro] text-[0.875rem] text-[#5e5d59] leading-relaxed line-clamp-2 max-w-2xl mb-4">
                         {assessment.assessmentDescription}
                       </p>
                     )}
 
-                    {/* Meta row */}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-2">
-                      <span>{assessment.totalQuestions ?? 0} câu</span>
-                      <span className="text-[#E8E6DC]">·</span>
-                      <span>{assessment.totalPoints ?? 0} điểm</span>
-                      {assessment.timeLimitMinutes && (
-                        <>
-                          <span className="text-[#E8E6DC]">·</span>
-                          <span className="inline-flex items-center gap-1">
-                            <Clock size={11} className="flex-shrink-0" />
-                            {assessment.timeLimitMinutes} phút
-                          </span>
-                        </>
-                      )}
-                      {assessment.startDate && (
-                        <>
-                          <span className="text-[#E8E6DC]">·</span>
-                          <span>{fmtDate(assessment.startDate)}</span>
-                        </>
-                      )}
-                      {assessment.submissionCount !== null && assessment.submissionCount > 0 && (
-                        <>
-                          <span className="text-[#E8E6DC]">·</span>
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
-                            <Users size={11} className="flex-shrink-0" />
-                            {assessment.submissionCount} bài nộp
-                          </span>
-                        </>
-                      )}
+                    {/* Stats Block */}
+                    <div className="cat-stats-row">
+                      <div className="cat-stat-box">
+                        <label>Tổng số câu</label>
+                        <span>{assessment.totalQuestions ?? 0} câu</span>
+                      </div>
+                      <div className="cat-stat-box">
+                        <label>Tổng điểm</label>
+                        <span>{assessment.totalPoints ?? 0} điểm</span>
+                      </div>
+                      <div className={`cat-stat-box interactive ${assessment.submissionCount !== null && assessment.submissionCount > 0 ? '' : 'opacity-50'}`}>
+                        <label>Bài nộp</label>
+                        <span>{assessment.submissionCount ?? 0} bài nộp</span>
+                      </div>
                     </div>
 
 

@@ -130,21 +130,22 @@
 
 /* Teacher Assessment List */
 .cat-list-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
+  background: #ffffff;
+  border-radius: 24px;
   border: 1px solid #f0eee6;
-  padding: 1.75rem;
+  padding: 1.75rem 2.25rem;
   display: flex;
-  gap: 1.25rem;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  gap: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
 }
 
 .cat-list-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-  border-color: #e8e6dc;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
 }
 
 .cat-drag-handle {
@@ -241,13 +242,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 99px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  padding: 0.4rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .cat-badge.formative {
@@ -283,6 +283,65 @@
 .cat-badge.warning {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+/* Stats Block */
+.cat-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.cat-stat-box {
+  width: 160px;
+  padding: 1rem 1.25rem;
+  background: #fafafa;
+  border: 1px solid #f1f5f9;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: all 0.25s ease;
+}
+
+.cat-stat-box:hover {
+  border-color: #e8e6dc;
+  background: #faf9f5;
+}
+
+.cat-stat-box label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #87867f;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.cat-stat-box span {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #141413;
+  line-height: 1;
+}
+
+.cat-stat-box.interactive {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #bbf7d0;
+}
+
+.cat-stat-box.interactive label {
+  color: #16a34a;
+}
+
+.cat-stat-box.interactive span {
+  color: #15803d;
+}
+
+.cat-stat-box.interactive:hover {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #86efac;
 }
 
 /* Toggle Switch */
