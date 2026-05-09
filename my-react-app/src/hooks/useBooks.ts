@@ -220,6 +220,21 @@ export function useTriggerOcr(bookId: string) {
   });
 }
 
+/** Step 4 verify: re-run Gemini+Mathpix OCR for one mapped page (async on crawler). */
+export function useReOcrSingleBookPage(bookId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { lessonId: string; pageNumber: number }) =>
+      BookService.reOcrSingleBookPage(bookId, payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bookKeys.bookContent(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.pageMapping(bookId) });
+    },
+  });
+}
+
 export function useCancelOcr(bookId: string) {
   const qc = useQueryClient();
   return useMutation({
