@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { CourseService } from '../services/api/course.service';
@@ -39,6 +44,26 @@ export const courseKeys = {
   reviewHistory: (status: string, page: number, size: number) =>
     [...courseKeys.all, 'admin', 'review-history', status, page, size] as const,
 };
+
+/** Sections for CUSTOM courses — keys scoped before hooks that consume them */
+export const sectionKeys = {
+  all: ['course-sections'] as const,
+  course: (courseId: string) => [...sectionKeys.all, courseId] as const,
+};
+
+/**
+ * Lesson CRUD / reorder / materials change course payloads in several cache shapes.
+ * Uses refetchType "all" so inactive queries update too (global refetchOnMount is false).
+ */
+export async function invalidateCourseLessonsScope(qc: QueryClient, courseId: string) {
+  await Promise.all([
+    qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId), refetchType: 'all' }),
+    qc.invalidateQueries({ queryKey: ['course-lessons', courseId], refetchType: 'all' }),
+    qc.invalidateQueries({ queryKey: courseKeys.detail(courseId), refetchType: 'all' }),
+    qc.invalidateQueries({ queryKey: sectionKeys.course(courseId), refetchType: 'all' }),
+    qc.invalidateQueries({ queryKey: courseKeys.my(), refetchType: 'all' }),
+  ]);
+}
 
 // ─── Teacher Hooks ────────────────────────────────────────────────────────────
 
@@ -243,6 +268,7 @@ export function useCourseLessons(courseId: string) {
     queryFn: () => CourseService.getLessons(courseId),
     enabled: !!courseId,
     staleTime: 30_000,
+    refetchOnMount: true,
   });
 }
 
@@ -258,8 +284,7 @@ export function useAddCourseLesson() {
       request: CreateCourseLessonRequest;
       videoFile?: File;
     }) => CourseService.addLesson(courseId, request, videoFile),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -277,8 +302,7 @@ export function useUpdateCourseLesson() {
       request: UpdateCourseLessonRequest;
       videoFile?: File;
     }) => CourseService.updateLesson(courseId, lessonId, request, videoFile),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -287,8 +311,7 @@ export function useDeleteCourseLesson() {
   return useMutation({
     mutationFn: ({ courseId, lessonId }: { courseId: string; lessonId: string }) =>
       CourseService.deleteLesson(courseId, lessonId),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -297,8 +320,7 @@ export function useReorderCourseLessons() {
   return useMutation({
     mutationFn: ({ courseId, data }: { courseId: string; data: ReorderLessonsRequest }) =>
       CourseService.reorderLessons(courseId, data),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -549,11 +571,6 @@ export function useRemoveAssessmentFromCourse() {
 
 // ─── Custom Course Section Hooks ─────────────────────────────────────────────
 
-export const sectionKeys = {
-  all: ['course-sections'] as const,
-  course: (courseId: string) => [...sectionKeys.all, courseId] as const,
-};
-
 export function useCustomCourseSections(courseId: string) {
   return useQuery({
     queryKey: sectionKeys.course(courseId),
@@ -573,7 +590,7 @@ export function useCreateSection() {
       data: CreateCustomCourseSectionRequest;
     }) => CourseService.createSection(courseId, data),
     onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId), refetchType: 'all' }),
   });
 }
 
@@ -590,7 +607,7 @@ export function useUpdateSection() {
       data: UpdateCustomCourseSectionRequest;
     }) => CourseService.updateSection(courseId, sectionId, data),
     onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId), refetchType: 'all' }),
   });
 }
 
@@ -599,8 +616,7 @@ export function useDeleteSection() {
   return useMutation({
     mutationFn: ({ courseId, sectionId }: { courseId: string; sectionId: string }) =>
       CourseService.deleteSection(courseId, sectionId),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -617,9 +633,8 @@ export function useAddMaterial() {
       courseId: string;
       lessonId: string;
       file: File;
-    }) => CourseService.addMaterial(courseId, lessonId, file),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    }) =>       CourseService.addMaterial(courseId, lessonId, file),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 
@@ -634,9 +649,8 @@ export function useRemoveMaterial() {
       courseId: string;
       lessonId: string;
       materialId: string;
-    }) => CourseService.removeMaterial(courseId, lessonId, materialId),
-    onSuccess: (_data, { courseId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+    }) =>       CourseService.removeMaterial(courseId, lessonId, materialId),
+    onSuccess: (_data, { courseId }) => invalidateCourseLessonsScope(qc, courseId),
   });
 }
 

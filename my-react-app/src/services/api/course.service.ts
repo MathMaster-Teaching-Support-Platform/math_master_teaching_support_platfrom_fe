@@ -320,8 +320,14 @@ export class CourseService {
   }
 
   static async getLessons(courseId: string): Promise<ApiResponse<CourseLessonResponse[]>> {
+    const token = AuthService.getToken();
+    const headers: Record<string, string> = { accept: '*/*' };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSONS(courseId)}`, {
       method: 'GET',
+      headers,
     });
     const data = await this.handleResponse<ApiResponse<CourseLessonResponse[]>>(res);
     if (data?.result && Array.isArray(data.result)) {
