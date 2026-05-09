@@ -21,7 +21,6 @@ import {
   useAvailableAssessmentsForCourse,
   useCourseAssessments,
   useRemoveAssessmentFromCourse,
-  useUpdateCourseAssessment,
 } from '../../../hooks/useCourses';
 import '../../../styles/module-refactor.css';
 import type {
@@ -376,7 +375,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
   const { data: assessmentsData, isLoading, refetch } = useCourseAssessments(courseId);
   const removeMutation = useRemoveAssessmentFromCourse();
-  const updateMutation = useUpdateCourseAssessment();
 
   const assessments: CourseAssessmentResponse[] = useMemo(
     () => assessmentsData?.result ?? [],
@@ -574,8 +572,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           {[...filteredAssessments]
             .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
             .map((assessment) => {
-              const typeCode = assessment.assessmentType ?? 'QUIZ';
-
               return (
                 <article
                   key={assessment.id}
