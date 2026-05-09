@@ -6,11 +6,9 @@ import {
   BookOpen,
   ChevronRight,
   Circle,
-  DollarSign,
   Download,
   GraduationCap,
   LayoutDashboard,
-  TrendingUp,
   Users,
 } from 'lucide-react';
 import React from 'react';
@@ -97,40 +95,19 @@ const AdminDashboard: React.FC = () => {
   const pendingProfiles = dashboardQuery.data?.pendingProfiles ?? 0;
   const systemServices = dashboardQuery.data?.systemServices ?? [];
 
-  const formatRevenue = (amount: number): string => {
-    if (amount >= 1_000_000) return `₫${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1_000) return `₫${(amount / 1_000).toFixed(0)}K`;
-    return `₫${amount.toLocaleString('vi-VN')}`;
-  };
-
-  const formatGrowth = (pct: number): string => `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
-
   const statsCards = dashboardStats
     ? [
         {
           Icon: Users,
           label: 'Tổng người dùng',
           value: dashboardStats.totalUsers.toLocaleString('vi-VN'),
-          trend: formatGrowth(dashboardStats.totalUsersGrowthPercent),
-          trendPositive: dashboardStats.totalUsersGrowthPercent >= 0,
           bg: 'bg-[#EEF2FF]',
           color: 'text-[#4F7EF7]',
-        },
-        {
-          Icon: DollarSign,
-          label: 'Doanh thu tháng',
-          value: formatRevenue(dashboardStats.monthlyRevenue),
-          trend: formatGrowth(dashboardStats.monthlyRevenueGrowthPercent),
-          trendPositive: dashboardStats.monthlyRevenueGrowthPercent >= 0,
-          bg: 'bg-[#ECFDF5]',
-          color: 'text-[#2EAD7A]',
         },
         {
           Icon: BookOpen,
           label: 'Enrollment hoạt động',
           value: dashboardStats.activeEnrollments.toLocaleString('vi-VN'),
-          trend: formatGrowth(dashboardStats.activeEnrollmentsGrowthPercent),
-          trendPositive: dashboardStats.activeEnrollmentsGrowthPercent >= 0,
           bg: 'bg-[#FFF7ED]',
           color: 'text-[#E07B39]',
         },
@@ -138,8 +115,6 @@ const AdminDashboard: React.FC = () => {
           Icon: BarChart2,
           label: 'Giao dịch',
           value: dashboardStats.totalTransactions.toLocaleString('vi-VN'),
-          trend: formatGrowth(dashboardStats.totalTransactionsGrowthPercent),
-          trendPositive: dashboardStats.totalTransactionsGrowthPercent >= 0,
           bg: 'bg-[#F5F3FF]',
           color: 'text-[#9B6FE0]',
         },
@@ -321,7 +296,7 @@ const AdminDashboard: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
-                    Admin Dashboard
+                    Tổng quan hệ thống
                   </h1>
                   {!loading && dashboardStats && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
@@ -374,12 +349,6 @@ const AdminDashboard: React.FC = () => {
                       </p>
                       <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 truncate">
                         {stat.label}
-                      </p>
-                      <p
-                        className={`font-[Be_Vietnam_Pro] text-[11px] font-medium mt-1 flex items-center gap-1 ${stat.trendPositive ? 'text-emerald-600' : 'text-red-600'}`}
-                      >
-                        <TrendingUp className="w-3 h-3 shrink-0" />
-                        {stat.trend} vs tháng trước
                       </p>
                     </div>
                   </div>

@@ -425,11 +425,7 @@ const RevenueBreakdown: React.FC = () => {
             <div className="source-info">
               <h3>Gói đăng ký</h3>
               <p>{formatCurrency(stats.subscriptions)}</p>
-              <div className="source-percentage">
-                {stats.total > 0
-                  ? `${((stats.subscriptions / stats.total) * 100).toFixed(1)}% tỷ trọng`
-                  : '—'}
-              </div>
+
             </div>
           </motion.div>
 
@@ -440,11 +436,7 @@ const RevenueBreakdown: React.FC = () => {
             <div className="source-info">
               <h3>Hoa hồng khóa học</h3>
               <p>{formatCurrency(stats.courses)}</p>
-              <div className="source-percentage">
-                {stats.total > 0
-                  ? `${((stats.courses / stats.total) * 100).toFixed(1)}% tỷ trọng`
-                  : '—'}
-              </div>
+
             </div>
           </motion.div>
         </div>

@@ -282,14 +282,12 @@ const SummaryCard = ({
           <p className="font-[Be_Vietnam_Pro] text-[clamp(1.125rem,2.5vw,1.5rem)] font-bold tabular-nums text-[#141413] leading-tight mt-1 break-words">
             {formatVND(amount)}
           </p>
+          <p className={`font-[Be_Vietnam_Pro] text-[11px] font-medium tabular-nums mt-1 ${trendTextCls}`}>
+            So với kỳ trước: {formatTrend(trend)}
+          </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 pt-1 border-t border-[#F0EEE6]">
-        <span className={`font-[Be_Vietnam_Pro] text-[12px] font-semibold ${trendTextCls}`}>
-          {formatTrend(trend)}
-        </span>
-        <span className="font-[Be_Vietnam_Pro] text-[11px] text-[#B0AEA5]">so với kỳ trước</span>
-      </div>
+
     </div>
   );
 };

@@ -199,6 +199,7 @@ export function useTriggerOcr(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.bookContent(bookId) });
     },
   });
 }

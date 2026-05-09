@@ -10,6 +10,7 @@ import {
   OctagonAlert,
   PlayCircle,
   RefreshCw,
+  RotateCcw,
   Rocket,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -84,6 +85,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
 
   const [error, setError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showRerunConfirm, setShowRerunConfirm] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   const progress = progressQuery.data?.result;
@@ -112,12 +114,28 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
     return () => globalThis.removeEventListener('keydown', onKey);
   }, [showCancelConfirm, cancelOcrMutation.isPending]);
 
-  const canTrigger = useMemo(() => {
+  useEffect(() => {
+    if (!showRerunConfirm) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !triggerOcr.isPending) setShowRerunConfirm(false);
+    };
+    globalThis.addEventListener('keydown', onKey);
+    return () => globalThis.removeEventListener('keydown', onKey);
+  }, [showRerunConfirm, triggerOcr.isPending]);
+
+  /** Lần đầu / thử lại khi chưa hoàn tất (không dùng cho OCR_DONE — có nút «Crawl lại» riêng). */
+  const canTriggerInitial = useMemo(() => {
     if (!book.pdfPath) return false;
     if (!book.mappedLessonCount || book.mappedLessonCount <= 0) return false;
     const st = book.status;
     return st === 'READY' || st === 'MAPPING' || st === 'OCR_FAILED';
   }, [book]);
+
+  const canRerunOcr = useMemo(() => {
+    if (!book.pdfPath) return false;
+    if (!book.mappedLessonCount || book.mappedLessonCount <= 0) return false;
+    return uiStatus === 'OCR_DONE';
+  }, [book.pdfPath, book.mappedLessonCount, uiStatus]);
 
   const handleTrigger = async () => {
     setError(null);
@@ -125,6 +143,16 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
       await triggerOcr.mutateAsync();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Không thể kích hoạt OCR.');
+    }
+  };
+
+  const handleConfirmRerunOcr = async () => {
+    setError(null);
+    try {
+      await triggerOcr.mutateAsync();
+      setShowRerunConfirm(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Không thể chạy lại OCR.');
     }
   };
 
@@ -444,18 +472,40 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
           </button>
         )}
         {uiStatus === 'OCR_DONE' ? (
-          <button
-            type="button"
-            onClick={onComplete}
-            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700"
-          >
-            <CheckCircle2 size={14} /> Sang bước Verify <ArrowRight size={14} />
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRerunConfirm(true)}
+              disabled={!canRerunOcr || triggerOcr.isPending}
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm hover:bg-slate-50 disabled:opacity-50"
+              title="Quét lại toàn bộ trang đã map — có thể thay nội dung OCR cũ"
+            >
+              {triggerOcr.isPending ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Đang gửi crawl…
+                </>
+              ) : (
+                <>
+                  <RotateCcw size={14} /> Crawl lại OCR
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onComplete}
+              disabled={triggerOcr.isPending}
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
+            >
+              <CheckCircle2 size={14} /> Sang bước Verify <ArrowRight size={14} />
+            </button>
+          </>
         ) : (
           <button
             type="button"
             onClick={handleTrigger}
-            disabled={!canTrigger || triggerOcr.isPending || uiStatus === 'OCR_RUNNING'}
+            disabled={
+              !canTriggerInitial || triggerOcr.isPending || uiStatus === 'OCR_RUNNING'
+            }
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
           >
             {triggerOcr.isPending || uiStatus === 'OCR_RUNNING' ? (
@@ -472,6 +522,67 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
           </button>
         )}
       </div>
+
+      {showRerunConfirm && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !triggerOcr.isPending) {
+              setShowRerunConfirm(false);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg border border-slate-200 max-w-md w-full p-5 space-y-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rerun-ocr-title"
+          >
+            <div className="flex gap-3">
+              <div className="shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+                <RotateCcw size={22} />
+              </div>
+              <div className="min-w-0 space-y-1">
+                <h3 id="rerun-ocr-title" className="text-base font-semibold text-slate-900">
+                  Crawl lại OCR cho cuốn này?
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Hệ thống sẽ chạy lại quét trên PDF cho đúng các bài đã map ở Bước 2. Nội dung OCR
+                  và tiến độ kiểm duyệt trước đó có thể thay đổi theo kết quả mới (theo dữ liệu máy
+                  chủ crawl).
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 pt-1">
+              <button
+                type="button"
+                disabled={triggerOcr.isPending}
+                onClick={() => setShowRerunConfirm(false)}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={triggerOcr.isPending || !canRerunOcr}
+                onClick={() => void handleConfirmRerunOcr()}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
+              >
+                {triggerOcr.isPending ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Đang gửi…
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw size={14} /> Xác nhận crawl lại
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCancelConfirm && (
         <div
