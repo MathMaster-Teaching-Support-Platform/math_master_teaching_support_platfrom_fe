@@ -216,11 +216,14 @@ const AuthenticatedImage: React.FC<{
           if (shouldSendAuth && token) {
             headers.Authorization = `Bearer ${token}`;
           }
+          // Avoid 304: fetch() treats 304 as !ok and often returns an empty body, so blob() isn't a
+          // valid image — we then fall back to <img src> without Authorization and admin assets break.
           const response = await fetch(candidateSrc, {
             method: 'GET',
             headers,
             credentials: 'include',
             signal: controller.signal,
+            cache: 'no-store',
           });
           if (!response.ok) {
             continue;
