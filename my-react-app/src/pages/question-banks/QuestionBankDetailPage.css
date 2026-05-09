@@ -10,7 +10,9 @@
 }
 
 .qb-scope .qbd-question {
+  position: relative;
   padding: 1rem 1.1rem;
+  padding-right: 2.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -22,6 +24,25 @@
     border-color 0.16s ease,
     box-shadow 0.16s ease,
     background-color 0.16s ease;
+}
+
+.qb-scope .qbd-question__remove {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  padding: 0.3rem;
+  color: var(--qb-text-muted);
+  opacity: 0;
+  transition: opacity 0.16s ease, color 0.16s ease;
+}
+
+.qb-scope .qbd-question:hover .qbd-question__remove,
+.qb-scope .qbd-question__remove:focus-visible {
+  opacity: 1;
+}
+
+.qb-scope .qbd-question__remove:hover {
+  color: #c0392b;
 }
 
 .qb-scope .qbd-question:hover {

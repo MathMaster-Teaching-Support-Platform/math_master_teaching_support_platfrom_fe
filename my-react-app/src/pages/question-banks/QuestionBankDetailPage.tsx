@@ -32,7 +32,10 @@ import {
 import { mockTeacher } from '../../data/mockData';
 import { useToast } from '../../context/ToastContext';
 import { questionBankService } from '../../services/questionBankService';
-import { useGetQuestionsByBank } from '../../hooks/useQuestion';
+import {
+  useBatchRemoveQuestionsFromBank,
+  useGetQuestionsByBank,
+} from '../../hooks/useQuestion';
 import {
   useDeleteQuestionBank,
   useGetQuestionBankById,
@@ -91,6 +94,8 @@ export function QuestionBankDetailPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
+  const [pendingRemoveQuestion, setPendingRemoveQuestion] =
+    useState<QuestionResponse | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [bucketContext, setBucketContext] = useState<{
     chapterId: string;
@@ -113,6 +118,7 @@ export function QuestionBankDetailPage() {
 
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
+  const removeQuestionMutation = useBatchRemoveQuestionsFromBank();
 
   const bank = data?.result;
   const questions = useMemo<QuestionResponse[]>(
@@ -202,6 +208,26 @@ export function QuestionBankDetailPage() {
         message: err instanceof Error ? err.message : 'Không thể xóa ngân hàng câu hỏi.',
       });
       setPendingDelete(false);
+    }
+  }
+
+  async function handleConfirmRemoveQuestion() {
+    if (!bankId || !pendingRemoveQuestion) return;
+    try {
+      await removeQuestionMutation.mutateAsync({
+        bankId,
+        questionIds: [pendingRemoveQuestion.id],
+      });
+      showToast({ type: 'success', message: 'Đã gỡ câu hỏi khỏi ngân hàng.' });
+      setPendingRemoveQuestion(null);
+      setTreeRefreshNonce((n) => n + 1);
+      await Promise.all([refetch(), refetchQuestions()]);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message:
+          err instanceof Error ? err.message : 'Không thể gỡ câu hỏi khỏi ngân hàng.',
+      });
     }
   }
 
@@ -627,6 +653,15 @@ export function QuestionBankDetailPage() {
                             </span>
                           )}
                         </div>
+                        <button
+                          type="button"
+                          className="qb-btn qb-btn--ghost qb-btn--sm qbd-question__remove"
+                          onClick={() => setPendingRemoveQuestion(question)}
+                          aria-label="Gỡ câu hỏi khỏi ngân hàng"
+                          title="Gỡ câu hỏi khỏi ngân hàng"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -689,6 +724,22 @@ export function QuestionBankDetailPage() {
               busy={deleteMutation.isPending}
               onConfirm={handleConfirmDelete}
               onCancel={() => setPendingDelete(false)}
+            />
+
+            <QbConfirmDialog
+              isOpen={!!pendingRemoveQuestion}
+              tone="danger"
+              title="Gỡ câu hỏi khỏi ngân hàng?"
+              message={
+                <>
+                  Câu hỏi sẽ được gỡ khỏi ngân hàng <strong>"{bank.name}"</strong> nhưng
+                  vẫn còn trong hệ thống. Bạn có thể thêm lại sau.
+                </>
+              }
+              confirmLabel="Gỡ câu hỏi"
+              busy={removeQuestionMutation.isPending}
+              onConfirm={handleConfirmRemoveQuestion}
+              onCancel={() => setPendingRemoveQuestion(null)}
             />
           </>
         )}

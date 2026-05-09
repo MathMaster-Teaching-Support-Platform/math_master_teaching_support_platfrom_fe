@@ -25,13 +25,12 @@ import { UI_TEXT } from '../../constants/uiText';
 import {
   useCourseDetail,
   useCourseProgress,
-  useCourseStudents,
   useInstructorCourses,
   useMyEnrollments,
   useRelatedCourses,
   useTeacherProfile,
 } from '../../hooks/useCourses';
-import { useMyAssessmentsByCourse } from '../../hooks/useStudentAssessment';
+
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
 import './tabs/CourseOverviewTab.css';
@@ -86,12 +85,7 @@ const StudentCourseDetail: React.FC = () => {
 
   const { data: courseData } = useCourseDetail(courseIdForQueries);
   const { data: progressData } = useCourseProgress(enrollmentId ?? '');
-  const { data: assessmentsMeta } = useMyAssessmentsByCourse(
-    courseIdForQueries,
-    { page: 0, size: 1, sortBy: 'dueDate', sortDir: 'ASC' },
-    { enabled: !!courseIdForQueries }
-  );
-  const { data: studentsData } = useCourseStudents(courseIdForQueries);
+
 
   const course = courseData?.result;
   const progress = progressData?.result;
@@ -122,11 +116,8 @@ const StudentCourseDetail: React.FC = () => {
     setSearchParams({ tab });
   };
 
-  const assessmentsTotal = assessmentsMeta?.result?.totalElements ?? 0;
-  const studentsTotal =
-    studentsData?.result?.totalElements ?? course?.studentsCount ?? 0;
-  const lessonsCountBadge = course?.lessonsCount ?? 0;
-  const reviewsCountBadge = course?.ratingCount ?? 0;
+
+
 
   const tabsConfig = [
     { id: 'overview' as const, label: 'Tổng quan', icon: BookOpen },
@@ -134,25 +125,21 @@ const StudentCourseDetail: React.FC = () => {
       id: 'lessons' as const,
       label: 'Bài học',
       icon: FileText,
-      count: lessonsCountBadge,
     },
     {
       id: 'assessments' as const,
       label: UI_TEXT.QUIZ,
       icon: CheckCircle2,
-      count: assessmentsTotal,
     },
     {
       id: 'students' as const,
       label: 'Học viên',
       icon: Users,
-      count: studentsTotal,
     },
     {
       id: 'reviews' as const,
       label: 'Đánh giá',
       icon: Star,
-      count: reviewsCountBadge,
     },
   ];
 
@@ -375,15 +362,7 @@ const StudentCourseDetail: React.FC = () => {
                   >
                     <tab.icon size={15} strokeWidth={2} />
                     <span>{tab.label}</span>
-                    {tab.count !== undefined && (
-                      <span
-                        className={`min-w-[1.25rem] h-5 px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
-                          active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    )}
+
                   </button>
                 );
               })}

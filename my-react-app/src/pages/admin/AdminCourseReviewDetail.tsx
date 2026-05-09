@@ -22,7 +22,6 @@ import { useToast } from '../../context/ToastContext';
 import {
   useApproveCourseReview,
   useCourseDetail,
-  useCourseStudents,
   useRejectCourseReview,
 } from '../../hooks/useCourses';
 import type { CourseResponse } from '../../types';
@@ -162,7 +161,6 @@ const AdminCourseReviewDetail: React.FC = () => {
   const activeTab = (searchParams.get('tab') as TabType) || 'overview';
 
   const { data: courseData, isLoading: loadingCourse, refetch } = useCourseDetail(courseId!);
-  const { data: studentsData } = useCourseStudents(courseId!);
   const approveMutation = useApproveCourseReview();
   const rejectMutation = useRejectCourseReview();
 
@@ -170,7 +168,7 @@ const AdminCourseReviewDetail: React.FC = () => {
   const [rejectReason, setRejectReason] = useState('');
 
   const course = courseData?.result;
-  const students = studentsData?.result?.content ?? [];
+
 
   let loadingMessage = '';
   if (loadingCourse) loadingMessage = 'Đang tải thông tin khóa học...';
@@ -276,9 +274,9 @@ const AdminCourseReviewDetail: React.FC = () => {
 
   const tabs = [
     { id: 'overview' as const, label: 'Tổng quan', icon: BookOpen },
-    { id: 'lessons' as const, label: 'Bài học', icon: FileText, count: course.lessonsCount },
+    { id: 'lessons' as const, label: 'Bài học', icon: FileText },
     { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: CheckCircle2 },
-    { id: 'students' as const, label: 'Học viên', icon: Users, count: students.length },
+    { id: 'students' as const, label: 'Học viên', icon: Users },
     { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
   ];
 
@@ -454,15 +452,7 @@ const AdminCourseReviewDetail: React.FC = () => {
                   >
                     <tab.icon size={15} strokeWidth={2} />
                     <span>{tab.label}</span>
-                    {tab.count !== undefined && (
-                      <span
-                        className={`min-w-[1.25rem] h-5 px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
-                          active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    )}
+
                   </button>
                 );
               })}

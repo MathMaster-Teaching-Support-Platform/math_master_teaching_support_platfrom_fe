@@ -14,7 +14,7 @@ import './matrix-table.css';
 
 interface MatrixTableProps {
   chapters: ExamMatrixTableChapter[];
-  gradeLevel?: string;
+  gradeLevel?: string | number;
   subjectName?: string;
   parts?: ExamMatrixPartConfig[];
   numberOfParts?: number;  // DEPRECATED
@@ -95,15 +95,23 @@ function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: 
   return fromCells?.questionCount ?? 0;
 }
 
-/** Nhãn lớp để gộp ô — ưu tiên grade ma trận, sau đó dữ liệu dòng */
-function displayGradeForRow(row: ExamMatrixTableRow, matrixGrade?: string): string {
+/** Nhãn lớp để gộp ô — ưu tiên snapshot của từng dòng (vì 1 ma trận có thể chứa
+ *  nhiều lớp), chỉ fallback về grade ma trận khi dòng không có dữ liệu lớp riêng. */
+// BE trả gradeLevel là Integer (10/11/12), nên optional-chain `.trim()` sẽ throw
+// nếu một field nào đó tới dưới dạng number. Coerce mọi candidate qua String trước.
+function toTrimmedString(v: unknown): string {
+  if (v == null) return '';
+  return String(v).trim();
+}
+
+function displayGradeForRow(row: ExamMatrixTableRow, matrixGrade?: string | number): string {
   const g =
-    matrixGrade?.trim() ||
-    row.schoolGradeName?.trim() ||
-    row.gradeLevel?.trim() ||
-    row.schoolGrade?.trim() ||
-    row.school_grade_name?.trim() ||
-    row.grade_level?.trim() ||
+    toTrimmedString(row.schoolGradeName) ||
+    toTrimmedString(row.gradeLevel) ||
+    toTrimmedString(row.schoolGrade) ||
+    toTrimmedString(row.school_grade_name) ||
+    toTrimmedString(row.grade_level) ||
+    toTrimmedString(matrixGrade) ||
     '';
   return g || '—';
 }
@@ -137,7 +145,7 @@ type MatrixFlatRow = {
 
 function buildFlatTableRows(
   sortedChapters: ExamMatrixTableChapter[],
-  matrixGrade?: string
+  matrixGrade?: string | number
 ): MatrixFlatRow[] {
   const out: MatrixFlatRow[] = [];
   sortedChapters.forEach((chapter, sortedChapterIndex) => {
