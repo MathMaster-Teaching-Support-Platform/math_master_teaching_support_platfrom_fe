@@ -1017,12 +1017,13 @@
 .module-layout-container .create-course-modal .wizard-content-wrapper {
   min-height: 0;
   flex: 1 1 auto;
-  max-height: min(50vh, 480px);
+  max-height: min(55vh, 520px);
   overflow-x: hidden;
   overflow-y: auto;
-  padding-right: 0.35rem;
+  padding: 0 1.5rem 0.5rem 0; /* Substantial right padding to clear scrollbar */
   margin-bottom: 0.25rem;
   scrollbar-gutter: stable;
+  box-sizing: border-box;
 }
 
 .module-layout-container .create-course-modal .modal-header {
@@ -1220,9 +1221,20 @@
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  /* letter-spacing gây tách dấu tiếng Việt khi dùng uppercase; giữ 0 (index.css) */
   letter-spacing: 0;
   font-family: var(--font-family);
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 0.35rem;
+}
+
+.module-layout-container .create-course-modal .label-format-hint {
+  font-size: 0.7rem;
+  color: #87867f;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .required {
@@ -1255,7 +1267,7 @@
 }
 
 .module-layout-container .create-course-modal .form-textarea {
-  min-height: 112px;
+  min-height: 120px;
   max-height: 220px;
   overflow-y: auto;
   resize: vertical;
@@ -1263,6 +1275,8 @@
   font-family: var(--font-family);
   font-synthesis: none;
   letter-spacing: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .module-layout-container .create-course-modal .form-textarea::-webkit-scrollbar {
@@ -1291,9 +1305,91 @@
   padding-right: 2.2rem;
 }
 
+/* Curriculum Grouping & Selection Enhancements */
+.module-layout-container .create-course-modal .curriculum-selection-group {
+  background: #fcfaf6;
+  border: 1px solid #e8e6dc;
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 1px 2px rgba(122, 90, 77, 0.04);
+}
+
+.module-layout-container .create-course-modal .curriculum-selection-group .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr !important; /* Force 50/50 balance */
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .module-layout-container .create-course-modal .curriculum-selection-group {
+    padding: 1rem;
+  }
+  .module-layout-container .create-course-modal .curriculum-selection-group .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+}
+
+.module-layout-container .create-course-modal .tc-icon-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.module-layout-container .create-course-modal .tc-select-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: #87867f;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 2;
+}
+
+.module-layout-container .create-course-modal .form-select--with-icon {
+  padding-left: 2.6rem !important;
+}
+
+.module-layout-container .create-course-modal .tc-icon-select-wrapper:focus-within .tc-select-icon {
+  color: #c96442;
+  transform: scale(1.1) translateY(-1px);
+}
+
+.module-layout-container .create-course-modal .form-select:disabled {
+  background-color: #f7f6f0;
+  border-style: dashed;
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.module-layout-container .create-course-modal .tc-icon-select-wrapper:hover .form-select:not(:disabled):not(:focus) {
+  border-color: #d1cfc5;
+  background-color: #fdfdfb;
+}
+
 .module-layout-container .create-course-modal .form-select option {
   font-family: var(--font-family);
   letter-spacing: 0;
+}
+
+/* Step 2 Specific Fixes */
+.module-layout-container .create-course-modal .step-2-details .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr !important; /* Force 50/50 balance for Language and Thumbnail */
+  gap: 1.25rem;
+  width: 100%;
+  align-items: start;
+}
+
+/* Step 4 Specific Fixes */
+.module-layout-container .create-course-modal .step-4-pricing .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1.25rem;
+  width: 100%;
+  align-items: start;
 }
 
 .module-layout-container .create-course-modal .file-upload-field {
