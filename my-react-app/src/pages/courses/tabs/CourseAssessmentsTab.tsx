@@ -423,15 +423,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
     }
   };
 
-  const handleToggleRequired = async (assessment: CourseAssessmentResponse) => {
-    await updateMutation.mutateAsync({
-      courseId,
-      assessmentId: assessment.assessmentId,
-      data: { isRequired: !assessment.isRequired },
-    });
-    void refetch();
-  };
-
   const clearFilters = () => {
     setFilterGradeId('');
     setFilterSubjectId('');
@@ -584,7 +575,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
             .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
             .map((assessment) => {
               const typeCode = assessment.assessmentType ?? 'QUIZ';
-              const category = typeCategory[typeCode] || 'formative';
 
               return (
                 <article
