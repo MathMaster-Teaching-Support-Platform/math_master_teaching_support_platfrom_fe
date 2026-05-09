@@ -19,6 +19,7 @@ import { FormField } from '../../components/common/FormField';
 import { McqOptionRow } from '../../components/common/McqOptionRow';
 import MathText from '../../components/common/MathText';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
+import { DiagramTemplatePreview } from '../../components/question-templates/DiagramTemplatePreview';
 
 /**
  * Method 1 entry form. The teacher writes a complete, real-valued question — no
@@ -417,6 +418,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
                     value={diagramLatex}
                     onChange={(e) => setDiagramLatex(e.target.value)}
                   />
+                  <DiagramTemplatePreview diagramTemplate={diagramLatex} />
                 </FormField>
               </>
             )}

@@ -3,6 +3,7 @@ import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
 import { renderTemplateWithSamples } from '../../utils/templatePreview';
 import { AIParameterPanel } from './AIParameterPanel';
+import { DiagramTemplatePreview } from './DiagramTemplatePreview';
 
 type OptionInput = {
   key: string;
@@ -188,6 +189,10 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
                 placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
               />
             </label>
+            <DiagramTemplatePreview
+              diagramTemplate={diagramTemplateRaw}
+              parameters={parameters}
+            />
           </>
         )}
 
