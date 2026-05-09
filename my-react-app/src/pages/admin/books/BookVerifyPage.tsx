@@ -179,6 +179,47 @@ const buildAssetCandidates = (url: string): string[] => {
   return Array.from(new Set(candidates));
 };
 
+/** Path + query for a resolved URL string (relative `/api/...` or absolute). */
+function pathnameFromResolvedUrl(resolvedUrl: string): string {
+  if (resolvedUrl.startsWith('/')) return resolvedUrl.split('#')[0];
+  try {
+    const u = new URL(resolvedUrl);
+    return `${u.pathname}${u.search}`;
+  } catch {
+    return resolvedUrl.split('#')[0];
+  }
+}
+
+/**
+ * Book OCR block images are GET-protected like uploads are POST-protected. When the SPA host
+ * (e.g. sep.*) rewrites `/api/...` to same-origin, some proxies forward Authorization on POST but
+ * strip it on GET — preview breaks while MinIO upload still succeeds. Prefer the same absolute API
+ * origin as `BookService.uploadPageImage` (`API_BASE_URL`) first.
+ */
+function withAbsoluteApiOrigin(pathFromRoot: string): string | null {
+  const base = API_BASE_URL?.trim();
+  if (!base || !(base.startsWith('http://') || base.startsWith('https://'))) return null;
+  if (!pathFromRoot.startsWith('/')) return null;
+  try {
+    return `${new URL(base).origin}${pathFromRoot}`;
+  } catch {
+    return null;
+  }
+}
+
+function buildProtectedImageFetchCandidates(resolvedUrl: string): string[] {
+  const ordered: string[] = [];
+  const path = pathnameFromResolvedUrl(resolvedUrl);
+  if (path.includes('/api/v1/books/') && path.includes('/page-images/')) {
+    const abs = withAbsoluteApiOrigin(path);
+    if (abs) ordered.push(abs);
+  }
+  for (const c of buildAssetCandidates(resolvedUrl)) {
+    if (!ordered.includes(c)) ordered.push(c);
+  }
+  return ordered;
+}
+
 const IMAGE_URL_EXT_REGEX = /\.(jpe?g|png|gif|webp|bmp|svg)$/i;
 
 function looksLikeImageAssetUrl(url: string): boolean {
@@ -236,7 +277,7 @@ const AuthenticatedImage: React.FC<{
     let revokedObjectUrl: string | null = null;
     const controller = new AbortController();
     const finalSrc = resolveAssetUrl(src);
-    const candidateSrcs = buildAssetCandidates(finalSrc);
+    const candidateSrcs = buildProtectedImageFetchCandidates(finalSrc);
     setResolvedSrc('');
 
     const fetchProtectedImage = async () => {
@@ -265,7 +306,8 @@ const AuthenticatedImage: React.FC<{
           const response = await fetch(candidateSrc, {
             method: 'GET',
             headers,
-            credentials: 'include',
+            // Bearer-only; avoid credentialed cross-origin mode (upload uses implicit omit too).
+            credentials: 'omit',
             signal: controller.signal,
             cache: 'no-store',
           });
