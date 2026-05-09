@@ -33,6 +33,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 
 import { mockTeacher } from '../../data/mockData';
 import {
+  useBlueprintFromRealQuestion,
   useCreateQuestionTemplate,
   useDeleteQuestionTemplate,
   useGetMyQuestionTemplates,
@@ -40,7 +41,10 @@ import {
   useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
-import { questionTemplateService } from '../../services/questionTemplateService';
+import {
+  questionTemplateService,
+  QuestionTemplateApiError,
+} from '../../services/questionTemplateService';
 import '../../styles/module-refactor.css';
 
 import {
@@ -73,6 +77,10 @@ const templateTypeLabel: Record<string, string> = {
   ESSAY: 'Tự luận',
   CODING: 'Lập trình',
 };
+
+const AI_BLUEPRINT_NO_RESULT = 'AI không trả về Blueprint. Vui lòng thử lại.';
+const NO_AI_TOKEN_TOAST =
+  'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
 
 const cognitiveLevelLabel: Record<string, string> = {
   NHAN_BIET: 'Nhận biết',
@@ -274,6 +282,7 @@ export function TemplateDashboard() {
   );
 
   const createMutation = useCreateQuestionTemplate();
+  const blueprintRegenerateMutation = useBlueprintFromRealQuestion();
   const updateMutation = useUpdateQuestionTemplate();
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
@@ -315,6 +324,33 @@ export function TemplateDashboard() {
     }
     if (!selected) return;
     await updateMutation.mutateAsync({ id: selected.id, request: payload });
+  }
+
+  /** Gọi lại blueprint AI với cùng câu hỏi thật — dùng khi giáo viên muốn retry trong modal xác nhận. */
+  async function regenerateBlueprintDraft() {
+    if (!blueprintRequest) return;
+    try {
+      const res = await blueprintRegenerateMutation.mutateAsync(blueprintRequest);
+      if (!res.result) {
+        showToast({ type: 'error', message: AI_BLUEPRINT_NO_RESULT });
+        throw new Error(AI_BLUEPRINT_NO_RESULT);
+      }
+      setBlueprintResponse(res.result);
+      showToast({ type: 'success', message: 'Đã làm mới bản nháp từ AI.' });
+    } catch (err) {
+      if (
+        err instanceof QuestionTemplateApiError &&
+        (err.code === 1167 || err.code === 1166)
+      ) {
+        showToast({ type: 'error', message: NO_AI_TOKEN_TOAST });
+        throw err;
+      }
+      const msg = err instanceof Error ? err.message : 'Không thể phân tích lại.';
+      if (msg !== AI_BLUEPRINT_NO_RESULT) {
+        showToast({ type: 'error', message: msg });
+      }
+      throw err;
+    }
   }
 
   async function openEditTemplate(templateId: string) {
@@ -1069,6 +1105,8 @@ export function TemplateDashboard() {
               isOpen={confirmOpen}
               request={blueprintRequest}
               blueprint={blueprintResponse}
+              onRegenerate={regenerateBlueprintDraft}
+              isRegenerating={blueprintRegenerateMutation.isPending}
               onCancel={() => {
                 setConfirmOpen(false);
                 setBlueprintRequest(null);
