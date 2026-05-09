@@ -148,6 +148,10 @@ export class MindmapService {
 
   /** GET /mindmaps/my-mindmaps - Get teacher's mindmaps */
   static async getMyMindmaps(params?: {
+    gradeId?: string;
+    subjectId?: string;
+    chapterId?: string;
+    lessonId?: string;
     page?: number;
     size?: number;
     status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -156,6 +160,10 @@ export class MindmapService {
   }): Promise<ApiResponse<PaginatedResponse<Mindmap>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
+    if (params?.gradeId) queryParams.set('gradeId', params.gradeId);
+    if (params?.subjectId) queryParams.set('subjectId', params.subjectId);
+    if (params?.chapterId) queryParams.set('chapterId', params.chapterId);
+    if (params?.lessonId) queryParams.set('lessonId', params.lessonId);
     if (params?.page !== undefined) queryParams.set('page', params.page.toString());
     if (params?.size !== undefined) queryParams.set('size', params.size.toString());
     if (params?.status) queryParams.set('status', params.status);
@@ -254,6 +262,9 @@ export class MindmapService {
 
   /** GET /mindmaps/public - Get all published mindmaps with filters + pagination */
   static async getPublicMindmaps(params?: {
+    gradeId?: string;
+    subjectId?: string;
+    chapterId?: string;
     lessonId?: string;
     name?: string;
     page?: number;
@@ -263,6 +274,9 @@ export class MindmapService {
   }): Promise<ApiResponse<PaginatedResponse<Mindmap>>> {
     const headers = this.getPublicHeaders();
     const queryParams = new URLSearchParams();
+    if (params?.gradeId) queryParams.set('gradeId', params.gradeId);
+    if (params?.subjectId) queryParams.set('subjectId', params.subjectId);
+    if (params?.chapterId) queryParams.set('chapterId', params.chapterId);
     if (params?.lessonId) queryParams.set('lessonId', params.lessonId);
     if (params?.name) queryParams.set('name', params.name);
     if (params?.page !== undefined) queryParams.set('page', params.page.toString());

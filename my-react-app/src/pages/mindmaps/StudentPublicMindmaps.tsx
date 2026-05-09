@@ -87,6 +87,9 @@ export default function StudentPublicMindmaps() {
     queryKey: [
       'public-mindmaps',
       {
+        gradeId,
+        subjectId,
+        chapterId,
         lessonId,
         name: mindmapKeywordDebounced,
         page: mindmapPage,
@@ -97,6 +100,9 @@ export default function StudentPublicMindmaps() {
     ],
     queryFn: () =>
       MindmapService.getPublicMindmaps({
+        gradeId: gradeId || undefined,
+        subjectId: subjectId || undefined,
+        chapterId: chapterId || undefined,
         lessonId: lessonId || undefined,
         name: mindmapKeywordDebounced || undefined,
         page: mindmapPage,
@@ -325,12 +331,7 @@ export default function StudentPublicMindmaps() {
     if (!loadingCatalog && !loadingMindmaps) {
       setMindmapsError('');
     }
-  }, [
-    catalogError,
-    mindmapsQuery.error,
-    loadingCatalog,
-    loadingMindmaps,
-  ]);
+  }, [catalogError, mindmapsQuery.error, loadingCatalog, loadingMindmaps]);
 
   return (
     <DashboardLayout
