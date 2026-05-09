@@ -44,6 +44,8 @@ export function useBookList(
     queryKey: bookKeys.list(params),
     queryFn: () => BookService.search(params),
     enabled: options?.enabled ?? true,
+    // App defaults refetchOnMount: false — admin list must refresh after edits on other routes.
+    refetchOnMount: true,
   });
 }
 
@@ -53,6 +55,7 @@ export function useBook(bookId: string | undefined, options?: { enabled?: boolea
     queryKey: bookKeys.detail(bookId ?? ''),
     queryFn: () => BookService.getById(bookId as string),
     enabled,
+    refetchOnMount: true,
   });
 }
 
@@ -61,6 +64,7 @@ export function useBookPageMapping(bookId: string | undefined) {
     queryKey: bookKeys.pageMapping(bookId ?? ''),
     queryFn: () => BookService.getPageMapping(bookId as string),
     enabled: Boolean(bookId),
+    refetchOnMount: true,
   });
 }
 
@@ -75,6 +79,7 @@ export function useBookProgress(
     queryFn: () => BookService.getProgress(bookId as string),
     enabled: Boolean(bookId),
     refetchInterval: options.refetchInterval,
+    refetchOnMount: true,
   });
 }
 
@@ -142,6 +147,7 @@ export function useSetBookPdfPath(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.pdfPreviewUrl(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
@@ -173,6 +179,7 @@ export function useSavePageMapping(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.pageMapping(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
@@ -182,6 +189,7 @@ export function useBookSeriesPageMapping(bookId: string | undefined) {
     queryKey: bookKeys.seriesPageMapping(bookId ?? ''),
     queryFn: () => BookService.getSeriesPageMapping(bookId as string),
     enabled: Boolean(bookId),
+    refetchOnMount: true,
   });
 }
 
@@ -207,6 +215,7 @@ export function useTriggerOcr(bookId: string) {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.bookContent(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
@@ -219,6 +228,7 @@ export function useCancelOcr(bookId: string) {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.bookContent(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
@@ -230,6 +240,7 @@ export function useRefreshVerification(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
@@ -267,6 +278,8 @@ export function useUpdatePage(bookId: string, lessonId: string) {
         queryKey: bookKeys.page(bookId, lessonId, variables.pageNumber),
       });
       void qc.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }
