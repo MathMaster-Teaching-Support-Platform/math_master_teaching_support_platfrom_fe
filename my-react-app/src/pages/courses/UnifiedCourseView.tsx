@@ -45,7 +45,7 @@ import {
   useMyEnrollments,
   useTeacherProfile,
 } from '../../hooks/useCourses';
-import { useMyAssessmentsByCourse } from '../../hooks/useStudentAssessment';
+
 import { AuthService } from '../../services/api/auth.service';
 import '../../styles/module-refactor.css';
 import type { Order } from '../../types/order.types';
@@ -171,11 +171,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const isEnrolled = !!enrollment && enrollment.status === 'ACTIVE';
   const hasFullAccess = isEnrolled || canViewUnpublishedCourse;
 
-  const { data: assessmentsMeta } = useMyAssessmentsByCourse(
-    courseId ?? '',
-    { page: 0, size: 1, sortBy: 'dueDate', sortDir: 'ASC' },
-    { enabled: Boolean(courseId && hasFullAccess) }
-  );
+
 
   // Calculate free preview stats
   const freePreviewLessons = useMemo(() => lessons.filter((l) => l.isFreePreview), [lessons]);
@@ -320,21 +316,19 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
       </div>
     );
   } else {
-    const assessmentsTotal = assessmentsMeta?.result?.totalElements ?? 0;
+
 
     const studentCourseTabs: Array<{
       id: TabType;
       label: string;
       icon: LucideIcon;
       locked: boolean;
-      badge?: React.ReactNode;
     }> = [
       {
         id: 'lessons',
         label: 'Bài học',
         icon: ListVideo,
         locked: false,
-        badge: course.lessonsCount,
       },
       {
         id: 'overview',
@@ -347,26 +341,18 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         label: UI_TEXT.QUIZ,
         icon: ClipboardCheck,
         locked: !hasFullAccess,
-        badge: hasFullAccess ? assessmentsTotal : undefined,
       },
       {
         id: 'progress',
         label: 'Tiến độ',
         icon: TrendingUp,
         locked: !hasFullAccess,
-        badge:
-          hasFullAccess && progress
-            ? `${Math.round(progress.completionRate)}%`
-            : hasFullAccess
-              ? '0%'
-              : undefined,
       },
       {
         id: 'reviews',
         label: 'Đánh giá',
         icon: Star,
         locked: false,
-        badge: course.ratingCount,
       },
     ];
 
@@ -673,14 +659,6 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                             title="Cần đăng ký"
                           >
                             <Lock size={11} strokeWidth={2.5} aria-hidden />
-                          </span>
-                        ) : tab.badge !== undefined && tab.badge !== null && tab.badge !== '' ? (
-                          <span
-                            className={`min-h-5 min-w-[1.25rem] px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold leading-none ${
-                              active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
-                            }`}
-                          >
-                            {tab.badge}
                           </span>
                         ) : null}
                       </button>
