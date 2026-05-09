@@ -25,10 +25,12 @@ export interface ExamMatrixRequest {
     parts?: ExamMatrixPartConfig[];  // FE-1: NEW - Configurable parts
     totalQuestionsTarget?: number | null;
     totalPointsTarget?: number | null;
+    /** School grade (lớp 1–12). When set, all rows must belong to the same cấp. */
+    gradeLevel?: number;
 }
 
 export interface BuildExamMatrixRequest extends ExamMatrixRequest {
-    gradeLevel?: string;
+    gradeLevel?: number;
     subjectId?: string;
     questionBankId?: string;
     numberOfParts?: number;  // DEPRECATED: Use parts[] instead

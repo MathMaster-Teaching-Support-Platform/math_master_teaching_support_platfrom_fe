@@ -422,7 +422,7 @@ export function ExamMatrixDashboard() {
                     </p>
                   </div>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 leading-relaxed">
-                    Định nghĩa mức độ câu hỏi, chương, số câu và điểm.
+                    Định nghĩa độ khó câu hỏi, chương, số câu và điểm.
                   </p>
                 </div>
                 <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4 flex flex-col gap-2 hover:border-[#D1CFC5] transition-colors">
@@ -505,7 +505,6 @@ export function ExamMatrixDashboard() {
               onLessonChange={() => {}}
               footnote={
                 <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
-                  Lọc theo lớp/môn của các chương trong ma trận.
                   {tableQueriesLoading && (
                     <span className="ml-2 text-[#C96442]">Đang tải dữ liệu hàng…</span>
                   )}

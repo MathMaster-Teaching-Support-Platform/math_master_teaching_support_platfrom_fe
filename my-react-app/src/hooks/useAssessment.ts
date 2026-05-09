@@ -494,7 +494,7 @@ export function useDistributeQuestionPoints() {
         strategy,
         scale,
       }),
-    onMutate: async ({ assessmentId, totalPoints, scale = 2 }) => {
+    onMutate: async ({ assessmentId, totalPoints, scale = 1 }) => {
       await queryClient.cancelQueries({ queryKey: assessmentKeys.questions(assessmentId) });
 
       const previousQuestions = queryClient.getQueryData<ApiResponse<AssessmentQuestionItem[]>>(

@@ -224,7 +224,6 @@ export function TemplateDashboard() {
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [filterChapterId, setFilterChapterId] = useState('');
-  const [filterLessonId, setFilterLessonId] = useState('');
   const [page, setPage] = useState(0);
   // Page size is now teacher-controllable via the Pagination footer. Defaults
   // to 9 (clean 3×3 desktop grid). Persists nothing here — the Pagination
@@ -255,13 +254,12 @@ export function TemplateDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, status, filterChapterId, filterGradeId, filterLessonId, filterSubjectId]);
+  }, [debouncedSearch, status, filterChapterId, filterGradeId, filterSubjectId]);
 
   const hasAnyFilter = !!(
     filterGradeId ||
     filterSubjectId ||
-    filterChapterId ||
-    filterLessonId
+    filterChapterId
   );
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
@@ -282,10 +280,7 @@ export function TemplateDashboard() {
   const unpublishMutation = useUnpublishTemplate();
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
-  const displayTemplates = useMemo(() => {
-    if (!filterLessonId) return templates;
-    return templates.filter((t) => t.lessonId === filterLessonId);
-  }, [templates, filterLessonId]);
+  const displayTemplates = templates;
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
@@ -486,27 +481,23 @@ export function TemplateDashboard() {
 
           <div className="space-y-2 mb-3">
             <CurriculumHierarchyFilter
+              depth="chapter"
               gradeId={filterGradeId}
               subjectId={filterSubjectId}
               chapterId={filterChapterId}
-              lessonId={filterLessonId}
               onGradeChange={(id) => {
                 setFilterGradeId(id);
                 setFilterSubjectId('');
                 setFilterChapterId('');
-                setFilterLessonId('');
               }}
               onSubjectChange={(id) => {
                 setFilterSubjectId(id);
                 setFilterChapterId('');
-                setFilterLessonId('');
               }}
               onChapterChange={(id) => {
                 setFilterChapterId(id);
-                setFilterLessonId('');
               }}
-              onLessonChange={setFilterLessonId}
-              footnote="API đang lọc theo khối và chương; chọn bài để lọc thêm trên trang hiện tại."
+              footnote="API đang lọc theo khối và chương."
             />
             {hasAnyFilter && (
               <button
@@ -515,7 +506,6 @@ export function TemplateDashboard() {
                   setFilterGradeId('');
                   setFilterSubjectId('');
                   setFilterChapterId('');
-                  setFilterLessonId('');
                 }}
                 className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] hover:text-[#141413] underline underline-offset-2 transition-colors"
               >

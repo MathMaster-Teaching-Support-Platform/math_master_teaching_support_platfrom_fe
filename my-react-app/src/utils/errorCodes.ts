@@ -191,6 +191,36 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Failed to update lesson': 'Không thể cập nhật bài học.',
   'Failed to delete lesson': 'Không thể xóa bài học.',
 
+  // Exam matrix
+  'Exam matrix not found': 'Không tìm thấy ma trận đề.',
+  'Assessment already has an exam matrix': 'Bài kiểm tra này đã có ma trận đề.',
+  'Assessment must be linked to a lesson to create matrix': 'Bài kiểm tra phải được liên kết với bài học trước khi tạo ma trận.',
+  'Exam matrix is locked and cannot be modified': 'Ma trận đề đã bị khóa và không thể chỉnh sửa.',
+  'Matrix cell not found': 'Không tìm thấy ô ma trận.',
+  'Matrix validation failed': 'Ma trận đề không hợp lệ. Vui lòng kiểm tra lại.',
+  'Matrix must be approved before assessment can be published': 'Ma trận đề phải được phê duyệt trước khi công khai bài kiểm tra.',
+  'Exam matrix is already approved and cannot be modified. Reset the matrix first.':
+    'Ma trận đề đã được phê duyệt. Đặt lại về nháp trước khi chỉnh sửa.',
+  'Cannot approve matrix while assessment is already published or closed':
+    'Không thể phê duyệt ma trận khi bài kiểm tra đã công khai hoặc đã đóng.',
+  'Only an APPROVED matrix can be reset to DRAFT': 'Chỉ ma trận đã phê duyệt mới có thể đặt lại về nháp.',
+  'Exam matrix row not found': 'Không tìm thấy dòng ma trận.',
+  'Question bank grade does not match matrix grade': 'Lớp của ngân hàng câu hỏi không khớp với ma trận.',
+  'Question bank subject does not match matrix subject': 'Môn học của ngân hàng câu hỏi không khớp với ma trận.',
+  'Row grade must belong to the same school level (cấp) as the matrix':
+    'Lớp của dòng phải thuộc cùng cấp học với ma trận.',
+  'Failed to fetch exam matrix': 'Không thể tải ma trận đề.',
+  'Failed to fetch exam matrices': 'Không thể tải danh sách ma trận đề.',
+  'Failed to create exam matrix': 'Không thể tạo ma trận đề.',
+  'Failed to update exam matrix': 'Không thể cập nhật ma trận đề.',
+  'Failed to delete exam matrix': 'Không thể xóa ma trận đề.',
+  'Failed to validate exam matrix': 'Không thể kiểm tra ma trận đề.',
+  'Failed to approve exam matrix': 'Không thể phê duyệt ma trận đề.',
+  'Failed to reset exam matrix': 'Không thể đặt lại ma trận đề.',
+  'Failed to add matrix row': 'Không thể thêm dòng ma trận.',
+  'Failed to remove matrix row': 'Không thể xóa dòng ma trận.',
+  'Failed to update matrix cells': 'Không thể cập nhật ô ma trận.',
+
   // Misc services
   'Failed to fetch chapters by subject': 'Không thể tải chương theo môn học.',
   'Failed to fetch grades': 'Không thể tải danh sách cấp độ.',
@@ -234,6 +264,19 @@ export const ERROR_MESSAGES: Record<number, string> = {
 
   // Subscription errors
   1166: 'Bạn không đủ token để thanh toán dịch vụ, vui lòng mua gói.',
+
+  // Exam matrix errors
+  1049: 'Không tìm thấy ma trận đề.',
+  1050: 'Bài kiểm tra này đã có ma trận đề.',
+  1051: 'Bài kiểm tra phải được liên kết với bài học trước khi tạo ma trận.',
+  1053: 'Ma trận đề đã bị khóa và không thể chỉnh sửa.',
+  1054: 'Không tìm thấy ô ma trận.',
+  1055: 'Ma trận đề không hợp lệ. Vui lòng kiểm tra lại.',
+  1056: 'Ma trận đề phải được phê duyệt trước khi công khai bài kiểm tra.',
+  1107: 'Chỉ ma trận đã phê duyệt mới có thể đặt lại về nháp.',
+  1126: 'Không tìm thấy dòng ma trận.',
+  1204: 'Lớp của ngân hàng câu hỏi không khớp với ma trận.',
+  1205: 'Môn học của ngân hàng câu hỏi không khớp với ma trận.',
 
   // Generic errors
   9999: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.',

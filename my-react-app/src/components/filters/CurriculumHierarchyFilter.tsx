@@ -11,11 +11,11 @@ export interface CurriculumHierarchyFilterProps {
   gradeId: string;
   subjectId: string;
   chapterId: string;
-  lessonId: string;
+  lessonId?: string;
   onGradeChange: (id: string) => void;
   onSubjectChange: (id: string) => void;
   onChapterChange: (id: string) => void;
-  onLessonChange: (id: string) => void;
+  onLessonChange?: (id: string) => void;
   /** Default `lesson` — full Lớp → Môn → Chương → Bài */
   depth?: CurriculumHierarchyDepth;
   disabled?: boolean;
@@ -29,11 +29,11 @@ export function CurriculumHierarchyFilter({
   gradeId,
   subjectId,
   chapterId,
-  lessonId,
+  lessonId = '',
   onGradeChange,
   onSubjectChange,
   onChapterChange,
-  onLessonChange,
+  onLessonChange = () => {},
   depth = 'lesson',
   disabled = false,
   className = '',

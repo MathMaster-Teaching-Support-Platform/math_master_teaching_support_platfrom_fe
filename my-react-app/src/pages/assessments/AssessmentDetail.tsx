@@ -279,7 +279,7 @@ export default function AssessmentDetail() {
 
       questions.forEach((q) => {
         const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
-        newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
+        newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(1);
       });
     } else {
       // Distribute proportionally by cognitive level
@@ -301,7 +301,7 @@ export default function AssessmentDetail() {
 
         levelQuestions.forEach((q) => {
           const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
-          newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
+          newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(1);
         });
       }
     }
@@ -932,7 +932,7 @@ export default function AssessmentDetail() {
                                                   pointsDraft[questionId] ||
                                                     String(question.points || 0)
                                                 );
-                                                const pointPerClause = (totalPoints / 4).toFixed(3);
+                                                const pointPerClause = (totalPoints / 4).toFixed(1);
                                                 return (
                                                   <div
                                                     style={{
@@ -995,7 +995,7 @@ export default function AssessmentDetail() {
                 {/* Auto distribute */}
                 <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
                   <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] m-0 mb-2">
-                    Tự động phân điểm theo mức độ câu hỏi
+                    Tự động phân điểm theo độ khó câu hỏi
                   </p>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mb-3 leading-relaxed">
                     💡 Câu hỏi Đúng/Sai (TF): mỗi mệnh đề đúng = tổng điểm câu ÷ số mệnh đề.

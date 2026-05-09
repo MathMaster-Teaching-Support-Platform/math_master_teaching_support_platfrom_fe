@@ -590,8 +590,7 @@ export function MatrixTable({
                 <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--synced">
                   <Check size={16} aria-hidden />
                   <span>
-                    Đã đồng bộ với máy chủ. Click vào ô số câu để chỉnh — kết thúc bằng{' '}
-                    <strong>Lưu thay đổi</strong>.
+                    Đã lưu thay đổi
                   </span>
                 </span>
               )}
@@ -658,8 +657,6 @@ export function MatrixTable({
               ))}
               <th className="matrix-th matrix-th--total-type" rowSpan={2}>
                 Tổng
-                <br />
-                chủ đề
               </th>
               <th className="matrix-th matrix-th--total-type" rowSpan={2}>
                 Tỉ lệ

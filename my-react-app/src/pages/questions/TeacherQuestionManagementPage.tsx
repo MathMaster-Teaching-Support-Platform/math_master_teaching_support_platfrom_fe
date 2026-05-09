@@ -80,13 +80,11 @@ export default function TeacherQuestionManagementPage() {
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [filterChapterId, setFilterChapterId] = useState('');
-  const [filterLessonId, setFilterLessonId] = useState('');
-
   const debouncedSearchName = useDebounce(searchName, 300);
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchName, pageSize, filterGradeId, filterChapterId, filterLessonId]);
+  }, [debouncedSearchName, pageSize, filterGradeId, filterChapterId]);
 
   const queryParams = useMemo(
     () => ({
@@ -117,10 +115,7 @@ export default function TeacherQuestionManagementPage() {
     chapterId: filterChapterId,
   });
 
-  const displayedQuestions = useMemo(() => {
-    if (!filterLessonId) return questions;
-    return questions.filter((q) => q.lessonId === filterLessonId);
-  }, [questions, filterLessonId]);
+  const displayedQuestions = questions;
 
   const totalPages =
     data?.result?.totalPages ??
@@ -235,8 +230,7 @@ export default function TeacherQuestionManagementPage() {
     !!searchName.trim() ||
     !!filterGradeId ||
     !!filterSubjectId ||
-    !!filterChapterId ||
-    !!filterLessonId;
+    !!filterChapterId;
 
   const quickLinks = [
     {
@@ -387,27 +381,23 @@ export default function TeacherQuestionManagementPage() {
           </div>
 
           <CurriculumHierarchyFilter
+            depth="chapter"
             gradeId={filterGradeId}
             subjectId={filterSubjectId}
             chapterId={filterChapterId}
-            lessonId={filterLessonId}
             onGradeChange={(id) => {
               setFilterGradeId(id);
               setFilterSubjectId('');
               setFilterChapterId('');
-              setFilterLessonId('');
             }}
             onSubjectChange={(id) => {
               setFilterSubjectId(id);
               setFilterChapterId('');
-              setFilterLessonId('');
             }}
             onChapterChange={(id) => {
               setFilterChapterId(id);
-              setFilterLessonId('');
             }}
-            onLessonChange={setFilterLessonId}
-            footnote="API lọc theo khối/chương; chọn bài để lọc thêm trên trang hiện tại."
+            footnote="API lọc theo khối/chương."
           />
 
           {/* ── Toolbar ── */}
@@ -511,7 +501,6 @@ export default function TeacherQuestionManagementPage() {
                     setFilterGradeId('');
                     setFilterSubjectId('');
                     setFilterChapterId('');
-                    setFilterLessonId('');
                   }}
                   className="mt-1 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
                 >
