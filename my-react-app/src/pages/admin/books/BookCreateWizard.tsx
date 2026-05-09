@@ -102,7 +102,12 @@ const BookCreateWizard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (stepIdx > 0 && !book?.pdfPath) {
+    // Khi đổi cuốn trong bộ, detail query của cuốn mới có khoảng trống book === undefined.
+    // Không được coi là "chưa có PDF" — tránh nhảy oạt về bước 1 trong lúc đang fetch.
+    if (!activeBookId) return;
+    if (book?.id !== activeBookId) return;
+
+    if (stepIdx > 0 && !book.pdfPath) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStepIdx(0);
       return;
@@ -111,10 +116,10 @@ const BookCreateWizard: React.FC = () => {
       setStepIdx(1);
       return;
     }
-    if (stepIdx > 2 && book?.status !== 'OCR_DONE') {
+    if (stepIdx > 2 && book.status !== 'OCR_DONE') {
       setStepIdx(2);
     }
-  }, [book, stepIdx, seriesHasAnyMapping]);
+  }, [book, activeBookId, stepIdx, seriesHasAnyMapping]);
 
   const handleBookCreated = ({ bookId, seriesId }: { bookId: string; seriesId: string }) => {
     setSeriesId(seriesId);
