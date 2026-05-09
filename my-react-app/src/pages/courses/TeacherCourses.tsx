@@ -1,3 +1,4 @@
+import { useQueries } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -33,6 +34,7 @@ import {
   useSubmitCourseForReview,
   useTeacherCourses,
 } from '../../hooks/useCourses';
+import { CourseService } from '../../services/api/course.service';
 import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
@@ -660,6 +662,8 @@ const TeacherCourses: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<CourseFilterStatus>('all');
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -668,7 +672,7 @@ const TeacherCourses: React.FC = () => {
   const { schoolGrades } = useCurriculumHierarchyCatalog({
     gradeId: filterGradeId,
     subjectId: filterSubjectId,
-    chapterId: '',
+    chapterId: filterChapterId,
   });
   const createMutation = useCreateCourse();
   const deleteMutation = useDeleteCourse();
@@ -686,6 +690,31 @@ const TeacherCourses: React.FC = () => {
     if (course.status === 'PENDING_REVIEW') return 'pending_review';
     return 'draft';
   };
+
+  const teacherUniqueCourseIds = useMemo(() => courses.map((c) => c.id), [courses]);
+  const needsLessonFilter = !!(filterChapterId || filterLessonId);
+
+  const teacherCourseLessonsQueries = useQueries({
+    queries: teacherUniqueCourseIds.map((courseId) => ({
+      queryKey: ['course-lessons', courseId],
+      queryFn: () => CourseService.getLessons(courseId),
+      enabled: needsLessonFilter && teacherUniqueCourseIds.length > 0,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const teacherLessonsMapByCourseId = useMemo(() => {
+    const map = new Map<string, { data?: any[]; isLoading: boolean }>();
+    if (!needsLessonFilter) return map;
+    teacherUniqueCourseIds.forEach((courseId, idx) => {
+      const query = teacherCourseLessonsQueries[idx];
+      map.set(courseId, {
+        data: query?.data?.result,
+        isLoading: query?.isLoading || false,
+      });
+    });
+    return map;
+  }, [teacherUniqueCourseIds, teacherCourseLessonsQueries, needsLessonFilter]);
 
   const filteredCourses = useMemo(() => {
     const selectedLevel =
@@ -708,9 +737,41 @@ const TeacherCourses: React.FC = () => {
           course.gradeLevel != null &&
           course.gradeLevel === selectedLevel);
       const subjectMatch = !filterSubjectId || course.subjectId === filterSubjectId;
-      return statusMatch && searchMatch && gradeMatch && subjectMatch;
+
+      if (!statusMatch || !searchMatch || !gradeMatch || !subjectMatch) return false;
+
+      if (needsLessonFilter) {
+        const lessonData = teacherLessonsMapByCourseId.get(course.id);
+        if (!lessonData || lessonData.isLoading || !lessonData.data) {
+          return true; // Keep visible while loading
+        }
+        
+        let hasMatch = false;
+        for (const lesson of lessonData.data) {
+          const chapterMatch = !filterChapterId || lesson.chapterId === filterChapterId;
+          const lessonMatch = !filterLessonId || lesson.lessonId === filterLessonId;
+          if (chapterMatch && lessonMatch) {
+            hasMatch = true;
+            break;
+          }
+        }
+        if (!hasMatch) return false;
+      }
+
+      return true;
     });
-  }, [courses, filterStatus, filterGradeId, filterSubjectId, search, schoolGrades]);
+  }, [
+    courses,
+    filterStatus,
+    filterGradeId,
+    filterSubjectId,
+    filterChapterId,
+    filterLessonId,
+    search,
+    schoolGrades,
+    needsLessonFilter,
+    teacherLessonsMapByCourseId,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -903,23 +964,33 @@ const TeacherCourses: React.FC = () => {
                 </label>
 
                 <CurriculumHierarchyFilter
-                  depth="subject"
                   className="lg:flex-1 lg:min-w-0 !p-4"
                   gradeId={filterGradeId}
                   subjectId={filterSubjectId}
-                  chapterId=""
-                  lessonId=""
+                  chapterId={filterChapterId}
+                  lessonId={filterLessonId}
                   onGradeChange={(id) => {
                     setFilterGradeId(id);
                     setFilterSubjectId('');
+                    setFilterChapterId('');
+                    setFilterLessonId('');
                     setCurrentPage(1);
                   }}
                   onSubjectChange={(id) => {
                     setFilterSubjectId(id);
+                    setFilterChapterId('');
+                    setFilterLessonId('');
                     setCurrentPage(1);
                   }}
-                  onChapterChange={() => {}}
-                  onLessonChange={() => {}}
+                  onChapterChange={(id) => {
+                    setFilterChapterId(id);
+                    setFilterLessonId('');
+                    setCurrentPage(1);
+                  }}
+                  onLessonChange={(id) => {
+                    setFilterLessonId(id);
+                    setCurrentPage(1);
+                  }}
                   hideTitle
                 />
               </div>

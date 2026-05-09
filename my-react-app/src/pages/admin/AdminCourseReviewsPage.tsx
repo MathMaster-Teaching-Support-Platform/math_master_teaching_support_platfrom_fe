@@ -1,3 +1,4 @@
+import { useQueries } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -23,6 +24,7 @@ import {
   usePendingReviewCourses,
   useRejectCourseReview,
 } from '../../hooks/useCourses';
+import { CourseService } from '../../services/api/course.service';
 import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { Link } from 'react-router-dom';
 import type { CourseResponse } from '../../types';
@@ -587,11 +589,13 @@ const AdminCourseReviewsPage: React.FC = () => {
   const [historyStatus, setHistoryStatus] = React.useState('ALL');
   const [filterGradeId, setFilterGradeId] = React.useState('');
   const [filterSubjectId, setFilterSubjectId] = React.useState('');
+  const [filterChapterId, setFilterChapterId] = React.useState('');
+  const [filterLessonId, setFilterLessonId] = React.useState('');
 
   const { schoolGrades } = useCurriculumHierarchyCatalog({
     gradeId: filterGradeId,
     subjectId: filterSubjectId,
-    chapterId: '',
+    chapterId: filterChapterId,
   });
 
   const pendingQuery = usePendingReviewCourses(pendingPage, PAGE_SIZE);
@@ -603,24 +607,75 @@ const AdminCourseReviewsPage: React.FC = () => {
 
   const pendingPageData = pendingQuery.data?.result;
   const coursesPendingRaw = pendingPageData?.content ?? [];
+  
+  const historyPageData = historyQuery.data?.result;
+  const coursesHistoryRaw = historyPageData?.content ?? [];
+
+  const combinedUniqueCourseIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    coursesPendingRaw.forEach(c => ids.add(c.id));
+    coursesHistoryRaw.forEach(c => ids.add(c.id));
+    return Array.from(ids);
+  }, [coursesPendingRaw, coursesHistoryRaw]);
+
+  const needsLessonFilter = !!(filterChapterId || filterLessonId);
+
+  const adminCourseLessonsQueries = useQueries({
+    queries: combinedUniqueCourseIds.map((courseId) => ({
+      queryKey: ['course-lessons', courseId],
+      queryFn: () => CourseService.getLessons(courseId),
+      enabled: needsLessonFilter && combinedUniqueCourseIds.length > 0,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const adminLessonsMapByCourseId = React.useMemo(() => {
+    const map = new Map<string, { data?: any[]; isLoading: boolean }>();
+    if (!needsLessonFilter) return map;
+    combinedUniqueCourseIds.forEach((courseId, idx) => {
+      const query = adminCourseLessonsQueries[idx];
+      map.set(courseId, {
+        data: query?.data?.result,
+        isLoading: query?.isLoading || false,
+      });
+    });
+    return map;
+  }, [combinedUniqueCourseIds, adminCourseLessonsQueries, needsLessonFilter]);
+
+  const filterCourseByLesson = React.useCallback((course: CourseResponse) => {
+    if (!needsLessonFilter) return true;
+    const lessonData = adminLessonsMapByCourseId.get(course.id);
+    if (!lessonData || lessonData.isLoading || !lessonData.data) {
+      return true; // Keep visible while loading
+    }
+    let hasMatch = false;
+    for (const lesson of lessonData.data) {
+      const chapterMatch = !filterChapterId || lesson.chapterId === filterChapterId;
+      const lessonMatch = !filterLessonId || lesson.lessonId === filterLessonId;
+      if (chapterMatch && lessonMatch) {
+        hasMatch = true;
+        break;
+      }
+    }
+    return hasMatch;
+  }, [needsLessonFilter, adminLessonsMapByCourseId, filterChapterId, filterLessonId]);
+
   const coursesPending = React.useMemo(
     () =>
       coursesPendingRaw.filter((c) =>
-        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades)
+        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades) && filterCourseByLesson(c)
       ),
-    [coursesPendingRaw, filterGradeId, filterSubjectId, schoolGrades]
+    [coursesPendingRaw, filterGradeId, filterSubjectId, schoolGrades, filterCourseByLesson]
   );
   const totalPagesPending = pendingPageData?.totalPages ?? 1;
   const pendingTotal = pickTotalElements(pendingQuery.data);
 
-  const historyPageData = historyQuery.data?.result;
-  const coursesHistoryRaw = historyPageData?.content ?? [];
   const coursesHistory = React.useMemo(
     () =>
       coursesHistoryRaw.filter((c) =>
-        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades)
+        entityMatchesGradeSubject(c, filterGradeId, filterSubjectId, schoolGrades) && filterCourseByLesson(c)
       ),
-    [coursesHistoryRaw, filterGradeId, filterSubjectId, schoolGrades]
+    [coursesHistoryRaw, filterGradeId, filterSubjectId, schoolGrades, filterCourseByLesson]
   );
   const totalPagesHistory = historyPageData?.totalPages ?? 1;
   const historyListTotal = pickTotalElements(historyQuery.data);
@@ -726,19 +781,29 @@ const AdminCourseReviewsPage: React.FC = () => {
           </div>
 
           <CurriculumHierarchyFilter
-            depth="subject"
             gradeId={filterGradeId}
             subjectId={filterSubjectId}
-            chapterId=""
-            lessonId=""
+            chapterId={filterChapterId}
+            lessonId={filterLessonId}
             onGradeChange={(id) => {
               setFilterGradeId(id);
               setFilterSubjectId('');
+              setFilterChapterId('');
+              setFilterLessonId('');
             }}
-            onSubjectChange={setFilterSubjectId}
-            onChapterChange={() => {}}
-            onLessonChange={() => {}}
-            footnote="Lọc theo khối/môn trên danh sách trang hiện tại."
+            onSubjectChange={(id) => {
+              setFilterSubjectId(id);
+              setFilterChapterId('');
+              setFilterLessonId('');
+            }}
+            onChapterChange={(id) => {
+              setFilterChapterId(id);
+              setFilterLessonId('');
+            }}
+            onLessonChange={(id) => {
+              setFilterLessonId(id);
+            }}
+            footnote="Lọc theo nội dung SGK trên danh sách trang hiện tại."
           />
 
           {/* Mode tabs — segmented control like mindmaps */}
