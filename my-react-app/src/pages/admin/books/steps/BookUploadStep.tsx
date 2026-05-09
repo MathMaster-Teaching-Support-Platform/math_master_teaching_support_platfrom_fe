@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   Plus,
+  RefreshCw,
   Trash2,
 } from 'lucide-react';
 import {
@@ -171,6 +172,14 @@ const BookUploadStep: React.FC<Props> = ({
   const isSavingMetadata = createBook.isPending || updateBook.isPending;
   const isUploading = uploadPdf.isPending;
   const isDeletingBook = deleteBook.isPending;
+  const hasServerPdf = Boolean(!isAddingAnother && book?.pdfPath);
+
+  let uploadButtonIcon: React.ReactNode = <UploadCloud size={14} />;
+  if (isUploading) {
+    uploadButtonIcon = <Loader2 size={14} className="animate-spin" />;
+  } else if (hasServerPdf) {
+    uploadButtonIcon = <RefreshCw size={14} />;
+  }
 
   const startAddAnotherBook = () => {
     setError(null);
@@ -421,9 +430,18 @@ const BookUploadStep: React.FC<Props> = ({
           <FileText size={16} /> File PDF nguồn
         </h3>
         {!isAddingAnother && book?.pdfPath ? (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 text-sm text-emerald-700">
-            <CheckCircle2 size={16} />
-            Đã upload PDF thành công.
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 text-sm text-emerald-800">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Đã có PDF trên server (đường dẫn trong CSDL).</p>
+                <p className="mt-1 text-xs text-emerald-900/85 leading-relaxed">
+                  Preview lỗi 404 / NoSuchKey thường do file chỉ tồn tại trên MinIO của máy khác (ví dụ đã
+                  upload ở local). Chọn lại file PDF và bấm <strong>Thay thế PDF trên server</strong>{' '}
+                  để ghi đè lên MinIO hiện tại.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-xs text-slate-500 mb-2">
@@ -445,8 +463,8 @@ const BookUploadStep: React.FC<Props> = ({
             disabled={!pdfFile || !book?.id || isUploading || isAddingAnother}
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
           >
-            {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-            Upload PDF
+            {uploadButtonIcon}
+            {hasServerPdf ? 'Thay thế PDF trên server' : 'Upload PDF'}
           </button>
           {!isAddingAnother && (
             <button
