@@ -573,14 +573,24 @@ const AISlideGenerator: React.FC = () => {
   selectedGeneratedFileIdRef.current = selectedGeneratedFileId;
 
   const loadGeneratedFiles = useCallback(
-    async (targetLessonId?: string, options?: { showLoading?: boolean }) => {
+    async (
+      targetFilter?:
+        | string
+        | {
+            gradeId?: string;
+            subjectId?: string;
+            chapterId?: string;
+            lessonId?: string;
+          },
+      options?: { showLoading?: boolean }
+    ) => {
       const showLoading = options?.showLoading ?? true;
       if (showLoading) {
         setLoadingGeneratedFiles(true);
       }
 
       try {
-        const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
+        const response = await LessonSlideService.getGeneratedFiles(targetFilter);
         const files = response.result || [];
         setGeneratedFiles(files);
 
@@ -605,6 +615,16 @@ const AISlideGenerator: React.FC = () => {
     },
     []
   );
+
+  useEffect(() => {
+    if (activeMainTab !== 'MANAGE') return;
+    void loadGeneratedFiles({
+      gradeId: libGradeId || undefined,
+      subjectId: libSubjectId || undefined,
+      chapterId: libChapterId || undefined,
+      lessonId: libLessonId || undefined,
+    });
+  }, [activeMainTab, libGradeId, libSubjectId, libChapterId, libLessonId, loadGeneratedFiles]);
 
   const loadLessonDetailFromGeneratedFile = useCallback(
     async (generatedFile: LessonSlideGeneratedFile) => {

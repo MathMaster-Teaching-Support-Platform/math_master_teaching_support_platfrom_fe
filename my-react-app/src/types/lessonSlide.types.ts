@@ -98,6 +98,9 @@ export interface PageResult<T> {
 }
 
 export interface PublicGeneratedSlidesQuery {
+  gradeId?: string;
+  subjectId?: string;
+  chapterId?: string;
   lessonId?: string;
   keyword?: string;
   page?: number;

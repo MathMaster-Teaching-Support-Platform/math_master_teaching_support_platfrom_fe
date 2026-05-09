@@ -378,13 +378,19 @@ export class LessonSlideService {
   }
 
   static async getGeneratedFiles(
-    lessonId?: string
+    filters?: string | PublicGeneratedSlidesQuery
   ): Promise<ApiEnvelope<LessonSlideGeneratedFile[]>> {
     const headers = await this.getAuthHeaders(false);
     const query = new URLSearchParams();
 
-    if (lessonId) {
-      query.set('lessonId', lessonId);
+    if (typeof filters === 'string') {
+      query.set('lessonId', filters);
+    } else if (filters) {
+      if (filters.gradeId) query.set('gradeId', filters.gradeId);
+      if (filters.subjectId) query.set('subjectId', filters.subjectId);
+      if (filters.chapterId) query.set('chapterId', filters.chapterId);
+      if (filters.lessonId) query.set('lessonId', filters.lessonId);
+      if (filters.keyword) query.set('keyword', filters.keyword);
     }
 
     const queryString = query.toString();
@@ -734,6 +740,9 @@ export class LessonSlideService {
     params: PublicGeneratedSlidesQuery = {}
   ): Promise<ApiEnvelope<PageResult<LessonSlideGeneratedFile>>> {
     const query = new URLSearchParams();
+    if (params.gradeId) query.set('gradeId', params.gradeId);
+    if (params.subjectId) query.set('subjectId', params.subjectId);
+    if (params.chapterId) query.set('chapterId', params.chapterId);
     if (params.lessonId) query.set('lessonId', params.lessonId);
     if (params.keyword) query.set('keyword', params.keyword);
     if (typeof params.page === 'number') query.set('page', String(params.page));
