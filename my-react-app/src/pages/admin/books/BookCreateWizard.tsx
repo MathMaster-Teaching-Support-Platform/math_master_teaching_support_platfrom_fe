@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -49,16 +49,35 @@ const BookCreateWizard: React.FC = () => {
     },
     { enabled: Boolean(seriesLookupId) }
   );
-  const seriesBooks = useMemo(
-    () => (seriesBooksQuery.data?.result?.content ?? []).sort((a, b) => a.title.localeCompare(b.title, 'vi')),
-    [seriesBooksQuery.data]
-  );
+  const seriesBooksRaw = useMemo(() => {
+    const rows = seriesBooksQuery.data?.result?.content ?? [];
+    return [...rows].sort((a, b) => a.title.localeCompare(b.title, 'vi'));
+  }, [seriesBooksQuery.data]);
+
+  /** Tránh nháy danh sách rỗng khi refetch — không reset volume đang chọn / không làm sai điều kiện mapping. */
+  const seriesSnapshotRef = useRef(seriesBooksRaw);
+  useEffect(() => {
+    if (seriesBooksRaw.length > 0) {
+      seriesSnapshotRef.current = seriesBooksRaw;
+    }
+  }, [seriesBooksRaw]);
+  const listBusy = seriesBooksQuery.isFetching;
+  const seriesBooks =
+    seriesBooksRaw.length > 0
+      ? seriesBooksRaw
+      : listBusy && seriesSnapshotRef.current.length > 0
+        ? seriesSnapshotRef.current
+        : seriesBooksRaw;
+
   /** URL /wizard/:id là bookSeriesId — không gọi GET /books/:id cho đến khi biết list theo bộ rỗng (fallback: id là bookId). */
   const fallbackBookFetchEnabled =
-    Boolean(routeId) && seriesBooksQuery.isSuccess && seriesBooks.length === 0;
+    Boolean(routeId) &&
+    seriesBooksQuery.isSuccess &&
+    seriesBooksRaw.length === 0 &&
+    !(listBusy && seriesSnapshotRef.current.length > 0);
   const fallbackBookQuery = useBook(routeId, { enabled: fallbackBookFetchEnabled });
-  const { data: bookData } = useBook(activeBookId);
-  const book = bookData?.result;
+  const activeBookQuery = useBook(activeBookId);
+  const book = activeBookQuery.data?.result;
   const seriesHasAnyMapping = useMemo(() => {
     if (seriesBooks.length > 0) {
       return seriesBooks.some((seriesBook) => (seriesBook.mappedLessonCount ?? 0) > 0);
@@ -106,6 +125,8 @@ const BookCreateWizard: React.FC = () => {
     // Không được coi là "chưa có PDF" — tránh nhảy oạt về bước 1 trong lúc đang fetch.
     if (!activeBookId) return;
     if (book?.id !== activeBookId) return;
+    // Refetch có thể trả payload tạm thiếu pdfPath/status → không kẹp bước trong lúc đó.
+    if (activeBookQuery.isFetching || activeBookQuery.isPending) return;
 
     if (stepIdx > 0 && !book.pdfPath) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -119,7 +140,14 @@ const BookCreateWizard: React.FC = () => {
     if (stepIdx > 2 && book.status !== 'OCR_DONE') {
       setStepIdx(2);
     }
-  }, [book, activeBookId, stepIdx, seriesHasAnyMapping]);
+  }, [
+    book,
+    activeBookId,
+    stepIdx,
+    seriesHasAnyMapping,
+    activeBookQuery.isFetching,
+    activeBookQuery.isPending,
+  ]);
 
   const handleBookCreated = ({ bookId, seriesId }: { bookId: string; seriesId: string }) => {
     setSeriesId(seriesId);
