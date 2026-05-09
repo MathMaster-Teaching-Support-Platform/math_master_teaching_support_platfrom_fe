@@ -7,7 +7,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookOpen,
   Check,
@@ -40,6 +40,7 @@ import {
   useReorderCourseLessons,
   useUpdateCourseLesson,
   useUpdateSection,
+  invalidateCourseLessonsScope,
 } from '../../../hooks/useCourses';
 import { useChaptersBySubject } from '../../../hooks/useChapters';
 import { AuthService } from '../../../services/api/auth.service';
@@ -743,7 +744,6 @@ function EditLessonModal({
   onSuccess: () => void;
 }) {
   const [videoTitle, setVideoTitle] = useState(lesson.videoTitle || '');
-  const [orderIndex, setOrderIndex] = useState(lesson.orderIndex || 1);
   const [isFreePreview, setIsFreePreview] = useState(lesson.isFreePreview);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
@@ -759,7 +759,6 @@ function EditLessonModal({
         lessonId: lesson.id,
         request: {
           videoTitle,
-          orderIndex,
           isFreePreview,
         },
       },
@@ -811,18 +810,6 @@ function EditLessonModal({
               onChange={(e) => setVideoTitle(e.target.value)}
               placeholder="Tên hiển thị trên trình phát"
               disabled={updating}
-            />
-          </label>
-
-          <label className="clt-form-field">
-            <span className="clt-form-label">Thứ tự</span>
-            <input
-              type="number"
-              className="clt-input"
-              value={orderIndex}
-              onChange={(e) => setOrderIndex(parseInt(e.target.value, 10) || 1)}
-              disabled={updating}
-              min={1}
             />
           </label>
 
@@ -1032,24 +1019,30 @@ function SortableLessonItem({
         {!isSidebar && !readOnly && !isReorderMode && (
           <div className="clt-actions">
             <button
+              type="button"
               className="clt-action-btn"
               title="Sửa bài học"
+              aria-label="Sửa bài học"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(lesson);
               }}
             >
-              <Pencil size={14} />
+              <Pencil size={16} strokeWidth={2} aria-hidden />
+              <span className="clt-action-btn__label">Sửa</span>
             </button>
             <button
+              type="button"
               className="clt-action-btn danger"
               title="Xóa bài học"
+              aria-label="Xóa bài học"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete({ k: 'lesson', lessonId: lesson.id });
               }}
             >
-              <Trash2 size={14} />
+              <Trash2 size={16} strokeWidth={2} aria-hidden />
+              <span className="clt-action-btn__label">Xóa</span>
             </button>
           </div>
         )}
@@ -1165,8 +1158,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const [renameTarget, setRenameTarget] = useState<null | { id: string; value: string }>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  const queryClient = useQueryClient();
+  const bumpLessonCaches = () => void invalidateCourseLessonsScope(queryClient, courseId);
+
   const { data: courseData } = useCourseDetail(courseId);
-  const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
+  const { data: lessonsData, isLoading } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -1286,7 +1282,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             type: 'error',
             message: 'Không thể lưu thứ tự. Đã khôi phục dữ liệu từ máy chủ.',
           });
-          void refetch();
+          bumpLessonCaches();
         },
       }
     );
@@ -1751,7 +1747,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           course={course}
           existingLessons={lessons}
           onClose={() => setShowUpload(false)}
-          onSuccess={() => void refetch()}
+          onSuccess={bumpLessonCaches}
         />
       )}
 
@@ -1798,7 +1794,6 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 {
                   onSuccess: () => {
                     setDeleteTarget(null);
-                    void refetch();
                     showToast({ type: 'success', message: 'Đã xóa bài học.' });
                   },
                   onError: () => {
@@ -1812,7 +1807,6 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 {
                   onSuccess: () => {
                     setDeleteTarget(null);
-                    void refetch();
                     showToast({ type: 'success', message: 'Đã xóa tài liệu.' });
                   },
                   onError: () => {
@@ -1826,7 +1820,6 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 {
                   onSuccess: () => {
                     setDeleteTarget(null);
-                    void refetch();
                     showToast({ type: 'success', message: 'Đã xóa phần.' });
                   },
                   onError: () => {
@@ -1884,7 +1877,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           courseId={courseId}
           lesson={editingLesson}
           onClose={() => setEditingLesson(null)}
-          onSuccess={() => void refetch()}
+          onSuccess={() => {}}
         />
       )}
     </div>

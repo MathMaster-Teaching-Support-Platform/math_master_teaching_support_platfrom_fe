@@ -378,33 +378,73 @@
 
 .clt-actions {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  align-items: flex-start;
+  justify-content: flex-end;
+  margin-left: auto;
   opacity: 1;
-  transition: opacity 0.2s ease;
 }
 
 .clt-action-btn {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
+  box-sizing: border-box;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #5e5d59;
+  gap: 0.35rem;
+  border-radius: 8px;
+  border: 1px solid #e8e6dc;
+  background: #ffffff;
+  color: #475569;
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.05);
+}
+
+.clt-action-btn svg {
+  flex-shrink: 0;
+}
+
+.clt-action-btn__label {
+  white-space: nowrap;
 }
 
 .clt-action-btn:hover {
-  background: #f0eee6;
+  background: #f5f4ed;
+  border-color: #d1cfc5;
   color: #141413;
+}
+
+.clt-action-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #faf9f5, 0 0 0 4px #64748b;
+}
+
+.clt-action-btn.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fffafb;
 }
 
 .clt-action-btn.danger:hover {
   background: #fef2f2;
-  color: #ef4444;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.clt-action-btn.danger:focus-visible {
+  box-shadow: 0 0 0 2px #faf9f5, 0 0 0 4px #ef4444;
 }
 
 /* Section Title & Description — curriculum (badge + title one baseline row) */

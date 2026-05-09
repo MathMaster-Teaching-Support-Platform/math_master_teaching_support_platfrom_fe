@@ -75,9 +75,7 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
           path: `/teacher/courses/${segments[2]}`,
         });
 
-        if (segments[3] === 'review') {
-          breadcrumbs.push({ label: 'Quản lý khóa học' });
-        } else if (segments[3] === 'lessons') {
+        if (segments[3] === 'lessons') {
           breadcrumbs.push({ label: 'Bài học' });
         } else if (segments[3] === 'assessments') {
           breadcrumbs.push({ label: UI_TEXT.QUIZ });

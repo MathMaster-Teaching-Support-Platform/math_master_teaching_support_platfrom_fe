@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
@@ -176,7 +176,6 @@ function CourseDetailLoadingOverlay({ message }: Readonly<{ message: string }>) 
 
 const TeacherCourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -347,8 +346,6 @@ const TeacherCourseDetail: React.FC = () => {
     { id: 'reviews' as const, label: 'Đánh giá', icon: Star, count: course.ratingCount },
   ];
 
-  const isReviewShellPath = /\/teacher\/courses\/[^/]+\/review\/?$/.test(location.pathname);
-
   return (
     <DashboardLayout
       role="teacher"
@@ -360,17 +357,7 @@ const TeacherCourseDetail: React.FC = () => {
           <div className="rounded-xl bg-[#FAF9F5]/80 border border-[#E8E6DC]/80 px-4 py-3">
             <CourseBreadcrumb
               homePath="/teacher/courses"
-              items={
-                isReviewShellPath
-                  ? [
-                      {
-                        label: course.title,
-                        path: `/teacher/courses/${course.id}`,
-                      },
-                      { label: 'Quản lý khóa học' },
-                    ]
-                  : [{ label: course.title }]
-              }
+              items={[{ label: course.title }]}
               courseTitle={course.title}
             />
           </div>
