@@ -85,13 +85,45 @@ const BLOCK_TYPES = [
 
 const ABSOLUTE_URL_REGEX = /^(https?:)?\/\//i;
 
+/**
+ * When VITE_API_BASE_URL points at another origin than the SPA (e.g. sep.* vs apex),
+ * rewriting `/api/...` to a same-origin path lets nginx on the SPA host proxy requests — avoids
+ * CORS preflight rejecting `Authorization` on credentialed image fetches.
+ */
+function rewriteApiUrlForBrowserOrigin(pathname: string, search: string, hash: string): string | null {
+  if (typeof window === 'undefined') return null;
+  if (!pathname.startsWith('/api')) return null;
+  const base = API_BASE_URL?.trim();
+  if (!base || !(base.startsWith('http://') || base.startsWith('https://'))) return null;
+  try {
+    const apiOrigin = new URL(base).origin;
+    if (window.location.origin === apiOrigin) return null;
+    return `${pathname}${search}${hash}`;
+  } catch {
+    return null;
+  }
+}
+
 const resolveAssetUrl = (value?: string | null): string => {
   const raw = value?.trim();
   if (!raw) return '';
-  if (raw.startsWith('data:') || raw.startsWith('blob:') || ABSOLUTE_URL_REGEX.test(raw))
+  if (raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
+
+  if (ABSOLUTE_URL_REGEX.test(raw)) {
+    try {
+      const u = new URL(raw.startsWith('//') ? `https:${raw}` : raw, globalThis.location.origin);
+      const rewritten = rewriteApiUrlForBrowserOrigin(u.pathname, u.search, u.hash);
+      if (rewritten) return rewritten;
+    } catch {
+      /* ignore */
+    }
     return raw;
+  }
+
   if (raw.startsWith('/')) {
     if (!API_BASE_URL) return raw;
+    const rewritten = rewriteApiUrlForBrowserOrigin(raw, '', '');
+    if (rewritten) return rewritten;
     if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
       try {
         const apiUrl = new URL(API_BASE_URL);
