@@ -176,6 +176,13 @@
   line-height: 1.4;
 }
 
+.module-layout-container .sal-card-metrics .metric.highlight-green {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.25);
+  font-weight: 700;
+}
+
 /* ──────────────────────────────────────────
    Due date row
    ────────────────────────────────────────── */

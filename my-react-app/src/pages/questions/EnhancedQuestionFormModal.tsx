@@ -9,6 +9,7 @@ import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { questionService } from '../../services/questionService';
 import { useToast } from '../../context/ToastContext';
 import type { QuestionType, QuestionDifficulty, QuestionCognitiveLevel } from '../../types/question';
+import { tfAnswerToBooleans, tfBooleansToDSString } from '../../utils/questionHelpers';
 import './EnhancedQuestionFormModal.css';
 
 function extractEditableLatex(value: unknown): string {
@@ -87,6 +88,10 @@ export function EnhancedQuestionFormModal({
 
   const previewQuestionText = String(editorValue.questionText || '').trim();
   const previewCorrectAnswer = String(editorValue.correctAnswer || '').trim();
+  const previewAnswerDisplay =
+    questionType === 'TRUE_FALSE'
+      ? tfBooleansToDSString(tfAnswerToBooleans(previewCorrectAnswer))
+      : previewCorrectAnswer;
   const previewExplanation = explanation.trim();
   const previewTypeLabel = questionTypeLabels[questionType];
   const previewOptions = (editorValue.options as Record<string, unknown>) || {};
@@ -435,7 +440,7 @@ export function EnhancedQuestionFormModal({
                 <p className="mt-auto pt-3 border-t border-[#F0EEE6] font-[Be_Vietnam_Pro] text-[13px]">
                   <span className="text-[#87867F] font-medium">Đáp án:</span>{' '}
                   <span className="text-[#141413] font-semibold">
-                    {previewCorrectAnswer || 'Chưa có đáp án'}
+                    {previewAnswerDisplay || 'Chưa có đáp án'}
                   </span>
                 </p>
               </section>

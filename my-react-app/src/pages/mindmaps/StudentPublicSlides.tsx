@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Download, Eye, FileText, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { API_BASE_URL } from '../../config/api.config';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -53,11 +51,6 @@ const emptySlidePage = (): PageResult<LessonSlideGeneratedFile> => ({
 export default function StudentPublicSlides() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [gradeId, setGradeId] = useState('');
-  const [subjectId, setSubjectId] = useState('');
-  const [chapterId, setChapterId] = useState('');
-  const [lessonId, setLessonId] = useState('');
-
   const [slideKeyword, setSlideKeyword] = useState(() => searchParams.get('slideQ') || '');
   const [slideKeywordDebounced, setSlideKeywordDebounced] = useState(() =>
     (searchParams.get('slideQ') || '').trim()
@@ -84,16 +77,10 @@ export default function StudentPublicSlides() {
   const previewPdfObjectUrlRef = useRef<string | null>(null);
   const [slidesError, setSlidesError] = useState('');
 
-  const { lessons, loadingCatalog, catalogError } = useCurriculumHierarchyCatalog({
-    gradeId,
-    subjectId,
-    chapterId,
-  });
   const slidesQuery = useQuery({
     queryKey: [
       'public-slides',
       {
-        lessonId,
         keyword: slideKeywordDebounced,
         page: slidePage,
         size: slideSize,
@@ -103,7 +90,6 @@ export default function StudentPublicSlides() {
     ],
     queryFn: () =>
       LessonSlideService.getAllPublicGeneratedFiles({
-        lessonId: lessonId || undefined,
         keyword: slideKeywordDebounced || undefined,
         page: slidePage,
         size: slideSize,
@@ -114,11 +100,6 @@ export default function StudentPublicSlides() {
   });
 
   const loadingSlides = slidesQuery.isLoading || slidesQuery.isFetching;
-
-  const selectedLesson = useMemo(
-    () => lessons.find((lesson) => lesson.id === lessonId),
-    [lessons, lessonId]
-  );
 
   const formatFileSize = (sizeInBytes: number): string => {
     if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
@@ -153,38 +134,6 @@ export default function StudentPublicSlides() {
     setSearchParams(params, { replace: true });
   }, [slideKeyword, slidePage, slideSize, slideSortBy, slideDirection, setSearchParams]);
 
-  const resetResourceState = () => {
-    setSlidePage(0);
-    setSlideKeyword('');
-    setSlidesResult(emptySlidePage());
-  };
-
-  const handleGradeChange = (value: string) => {
-    setGradeId(value);
-    setSubjectId('');
-    setChapterId('');
-    setLessonId('');
-    resetResourceState();
-  };
-
-  const handleSubjectChange = (value: string) => {
-    setSubjectId(value);
-    setChapterId('');
-    setLessonId('');
-    resetResourceState();
-  };
-
-  const handleChapterChange = (value: string) => {
-    setChapterId(value);
-    setLessonId('');
-    resetResourceState();
-  };
-
-  const handleLessonChange = (value: string) => {
-    setLessonId(value);
-    resetResourceState();
-  };
-
   useEffect(() => {
     if (slidesQuery.data?.result) {
       const normalizedContent = (slidesQuery.data.result.content || []).filter(
@@ -202,23 +151,14 @@ export default function StudentPublicSlides() {
   }, [slidesQuery.data]);
 
   useEffect(() => {
-    if (catalogError instanceof Error) {
-      setSlidesError(catalogError.message);
-      return;
-    }
     if (slidesQuery.error instanceof Error) {
       setSlidesError(slidesQuery.error.message);
       return;
     }
-    if (!loadingCatalog && !loadingSlides) {
+    if (!loadingSlides) {
       setSlidesError('');
     }
-  }, [
-    catalogError,
-    slidesQuery.error,
-    loadingCatalog,
-    loadingSlides,
-  ]);
+  }, [slidesQuery.error, loadingSlides]);
 
   const handleDownloadSlide = async (generatedFileId: string) => {
     setDownloadingSlideId(generatedFileId);
@@ -298,17 +238,6 @@ export default function StudentPublicSlides() {
             </div>
           </div>
 
-          <CurriculumHierarchyFilter
-            gradeId={gradeId}
-            subjectId={subjectId}
-            chapterId={chapterId}
-            lessonId={lessonId}
-            onGradeChange={handleGradeChange}
-            onSubjectChange={handleSubjectChange}
-            onChapterChange={handleChapterChange}
-            onLessonChange={handleLessonChange}
-          />
-
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl shadow-[0px_0px_0px_1px_#E8E6DC] px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
@@ -375,29 +304,6 @@ export default function StudentPublicSlides() {
             </div>
           </div>
 
-          {/* ── Active lesson chip ── */}
-          {selectedLesson && (
-            <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
-              <div className="flex items-center gap-2">
-                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
-                  Bài học
-                </span>
-                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                  {selectedLesson.title}
-                </strong>
-              </div>
-              <div className="w-px h-4 bg-[#E8E6DC]" />
-              <div className="flex items-center gap-2">
-                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
-                  Kết quả
-                </span>
-                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                  {slidesResult.totalElements} slide
-                </strong>
-              </div>
-            </div>
-          )}
-
           {/* ── Loading skeleton ── */}
           {loadingSlides && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -424,7 +330,7 @@ export default function StudentPublicSlides() {
                 <FileText className="w-6 h-6" />
               </div>
               <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
-                Không có slide công khai phù hợp bộ lọc hiện tại.
+                Không có slide công khai phù hợp với từ khóa hiện tại.
               </p>
             </div>
           )}

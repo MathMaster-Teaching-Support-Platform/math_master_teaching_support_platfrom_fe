@@ -13,6 +13,7 @@ import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useSubjects } from '../../hooks/useSubjects';
 import { questionBulkImportService } from '../../services/questionBulkImportService';
 import type { QuestionExcelPreviewResponse, QuestionImportRequest } from '../../types/bulkImport';
+import { tfAnswerToBooleans, tfBooleansToDSString } from '../../utils/questionHelpers';
 import '../question-templates/template-bulk-import.css';
 
 interface Props {
@@ -54,11 +55,10 @@ function summarizeAnswer(data: QuestionImportRequest | null): string {
     case 'MULTIPLE_CHOICE':
       return `Đáp án: ${data.correctAnswer ?? '?'}`;
     case 'TRUE_FALSE': {
-      const correct = data.correctAnswer && data.correctAnswer.length > 0
-        ? data.correctAnswer
-        : '(tự suy ra)';
+      const raw = data.correctAnswer && data.correctAnswer.length > 0 ? data.correctAnswer : null;
+      const dsDisplay = raw ? tfBooleansToDSString(tfAnswerToBooleans(raw)) : '(tự suy ra)';
       const count = data.options ? Object.keys(data.options).length : 0;
-      return `Mệnh đề đúng: ${correct} · ${count} phát biểu`;
+      return `Đáp án: ${dsDisplay} · ${count} phát biểu`;
     }
     case 'SHORT_ANSWER': {
       const meta = data.generationMetadata ?? {};

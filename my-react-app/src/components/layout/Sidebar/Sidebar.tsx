@@ -106,7 +106,6 @@ const studentGroups: MenuGroup[] = [
       { path: '/student/public-slides', icon: Library, label: 'Slide' },
       { path: '/student/public-mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/student/assessments', icon: FileCheck2, label: 'Bài kiểm tra' },
-      { path: '/student/roadmap', icon: Workflow, label: 'Lộ trình' },
     ],
   },
   {

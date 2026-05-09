@@ -22,6 +22,7 @@ export interface StudentAssessmentResponse {
   cannotStartReason?: string;
   isRequired?: boolean;
   courseOrderIndex?: number;
+  lastScore?: number;
   /** Metadata CT — phục vụ lọc Lớp → Môn → Chương → Bài (và API query). */
   courseId?: string;
   schoolGradeId?: string;

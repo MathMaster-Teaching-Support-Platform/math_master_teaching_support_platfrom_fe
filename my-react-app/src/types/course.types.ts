@@ -262,7 +262,9 @@ export interface CourseAssessmentResponse {
   totalQuestions: number | null;
   totalPoints: number | null;
   submissionCount: number | null;
+  assessmentLessonIds: string[];
   matchedLessonCount: number;
+  matchedLessonIds: string[];
   matchedLessonTitles: string[];
   lessonMatched: boolean;
 }

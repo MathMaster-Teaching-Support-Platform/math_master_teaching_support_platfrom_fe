@@ -301,6 +301,18 @@
   border-color: rgba(5, 150, 105, 0.2);
 }
 
+.sat-chip-score {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: rgba(5, 150, 105, 0.25);
+}
+
+.sat-chip-attempts {
+  color: #4338ca;
+  background: #eef2ff;
+  border-color: rgba(67, 56, 202, 0.2);
+}
+
 .sat-chip-pass svg {
   color: #059669;
 }

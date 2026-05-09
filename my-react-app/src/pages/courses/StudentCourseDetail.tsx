@@ -422,8 +422,8 @@ const StudentCourseDetail: React.FC = () => {
                       enrollmentStatus={enrollment.status}
                     />
                   )}
-                  {activeTab === 'assessments' && (
-                    <StudentAssessmentsTab courseId={enrollment.courseId} />
+                  {activeTab === 'assessments' && course && (
+                    <StudentAssessmentsTab courseId={enrollment.courseId} course={course} />
                   )}
                   {activeTab === 'students' && (
                     <CourseStudentsTab courseId={enrollment.courseId} />
