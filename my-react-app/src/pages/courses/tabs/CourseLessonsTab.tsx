@@ -10,6 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useQuery } from '@tanstack/react-query';
 import {
   BookOpen,
+  Check,
   ChevronDown,
   Clock,
   FileText,
@@ -862,9 +863,40 @@ function EditLessonModal({
   );
 }
 
-function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
+function SortableLessonItem({
+  lesson,
+  isSidebar,
+  isPlaying,
+  readOnly,
+  isReorderMode,
+  showResources,
+  onSelect,
+  onToggleResources,
+  onUpdatePreview,
+  onEdit,
+  onDelete,
+  onAddMaterial,
+  onDownloadMaterial,
+  onRemoveMaterial,
+}: {
+  lesson: CourseLessonResponse;
+  isSidebar: boolean;
+  isPlaying: boolean;
+  readOnly: boolean;
+  isReorderMode: boolean;
+  showResources: boolean;
+  onSelect: (l: CourseLessonResponse) => void;
+  onToggleResources: (id: string) => void;
+  onUpdatePreview: (id: string, preview: boolean) => void;
+  onEdit: (l: CourseLessonResponse) => void;
+  onDelete: (target: CltDeleteTarget) => void;
+  onAddMaterial: (id: string, file: File) => void;
+  onDownloadMaterial: (l: CourseLessonResponse, m: LessonMaterial) => void;
+  onRemoveMaterial: (lessonId: string, materialId: string, name: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lesson.id,
+    disabled: !isReorderMode || isSidebar || readOnly,
   });
 
   const style = {
@@ -873,106 +905,247 @@ function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
     opacity: isDragging ? 0.6 : 1,
   };
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`clt-list-card ${isDragging ? 'is-dragging' : ''}`}
-      {...attributes}
-      {...listeners}
-    >
-      <div className="clt-drag-handle">
-        <GripVertical size={18} />
-      </div>
-      <span style={{ minWidth: 28, fontWeight: 800, color: '#3b82f6', fontSize: '0.9rem' }}>
-        #{lesson.orderIndex ?? '-'}
-      </span>
-      <div className="clt-lesson-info">
-        <div className="clt-lesson-title">{lesson.lessonTitle ?? 'Untitled lesson'}</div>
-        <div className="clt-lesson-subtitle">{lesson.videoTitle || 'No video title'}</div>
-      </div>
-      {lesson.isFreePreview && (
-        <span className="badge published" style={{ fontSize: '0.7rem' }}>
-          Xem trước
-        </span>
-      )}
-    </div>
-  );
-}
-
-function LessonReorderStrip({
-  lessons,
-  title,
-  disabled,
-  onReordered,
-}: {
-  lessons: CourseLessonResponse[];
-  title: string;
-  disabled?: boolean;
-  onReordered: (ordered: CourseLessonResponse[]) => void;
-}) {
-  const [items, setItems] = useState<CourseLessonResponse[]>(lessons);
-
-  useEffect(() => {
-    setItems(lessons);
-  }, [lessons]);
-
-  const sensors = useSensors(useSensor(PointerSensor));
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (disabled) return;
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = items.findIndex((l) => l.id === String(active.id));
-    const newIndex = items.findIndex((l) => l.id === String(over.id));
-    if (oldIndex < 0 || newIndex < 0) return;
-
-    const moved = arrayMove(items, oldIndex, newIndex).map((lesson, idx) => ({
-      ...lesson,
-      orderIndex: idx + 1,
-    }));
-    setItems(moved);
-    onReordered(moved);
-  };
+  const materialsList = parseLessonMaterials(lesson.materials);
 
   return (
-    <div
-      className="data-card"
-      style={{
-        marginBottom: '1rem',
-        opacity: disabled ? 0.7 : 1,
-        transition: 'opacity 0.2s ease',
-      }}
-    >
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-        <h4 style={{ margin: 0 }}>{title}</h4>
-        <span className="muted" style={{ fontSize: '0.82rem' }}>
-          {disabled ? 'Đang lưu thứ tự...' : 'Kéo thả để đổi thứ tự'}
-        </span>
-      </div>
-      <div style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext
-            items={items.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
+    <div ref={setNodeRef} style={style} className={isDragging ? 'is-dragging' : ''}>
+      <div
+        className={`${isSidebar ? 'clt-sidebar-lesson-row' : 'clt-list-card'} ${isReorderMode ? 'reorder-active' : ''}`}
+        onClick={() => !isReorderMode && onSelect(lesson)}
+        style={
+          isSidebar
+            ? {
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+                padding: '0.75rem 1rem',
+                background: isPlaying ? '#f1f5f9' : '#ffffff',
+                cursor: 'pointer',
+                borderLeft: isPlaying ? '3px solid #64748b' : '3px solid transparent',
+                borderBottom: '1px solid #f0eee6',
+                transition: 'all 0.2s ease',
+              }
+            : {
+                cursor: isReorderMode ? 'default' : 'pointer',
+                borderColor: isPlaying ? '#94a3b8' : undefined,
+                boxShadow: isPlaying ? '0 4px 12px rgba(71, 85, 105, 0.12)' : undefined,
+                ...(isReorderMode ? { background: '#fff' } : {}),
+              }
+        }
+      >
+        {isReorderMode && !isSidebar && !readOnly ? (
+          <div className="clt-drag-handle" {...attributes} {...listeners}>
+            <GripVertical size={18} />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isPlaying ? '#64748b' : '#e8e6dc',
+              color: isPlaying ? '#fff' : '#5e5d59',
+            }}
           >
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {items.map((lesson) => (
-                <SortableLessonChip key={lesson.id} lesson={lesson} />
-              ))}
+            <Play size={16} style={{ marginLeft: 2 }} />
+          </div>
+        )}
+
+        <div className="clt-lesson-info">
+          <div
+            className="clt-lesson-title"
+            style={{ color: isPlaying ? '#475569' : isSidebar ? '#141413' : undefined }}
+            title={lesson.lessonTitle ?? 'Bài học'}
+          >
+            {isReorderMode && (
+              <span style={{ marginRight: 8, color: '#64748b', fontWeight: 500 }}>
+                #{lesson.orderIndex}
+              </span>
+            )}
+            {lesson.lessonTitle ?? 'Bài học'}
+          </div>
+          {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
+            <div className="clt-lesson-subtitle" title={lesson.videoTitle}>
+              {lesson.videoTitle}
             </div>
-          </SortableContext>
-        </DndContext>
+          )}
+          {!isSidebar && (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
+              {lesson.durationSeconds && (
+                <span
+                  className="clt-muted"
+                  style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <Clock size={12} />
+                  {Math.floor(lesson.durationSeconds / 60)} phút
+                </span>
+              )}
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#6366f1',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  cursor: isReorderMode ? 'default' : 'pointer',
+                }}
+                onClick={(e) => {
+                  if (isReorderMode) return;
+                  e.stopPropagation();
+                  onToggleResources(lesson.id);
+                }}
+              >
+                <Paperclip size={12} /> {materialsList.length} tài liệu
+              </span>
+              <span
+                className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
+                style={{
+                  fontSize: '0.65rem',
+                  padding: '2px 8px',
+                  cursor: readOnly || isReorderMode ? 'default' : 'pointer',
+                  opacity: lesson.isFreePreview ? 1 : 0.6,
+                }}
+                onClick={(e) => {
+                  if (readOnly || isReorderMode) return;
+                  e.stopPropagation();
+                  onUpdatePreview(lesson.id, !lesson.isFreePreview);
+                }}
+                title={
+                  readOnly || isReorderMode
+                    ? undefined
+                    : lesson.isFreePreview
+                      ? 'Click để khóa bài học'
+                      : 'Click để mở xem thử miễn phí'
+                }
+              >
+                {lesson.isFreePreview ? 'Xem trước' : 'Đã khóa'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {!isSidebar && !readOnly && !isReorderMode && (
+          <div className="clt-actions">
+            <button
+              className="clt-action-btn"
+              title="Sửa bài học"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(lesson);
+              }}
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              className="clt-action-btn danger"
+              title="Xóa bài học"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete({ k: 'lesson', lessonId: lesson.id });
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
       </div>
-      {disabled && (
-        <div className="muted" style={{ marginTop: '0.6rem', fontSize: '0.78rem' }}>
-          Vui lòng chờ lưu xong trước khi tiếp tục kéo thả.
+
+      {/* Materials List */}
+      {!isSidebar && showResources && !isReorderMode && (
+        <div style={{ padding: '0.5rem 1.25rem 1rem 3.5rem', background: '#f8fafc' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {materialsList.map((m: LessonMaterial) => (
+              <div
+                key={m.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #e2e8f0',
+                  background: '#fff',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => void onDownloadMaterial(lesson, m)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: '0.8rem',
+                    color: '#475569',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    flex: 1,
+                    textAlign: 'left',
+                  }}
+                >
+                  <FileText size={13} style={{ color: '#1f5eff' }} />
+                  <span>{m.name}</span>
+                  <span className="muted" style={{ fontSize: '0.7rem' }}>
+                    ({((m.size || 0) / 1024).toFixed(1)} KB)
+                  </span>
+                </button>
+                {!readOnly && (
+                  <button
+                    className="btn-icon"
+                    style={{ color: '#ef4444' }}
+                    onClick={() => m.id && onRemoveMaterial(lesson.id, m.id, m.name || 'Tài liệu')}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {materialsList.length === 0 && (
+              <p
+                className="muted"
+                style={{ fontSize: '0.8rem', fontStyle: 'italic', margin: '0 0 8px' }}
+              >
+                Chưa có tài liệu đính kèm cho bài học này.
+              </p>
+            )}
+            {!readOnly && (
+              <label
+                className="btn secondary"
+                style={{
+                  padding: '0.3rem 0.6rem',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  width: 'fit-content',
+                  marginTop: 4,
+                }}
+              >
+                <Plus size={12} style={{ marginRight: 4 }} />
+                Thêm tài liệu
+                <input
+                  type="file"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      onAddMaterial(lesson.id, file);
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
+
 
 // Main Component
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
@@ -990,10 +1163,13 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const [newSectionTitle, setNewSectionTitle] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<CltDeleteTarget | null>(null);
   const [renameTarget, setRenameTarget] = useState<null | { id: string; value: string }>(null);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   const { data: courseData } = useCourseDetail(courseId);
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
+
+  const sensors = useSensors(useSensor(PointerSensor));
 
   const subjectId = courseData?.result?.subjectId || '';
   const { data: chaptersData } = useChaptersBySubject(subjectId, !!subjectId);
@@ -1240,17 +1416,92 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           </div>
           <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
             <div className="lessons-inner">
-              {!isSidebar && !readOnly && group.lessons.length > 1 && (
-                <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
-                  <LessonReorderStrip
-                    title="Sắp xếp bài học trong phần"
-                    lessons={group.lessons}
-                    disabled={reorderMutation.isPending}
-                    onReordered={persistReorder}
+              {isReorderMode && !isSidebar && !readOnly ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event: DragEndEvent) => {
+                    const { active, over } = event;
+                    if (!over || active.id === over.id) return;
+
+                    const oldIndex = group.lessons.findIndex((l) => l.id === active.id);
+                    const newIndex = group.lessons.findIndex((l) => l.id === over.id);
+
+                    const moved = arrayMove(group.lessons, oldIndex, newIndex).map(
+                      (lesson, idx) => ({
+                        ...lesson,
+                        orderIndex: idx + 1,
+                      })
+                    );
+                    persistReorder(moved);
+                  }}
+                >
+                  <SortableContext
+                    items={group.lessons.map((l) => l.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {group.lessons.map((l) => (
+                      <SortableLessonItem
+                        key={l.id}
+                        lesson={l}
+                        isSidebar={isSidebar}
+                        isPlaying={l.id === playingLessonId}
+                        readOnly={readOnly}
+                        isReorderMode={isReorderMode}
+                        showResources={showResources === l.id}
+                        onSelect={handleLessonSelect}
+                        onToggleResources={(id) => setShowResources(showResources === id ? null : id)}
+                        onUpdatePreview={(lessonId, preview) =>
+                          updateMutation.mutate({
+                            courseId,
+                            lessonId,
+                            request: { isFreePreview: preview },
+                          })
+                        }
+                        onEdit={setEditingLesson}
+                        onDelete={setDeleteTarget}
+                        onAddMaterial={(lessonId, file) =>
+                          addMaterialMutation.mutate({ courseId, lessonId, file })
+                        }
+                        onDownloadMaterial={handleDownloadMaterial}
+                        onRemoveMaterial={(lessonId, materialId, name) =>
+                          setDeleteTarget({ k: 'material', lessonId, materialId, name })
+                        }
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                group.lessons.map((l) => (
+                  <SortableLessonItem
+                    key={l.id}
+                    lesson={l}
+                    isSidebar={isSidebar}
+                    isPlaying={l.id === playingLessonId}
+                    readOnly={readOnly}
+                    isReorderMode={isReorderMode}
+                    showResources={showResources === l.id}
+                    onSelect={handleLessonSelect}
+                    onToggleResources={(id) => setShowResources(showResources === id ? null : id)}
+                    onUpdatePreview={(lessonId, preview) =>
+                      updateMutation.mutate({
+                        courseId,
+                        lessonId,
+                        request: { isFreePreview: preview },
+                      })
+                    }
+                    onEdit={setEditingLesson}
+                    onDelete={setDeleteTarget}
+                    onAddMaterial={(lessonId, file) =>
+                      addMaterialMutation.mutate({ courseId, lessonId, file })
+                    }
+                    onDownloadMaterial={handleDownloadMaterial}
+                    onRemoveMaterial={(lessonId, materialId, name) =>
+                      setDeleteTarget({ k: 'material', lessonId, materialId, name })
+                    }
                   />
-                </div>
+                ))
               )}
-              {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
             </div>
           </div>
         </div>
@@ -1258,247 +1509,6 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     });
   };
 
-  const renderLessonItem = (lesson: CourseLessonResponse, isSidebar = false) => {
-    const isPlaying = lesson.id === playingLessonId;
-    const materialsList = parseLessonMaterials(lesson.materials);
-
-    return (
-      <div key={lesson.id} style={{ marginBottom: 0 }}>
-        <div
-          className={isSidebar ? 'clt-sidebar-lesson-row' : 'clt-list-card'}
-          onClick={() => handleLessonSelect(lesson)}
-          style={
-            isSidebar
-              ? {
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  background: isPlaying ? '#f1f5f9' : '#ffffff',
-                  cursor: 'pointer',
-                  borderLeft: isPlaying ? '3px solid #64748b' : '3px solid transparent',
-                  borderBottom: '1px solid #f0eee6',
-                  transition: 'all 0.2s ease',
-                }
-              : {
-                  cursor: 'pointer',
-                  borderColor: isPlaying ? '#94a3b8' : undefined,
-                  boxShadow: isPlaying ? '0 4px 12px rgba(71, 85, 105, 0.12)' : undefined,
-                }
-          }
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: isPlaying ? '#64748b' : '#e8e6dc',
-              color: isPlaying ? '#fff' : '#5e5d59',
-            }}
-          >
-            <Play size={16} style={{ marginLeft: 2 }} />
-          </div>
-
-          <div className="clt-lesson-info">
-            <div
-              className="clt-lesson-title"
-              style={{ color: isPlaying ? '#475569' : isSidebar ? '#141413' : undefined }}
-              title={lesson.lessonTitle ?? 'Bài học'}
-            >
-              {lesson.lessonTitle ?? 'Bài học'}
-            </div>
-            {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
-              <div className="clt-lesson-subtitle" title={lesson.videoTitle}>
-                {lesson.videoTitle}
-              </div>
-            )}
-            {!isSidebar && (
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
-                {lesson.durationSeconds && (
-                  <span
-                    className="clt-muted"
-                    style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <Clock size={12} />
-                    {Math.floor(lesson.durationSeconds / 60)} phút
-                  </span>
-                )}
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    color: '#6366f1',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    cursor: 'pointer',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowResources(showResources === lesson.id ? null : lesson.id);
-                  }}
-                >
-                  <Paperclip size={12} /> {materialsList.length} tài liệu
-                </span>
-                <span
-                  className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
-                  style={{
-                    fontSize: '0.65rem',
-                    padding: '2px 8px',
-                    cursor: 'pointer',
-                    opacity: lesson.isFreePreview ? 1 : 0.6,
-                  }}
-                  onClick={(e) => {
-                    if (readOnly) return;
-                    e.stopPropagation();
-                    updateMutation.mutate({
-                      courseId,
-                      lessonId: lesson.id,
-                      request: { isFreePreview: !lesson.isFreePreview },
-                    });
-                  }}
-                  title={
-                    readOnly
-                      ? undefined
-                      : lesson.isFreePreview
-                        ? 'Click để khóa bài học'
-                        : 'Click để mở xem thử miễn phí'
-                  }
-                >
-                  {lesson.isFreePreview ? 'Xem trước' : 'Đã khóa'}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {!isSidebar && !readOnly && (
-            <div className="clt-actions">
-              <button
-                className="clt-action-btn"
-                title="Sửa bài học"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingLesson(lesson);
-                }}
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                className="clt-action-btn danger"
-                title="Xóa bài học"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteTarget({ k: 'lesson', lessonId: lesson.id });
-                }}
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Materials List */}
-        {!isSidebar && showResources === lesson.id && (
-          <div style={{ padding: '0.5rem 1.25rem 1rem 3.5rem', background: '#f8fafc' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {materialsList.map((m: LessonMaterial) => (
-                <div
-                  key={m.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                    padding: '6px 10px',
-                    borderRadius: 6,
-                    border: '1px solid #e2e8f0',
-                    background: '#fff',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => void handleDownloadMaterial(lesson, m)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      fontSize: '0.8rem',
-                      color: '#475569',
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      flex: 1,
-                      textAlign: 'left',
-                    }}
-                  >
-                    <FileText size={13} style={{ color: '#1f5eff' }} />
-                    <span>{m.name}</span>
-                    <span className="muted" style={{ fontSize: '0.7rem' }}>
-                      ({((m.size || 0) / 1024).toFixed(1)} KB)
-                    </span>
-                  </button>
-                  {!readOnly && (
-                    <button
-                      className="btn-icon"
-                      style={{ color: '#ef4444' }}
-                      onClick={() =>
-                        m.id &&
-                        setDeleteTarget({
-                          k: 'material',
-                          lessonId: lesson.id,
-                          materialId: m.id,
-                          name: m.name || 'Tài liệu',
-                        })
-                      }
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {materialsList.length === 0 && (
-                <p
-                  className="muted"
-                  style={{ fontSize: '0.8rem', fontStyle: 'italic', margin: '0 0 8px' }}
-                >
-                  Chưa có tài liệu đính kèm cho bài học này.
-                </p>
-              )}
-              {!readOnly && (
-                <label
-                  className="btn secondary"
-                  style={{
-                    padding: '0.3rem 0.6rem',
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    width: 'fit-content',
-                    marginTop: 4,
-                  }}
-                >
-                  <Plus size={12} style={{ marginRight: 4 }} />
-                  Thêm tài liệu
-                  <input
-                    type="file"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        addMaterialMutation.mutate({ courseId, lessonId: lesson.id, file });
-                      }
-                    }}
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const submitAddSection = () => {
     const t = newSectionTitle.trim();
@@ -1651,27 +1661,48 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-4 md:p-6 space-y-5">
           {!readOnly && (
             <div className="cdt-toolbar">
-              {course.provider === 'CUSTOM' && (
+              {isReorderMode ? (
                 <button
                   type="button"
-                  className="btn secondary"
-                  onClick={() => {
-                    setNewSectionTitle('');
-                    setAddSectionOpen(true);
-                  }}
+                  className="btn cdt-btn-primary"
+                  onClick={() => setIsReorderMode(false)}
                 >
-                  <Plus size={14} />
-                  Thêm phần
+                  <Check size={14} />
+                  Xong
                 </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => setIsReorderMode(true)}
+                  >
+                    <GripVertical size={14} />
+                    Sắp xếp
+                  </button>
+                  {course.provider === 'CUSTOM' && (
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={() => {
+                        setNewSectionTitle('');
+                        setAddSectionOpen(true);
+                      }}
+                    >
+                      <Plus size={14} />
+                      Thêm phần
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn cdt-btn-primary"
+                    onClick={() => setShowUpload(true)}
+                  >
+                    <Plus size={14} />
+                    Thêm bài học
+                  </button>
+                </>
               )}
-              <button
-                type="button"
-                className="btn cdt-btn-primary"
-                onClick={() => setShowUpload(true)}
-              >
-                <Plus size={14} />
-                Thêm bài học
-              </button>
             </div>
           )}
 

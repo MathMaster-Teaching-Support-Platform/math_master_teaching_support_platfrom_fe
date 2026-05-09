@@ -24,17 +24,17 @@ const SeriesMappingGrid: React.FC<Props> = ({ rows, conflictsByBookId }) => {
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
       <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
-        Mapping toàn series theo khoảng trang OCR
+        Mapping toàn bộ sách theo khoảng trang OCR
       </div>
       <div className="max-h-[260px] overflow-y-auto">
         <table className="w-full text-sm">
           <thead className="bg-white sticky top-0 z-10 border-b border-slate-100">
             <tr className="text-slate-500 text-xs">
-              <th className="text-left px-3 py-2 font-semibold">Book</th>
-              <th className="text-left px-3 py-2 font-semibold">OCR page from</th>
-              <th className="text-left px-3 py-2 font-semibold">OCR page to</th>
+              <th className="text-left px-3 py-2 font-semibold">Sách</th>
+              <th className="text-left px-3 py-2 font-semibold">OCR từ trang</th>
+              <th className="text-left px-3 py-2 font-semibold">OCR đến trang</th>
               <th className="text-left px-3 py-2 font-semibold">Số bài map</th>
-              <th className="text-left px-3 py-2 font-semibold">Trạng thái overlap</th>
+              <th className="text-left px-3 py-2 font-semibold">Trạng thái trùng lặp</th>
             </tr>
           </thead>
           <tbody>

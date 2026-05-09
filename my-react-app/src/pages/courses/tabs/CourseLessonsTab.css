@@ -277,10 +277,13 @@
 }
 
 .clt-list-card.is-dragging {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-  border-color: #c96442;
-  opacity: 0.9;
-  z-index: 10;
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  border-style: solid;
+  opacity: 0.95;
+  z-index: 1000;
+  background: #fff;
+  cursor: grabbing;
 }
 
 .clt-list-card:hover {
@@ -320,6 +323,16 @@
   box-shadow: none;
 }
 
+.clt-list-card.reorder-active {
+  border-style: dashed;
+  background: #ffffff !important;
+}
+
+.clt-list-card.reorder-active:hover {
+  border-color: #3b82f6;
+  background: #f8fafc !important;
+}
+
 .clt-drag-handle {
   color: #94a3b8;
   cursor: grab;
@@ -335,8 +348,8 @@
 }
 
 .clt-drag-handle:hover {
-  background: #f1f5f9;
-  color: #475569;
+  background: #eff6ff;
+  color: #3b82f6;
 }
 
 .clt-lesson-info {

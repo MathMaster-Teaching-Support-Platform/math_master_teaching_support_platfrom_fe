@@ -246,8 +246,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
                     isActive ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : 'hover:bg-slate-50',
                   ].join(' ')}
                 >
-                  <div className="min-w-0">
-                    <div className="truncate text-slate-800 font-medium">{seriesBook.title}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-slate-800 font-medium break-words leading-snug">{seriesBook.title}</div>
                     <div className="text-[11px] text-slate-500">
                       OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} ·
                       mapped: {seriesBook.mappedLessonCount ?? 0}
@@ -284,8 +284,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
       ) : null}
 
       {/* Summary */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="border border-slate-200 rounded-lg p-4 space-y-2 text-sm">
+      <div className="grid md:grid-cols-2 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-4">
+        <div className="border border-slate-200 rounded-lg p-4 space-y-2 text-sm min-w-0">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
             Thông tin sách
           </div>
@@ -297,7 +297,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
           {book.academicYear && <Row label="Năm học" value={book.academicYear} />}
         </div>
 
-        <div className="border border-slate-200 rounded-lg p-4 space-y-2 text-sm">
+        <div className="border border-slate-200 rounded-lg p-4 space-y-2 text-sm min-w-0">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
             Thiết lập OCR
           </div>
@@ -646,9 +646,11 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
 };
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div className="flex items-center justify-between gap-3">
-    <span className="text-xs text-slate-500">{label}</span>
-    <span className="text-sm text-slate-800 text-right truncate max-w-[60%]">{value}</span>
+  <div className="flex items-start justify-between gap-4">
+    <span className="text-xs text-slate-500 shrink-0 pt-0.5 min-w-[6.5rem] sm:min-w-[7.5rem]">
+      {label}
+    </span>
+    <span className="text-sm text-slate-800 text-right flex-1 min-w-0 break-words">{value}</span>
   </div>
 );
 
