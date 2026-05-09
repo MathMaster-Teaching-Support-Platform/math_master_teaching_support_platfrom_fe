@@ -75,9 +75,6 @@ export function TemplateGenerateModal({
         <div className="modal-header">
           <div>
             <h3>Sinh câu hỏi từ mẫu</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              {template.name}
-            </p>
           </div>
           <ModalCloseButton onClick={onClose} />
         </div>

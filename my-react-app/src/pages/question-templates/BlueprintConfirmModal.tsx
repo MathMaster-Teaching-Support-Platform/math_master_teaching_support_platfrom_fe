@@ -362,7 +362,7 @@ export function BlueprintConfirmModal({
           {request.questionType === QuestionType.MULTIPLE_CHOICE &&
             Object.keys(optionsState).length > 0 && (
               <section className="data-card" style={{ minHeight: 0 }}>
-                <h4 style={{ marginTop: 0, color: '#92400e' }}>Đáp án có placeholder</h4>
+                <h4 style={{ marginTop: 0, color: '#92400e' }}>Đáp án có biến số</h4>
                 {Object.entries(optionsState).map(([k, v]) => (
                   <div
                     key={k}

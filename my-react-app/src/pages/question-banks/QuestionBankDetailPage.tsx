@@ -54,7 +54,6 @@ type StatusFilter = 'ALL' | 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED
 
 const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
   { value: 'ALL', label: 'Tất cả trạng thái' },
-  { value: 'AI_DRAFT', label: 'Nháp AI' },
   { value: 'UNDER_REVIEW', label: 'Chờ duyệt' },
   { value: 'APPROVED', label: 'Đã duyệt' },
   { value: 'ARCHIVED', label: 'Đã lưu trữ' },
@@ -469,6 +468,11 @@ export function QuestionBankDetailPage() {
                     cognitiveLevel: level,
                   });
                   navigate(`/teacher/question-templates?${params.toString()}`);
+                }}
+                onRemoveQuestion={(q) => {
+                  // Tree summary only carries id+text; the confirm handler
+                  // only reads .id, so a partial cast is safe here.
+                  setPendingRemoveQuestion(q as QuestionResponse);
                 }}
               />
             )}

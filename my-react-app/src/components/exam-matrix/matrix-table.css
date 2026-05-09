@@ -254,6 +254,15 @@
   background-color: #f0f9ff;
 }
 
+/* Empty row warning — sum across all parts/levels is 0. Blocks approval. */
+.matrix-row--empty {
+  background-color: #fef2f2 !important;
+  box-shadow: inset 4px 0 0 #dc2626;
+}
+.matrix-row--empty:hover {
+  background-color: #fee2e2 !important;
+}
+
 /* Grand total row */
 .matrix-row--grand-total {
   background: #fef3c7;

@@ -80,6 +80,9 @@ export default function TeacherQuestionManagementPage() {
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [filterChapterId, setFilterChapterId] = useState('');
+  // FE-only filter — narrows the current page in-memory; BE has no status param.
+  type StatusFilter = 'ALL' | 'UNDER_REVIEW' | 'APPROVED';
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('ALL');
   const debouncedSearchName = useDebounce(searchName, 300);
 
   useEffect(() => {
@@ -115,7 +118,10 @@ export default function TeacherQuestionManagementPage() {
     chapterId: filterChapterId,
   });
 
-  const displayedQuestions = questions;
+  const displayedQuestions = useMemo(() => {
+    if (filterStatus === 'ALL') return questions;
+    return questions.filter((q) => q.questionStatus === filterStatus);
+  }, [questions, filterStatus]);
 
   const totalPages =
     data?.result?.totalPages ??
@@ -421,6 +427,16 @@ export default function TeacherQuestionManagementPage() {
                 </button>
               ) : null}
             </label>
+            <select
+              aria-label="Lọc theo trạng thái"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
+              className="px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all duration-150 flex-shrink-0"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="UNDER_REVIEW">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+            </select>
             <button
               type="button"
               onClick={() => void refetch()}

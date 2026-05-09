@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, RefreshCw, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import MathText from '../../components/common/MathText';
 import {
   QbCognitiveBadge,
@@ -29,6 +29,11 @@ type Props = {
     level: CognitiveLevelVi,
     chapterTitle: string
   ) => void;
+  /**
+   * Triggered when the user clicks the trash icon on a question row in the tree.
+   * Parent owns the confirm dialog + remove mutation.
+   */
+  onRemoveQuestion?: (question: { id: string; questionText: string }) => void;
 };
 
 const LEVEL_ORDER: CognitiveLevelVi[] = ['NHAN_BIET', 'THONG_HIEU', 'VAN_DUNG', 'VAN_DUNG_CAO'];
@@ -53,6 +58,7 @@ export function QuestionBankTreeSection({
   refreshNonce,
   onAddFromTemplate,
   onAddFromMyQuestions,
+  onRemoveQuestion,
 }: Readonly<Props>) {
   const [tree, setTree] = useState<QuestionBankTreeResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -159,6 +165,7 @@ export function QuestionBankTreeSection({
               onToggle={() => toggle(chapter.chapterId)}
               onAddFromTemplate={onAddFromTemplate}
               onAddFromMyQuestions={onAddFromMyQuestions}
+              onRemoveQuestion={onRemoveQuestion}
             />
           ))}
         </div>
@@ -181,6 +188,7 @@ type ChapterRowProps = {
     level: CognitiveLevelVi,
     chapterTitle: string
   ) => void;
+  onRemoveQuestion?: (question: { id: string; questionText: string }) => void;
 };
 
 function intensityFromCount(count: number): 'empty' | 'low' | 'med' | 'high' {
@@ -194,8 +202,8 @@ function ChapterRow({
   chapter,
   expanded,
   onToggle,
-  onAddFromTemplate,
   onAddFromMyQuestions,
+  onRemoveQuestion,
 }: Readonly<ChapterRowProps>) {
   const [openLevels, setOpenLevels] = useState<Set<CognitiveLevelVi>>(() => new Set());
 
@@ -268,20 +276,7 @@ function ChapterRow({
                     </span>
                   </button>
                   <div className="qbts-level__actions">
-                    {onAddFromTemplate && (
-                      <button
-                        type="button"
-                        className="qbts-cell__btn"
-                        title="Sinh câu hỏi từ mẫu"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddFromTemplate(chapter.chapterId, level, chapter.title);
-                        }}
-                      >
-                        <Sparkles size={11} />
-                        Mẫu
-                      </button>
-                    )}
+             
                     {onAddFromMyQuestions && (
                       <button
                         type="button"
@@ -320,13 +315,27 @@ function ChapterRow({
                               {q.questionStatus ? (
                                 <QbQuestionStatusBadge status={q.questionStatus} />
                               ) : null}
-                              <span className="qbts-level__qid" title={q.id}>
-                                #{q.id.slice(0, 8)}…
-                              </span>
                             </div>
                             <div className="qbts-level__question-body">
                               <MathText text={q.questionText} />
                             </div>
+                            {onRemoveQuestion && (
+                              <button
+                                type="button"
+                                className="qbts-level__question-remove"
+                                aria-label="Gỡ câu hỏi khỏi ngân hàng"
+                                title="Gỡ câu hỏi khỏi ngân hàng"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onRemoveQuestion({
+                                    id: q.id,
+                                    questionText: q.questionText,
+                                  });
+                                }}
+                              >
+                                <Trash2 size={14} aria-hidden />
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>

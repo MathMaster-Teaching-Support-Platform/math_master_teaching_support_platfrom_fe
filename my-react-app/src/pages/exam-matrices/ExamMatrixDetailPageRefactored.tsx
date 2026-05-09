@@ -145,6 +145,26 @@ export default function ExamMatrixDetailPageRefactored() {
   async function handleApprove() {
     if (!matrix?.id || !matrix?.name) return;
 
+    // FE pre-check: every row in the matrix must have at least 1 question.
+    // BE rejects empty rows too; surfacing it here gives a clearer message
+    // and avoids the round-trip.
+    const hasEmptyRow = chapters.some((ch) =>
+      ch.rows.some((r) => {
+        const total = (r.cells ?? []).reduce(
+          (sum, cell) => sum + (cell.questionCount ?? 0),
+          0
+        );
+        return total === 0;
+      })
+    );
+    if (hasEmptyRow) {
+      showToast({
+        type: 'error',
+        message: 'Hàng không được trống',
+      });
+      return;
+    }
+
     const matrixName = matrix.name; // Capture name before mutation
 
     try {
@@ -542,6 +562,18 @@ export default function ExamMatrixDetailPageRefactored() {
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
               bankId={matrix?.questionBankId}
+              usedChapterIds={chapters.flatMap((ch) => {
+                // Prefer per-row chapterId; fall back to chapter group's
+                // chapterId so a single-row chapter still blocks re-add.
+                const rowIds = ch.rows
+                  .map((r) => r.chapterId)
+                  .filter((id): id is string => !!id);
+                return rowIds.length > 0
+                  ? rowIds
+                  : ch.chapterId
+                    ? [ch.chapterId]
+                    : [];
+              })}
               onClose={() => {
                 setRowModalOpen(false);
               }}
