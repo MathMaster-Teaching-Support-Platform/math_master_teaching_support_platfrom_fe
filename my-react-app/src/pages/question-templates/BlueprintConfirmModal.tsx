@@ -1,6 +1,9 @@
-import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Check, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import ModalCloseButton from '../../components/common/ModalCloseButton';
+import MathText from '../../components/common/MathText';
+import { DiagramTemplatePreview } from '../../components/question-templates/DiagramTemplatePreview';
+import { renderTemplateWithSamples, type ParameterInput } from '../../utils/templatePreview';
 import {
   QuestionType,
   type BlueprintFromRealQuestionRequest,
@@ -53,6 +56,9 @@ type Props = {
   blueprint: BlueprintFromRealQuestionResponse | null;
   onCancel: () => void;
   onConfirm: (payload: QuestionTemplateRequest) => Promise<void>;
+  /** Gọi lại POST blueprint-from-real-question với cùng payload ban đầu (tốn lượt AI). */
+  onRegenerate?: () => Promise<void>;
+  isRegenerating?: boolean;
 };
 
 export function BlueprintConfirmModal({
@@ -61,6 +67,8 @@ export function BlueprintConfirmModal({
   blueprint,
   onCancel,
   onConfirm,
+  onRegenerate,
+  isRegenerating = false,
 }: Readonly<Props>) {
   const [name, setName] = useState('');
   const [params, setParams] = useState<BlueprintParameter[]>([]);
@@ -85,6 +93,37 @@ export function BlueprintConfirmModal({
     setOptionsState(blueprint.optionsGenerator ?? {});
     setError(null);
   }, [isOpen, blueprint, request]);
+
+  const previewParameterInputs = useMemo<ParameterInput[]>(
+    () =>
+      params.map((p) => ({
+        name: (p.name ?? '').trim(),
+        constraintText: p.constraintText ?? '',
+        sampleValue:
+          p.sampleValue === null || p.sampleValue === undefined ? '' : String(p.sampleValue),
+      })),
+    [params],
+  );
+
+  const previewQuestionStem = useMemo(
+    () => renderTemplateWithSamples(templateText, previewParameterInputs),
+    [templateText, previewParameterInputs],
+  );
+
+  const previewSolution = useMemo(
+    () => renderTemplateWithSamples(solutionSteps, previewParameterInputs),
+    [solutionSteps, previewParameterInputs],
+  );
+
+  const previewMcqOptions = useMemo(() => {
+    if (!request || request.questionType !== QuestionType.MULTIPLE_CHOICE) return [];
+    return Object.entries(optionsState)
+      .filter(([, v]) => v.trim())
+      .map(([k, v]) => ({
+        key: k,
+        text: renderTemplateWithSamples(v, previewParameterInputs),
+      }));
+  }, [request, optionsState, previewParameterInputs]);
 
   if (!isOpen || !blueprint || !request) return null;
 
@@ -190,8 +229,10 @@ export function BlueprintConfirmModal({
           <div>
             <h3>Xác nhận Mẫu Câu Hỏi</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              AI đã chuyển câu hỏi thật của bạn thành mẫu câu hỏi. Hãy xem lại và chỉnh
-              sửa nếu cần. Độ tin cậy:{' '}
+              AI đã chuyển câu hỏi thật của bạn thành mẫu câu hỏi. Hãy xem lại,
+              dùng khối <strong>Xem trước render</strong> bên dưới (giống học sinh
+              nhìn thấy sau khi thế giá trị mẫu), và bấm <strong>Phân tích lại</strong>{' '}
+              nếu bản nháp chưa đúng ý. Độ tin cậy:{' '}
               <strong>{Math.round((blueprint.confidence ?? 0) * 100)}%</strong>
             </p>
           </div>
@@ -404,7 +445,61 @@ export function BlueprintConfirmModal({
               value={diagram}
               onChange={(e) => setDiagram(e.target.value)}
             />
+            <p className="muted" style={{ marginTop: 6, marginBottom: 0, fontSize: '0.8rem' }}>
+              Nên bấm <strong>Render thử</strong> trước khi lưu — LaTeX lỗi sẽ làm luồng render
+              thất bại khi sinh câu hoặc hiển thị.
+            </p>
+            <DiagramTemplatePreview diagramTemplate={diagram} parameters={previewParameterInputs} />
           </label>
+
+          <section className="data-card" style={{ minHeight: 0 }}>
+            <h4 style={{ marginTop: 0, color: '#0f766e' }}>Xem trước render (giá trị mẫu)</h4>
+            <p className="muted" style={{ fontSize: '0.85rem', marginTop: 0 }}>
+              Thay đổi ô &quot;Giá trị mẫu&quot; ở trên sẽ cập nhật preview ngay — để kiểm tra
+              placeholder <code>{'{{a}}'}</code> có khớp toàn bài không.
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <strong style={{ fontSize: '0.85rem' }}>Đề (substitute mẫu):</strong>
+              <div className="preview-box" style={{ marginTop: 6 }}>
+                {previewQuestionStem.trim() ? (
+                  <MathText text={previewQuestionStem} />
+                ) : (
+                  <span className="muted">(trống)</span>
+                )}
+              </div>
+            </div>
+            {previewMcqOptions.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <strong style={{ fontSize: '0.85rem' }}>Đáp án:</strong>
+                <div style={{ display: 'grid', gap: 6, marginTop: 6 }}>
+                  {previewMcqOptions.map((o) => (
+                    <div
+                      key={o.key}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr',
+                        gap: 8,
+                        padding: '6px 10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <strong>{o.key}.</strong>
+                      <MathText text={o.text} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {previewSolution.trim() && (
+              <div style={{ marginTop: 12 }}>
+                <strong style={{ fontSize: '0.85rem' }}>Lời giải mẫu:</strong>
+                <div className="preview-box" style={{ marginTop: 6 }}>
+                  <MathText text={previewSolution} />
+                </div>
+              </div>
+            )}
+          </section>
 
           {/* Global constraints */}
           <section className="data-card" style={{ minHeight: 0 }}>
@@ -445,6 +540,36 @@ export function BlueprintConfirmModal({
           <button type="button" className="btn secondary" onClick={onCancel}>
             Hủy
           </button>
+          {onRegenerate && (
+            <button
+              type="button"
+              className="btn secondary"
+              disabled={saving || isRegenerating}
+              onClick={async () => {
+                setError(null);
+                try {
+                  await onRegenerate();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Không thể phân tích lại.');
+                }
+              }}
+            >
+              {isRegenerating ? (
+                <>
+                  <span
+                    className="inline-block w-3.5 h-3.5 rounded-full border-2 border-current/35 border-t-current animate-spin mr-2 align-middle shrink-0"
+                    aria-hidden
+                  />
+                  AI đang phân tích…
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={14} style={{ marginRight: 6 }} />
+                  Phân tích lại (AI)
+                </>
+              )}
+            </button>
+          )}
           <button type="button" className="btn" disabled={saving} onClick={confirm}>
             {saving ? (
               'Đang lưu…'
