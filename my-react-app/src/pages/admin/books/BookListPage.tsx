@@ -396,7 +396,10 @@ const BookListPage: React.FC = () => {
                           {s.title}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {s.publisher ?? '—'} · {s.academicYear ?? '—'}
+                          {[s.publisher, s.academicYear]
+                            .map((x) => (x == null ? '' : String(x).trim()))
+                            .filter(Boolean)
+                            .join(' · ') || '—'}
                         </div>
                       </button>
                     </td>
