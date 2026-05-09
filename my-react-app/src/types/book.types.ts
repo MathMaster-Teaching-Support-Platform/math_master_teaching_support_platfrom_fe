@@ -16,6 +16,11 @@ export interface BookPageImageResponse {
   imagePath: string;
 }
 
+/** Short-lived MinIO GET URL for admin preview (same idea as course thumbnails). */
+export interface BookPageImagePresignedUrlResponse {
+  url: string;
+}
+
 export interface BookResponse {
   id: string;
   schoolGradeId: string;
