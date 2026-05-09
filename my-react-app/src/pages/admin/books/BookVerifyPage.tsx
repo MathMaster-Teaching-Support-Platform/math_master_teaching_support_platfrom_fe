@@ -18,7 +18,8 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../../components/common/MathText';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
@@ -31,6 +32,7 @@ import {
   useBookPageMapping,
   usePageHistory,
   useRefreshVerification,
+  bookKeys,
   useReOcrSingleBookPage,
   useUpdatePage,
   useUploadBookPageImage,
@@ -488,6 +490,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
   const navigate = useNavigate();
   const { data: bookData, isLoading: bookLoading } = useBook(bookId);
   const { data: contentData, isLoading: contentLoading, refetch } = useBookContent(bookId);
+  const refetchBookContent = useCallback(() => refetch(), [refetch]);
   const { data: mappingData } = useBookPageMapping(bookId);
   const seriesBooksQuery = useBookList({
     bookSeriesId: bookData?.result?.bookSeriesId ?? undefined,
@@ -903,6 +906,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                 }
                 page={activePage}
                 bookStatus={book?.status}
+                refetchBookContent={refetchBookContent}
               />
             ) : (
               <div className="p-10 text-center text-sm text-slate-500">
@@ -961,6 +965,19 @@ interface PageEditorProps {
   page: LessonPageResponse;
   /** Trạng thái sách Postgres — chặn OCR 1 trang khi đang OCR full sách. */
   bookStatus?: BookStatus | null;
+  /** Refetch lesson tree sau khi crawler ghi Mongo (polling trong PageEditor). */
+  refetchBookContent: () => Promise<unknown>;
+}
+
+/** So sánh snapshot server để biết OCR xong (Mongo đã đổi). */
+function fingerprintLessonPageForOcrPoll(p: LessonPageResponse): string {
+  return JSON.stringify({
+    id: p.id,
+    updatedAt: p.updatedAt ?? null,
+    ocrConfidence: p.ocrConfidence ?? null,
+    ocrSource: p.ocrSource ?? null,
+    blocks: p.contentBlocks ?? [],
+  });
 }
 
 interface PageVersionEntry {
@@ -1170,7 +1187,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
   chapterTitle,
   page,
   bookStatus,
+  refetchBookContent,
 }) => {
+  const queryClient = useQueryClient();
   const updatePage = useUpdatePage(bookId, lessonId);
   const reOcrSinglePage = useReOcrSingleBookPage(bookId);
   const cloneBlocks = (items: ContentBlockDto[]) => items.map((b) => ({ ...b }));
@@ -1182,8 +1201,10 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const [lastSavedVerified, setLastSavedVerified] = useState<boolean>(page.verified);
   const [error, setError] = useState<string | null>(null);
   const [reOcrNotice, setReOcrNotice] = useState<string | null>(null);
+  const [awaitingBackendOcr, setAwaitingBackendOcr] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const snapshotBeforeOcrRef = useRef<string | null>(null);
   const {
     data: pageHistoryData,
     refetch: refetchPageHistory,
@@ -1192,7 +1213,49 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   useEffect(() => {
     setReOcrNotice(null);
+    setAwaitingBackendOcr(false);
+    snapshotBeforeOcrRef.current = null;
   }, [lessonId, page.pageNumber]);
+
+  useEffect(() => {
+    if (!awaitingBackendOcr || snapshotBeforeOcrRef.current === null) return;
+    const snap = snapshotBeforeOcrRef.current;
+    const now = fingerprintLessonPageForOcrPoll(page);
+    if (now !== snap) {
+      snapshotBeforeOcrRef.current = null;
+      setAwaitingBackendOcr(false);
+      const nextBlocks = cloneBlocks(page.contentBlocks ?? []);
+      setBlocks(nextBlocks);
+      setLastSavedBlocks(nextBlocks);
+      setVerified(page.verified);
+      setLastSavedVerified(page.verified);
+      setReOcrNotice('Đã cập nhật nội dung sau OCR.');
+      void queryClient.invalidateQueries({ queryKey: bookKeys.progress(bookId) });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.pageMapping(bookId) });
+    }
+  }, [page, awaitingBackendOcr, bookId, queryClient]);
+
+  useEffect(() => {
+    if (!awaitingBackendOcr) return;
+    const intervalMs = 2500;
+    const maxTicks = 72;
+    let ticks = 0;
+    const id = window.setInterval(() => {
+      ticks += 1;
+      void refetchBookContent();
+      if (ticks >= maxTicks) {
+        window.clearInterval(id);
+        setAwaitingBackendOcr(false);
+        snapshotBeforeOcrRef.current = null;
+        setReOcrNotice(
+          'Đã chờ tối đa ~3 phút — nếu nội dung chưa đổi, kiểm tra log crawler hoặc thử OCR lại.'
+        );
+      }
+    }, intervalMs);
+    void refetchBookContent();
+    return () => window.clearInterval(id);
+  }, [awaitingBackendOcr, refetchBookContent]);
 
   const historyEntries: PageVersionEntry[] = useMemo(() => {
     const rows = pageHistoryData?.result ?? [];
@@ -1247,20 +1310,24 @@ const PageEditor: React.FC<PageEditorProps> = ({
     }
     setError(null);
     setReOcrNotice(null);
+    snapshotBeforeOcrRef.current = fingerprintLessonPageForOcrPoll(page);
     reOcrSinglePage.mutate(
       { lessonId, pageNumber: page.pageNumber },
       {
         onSuccess: () => {
-          setReOcrNotice(
-            'Đã xếp hàng OCR lại trang (Gemini + Mathpix). Đợi vài giây rồi nội dung sẽ cập nhật hoặc chọn lại trang.'
-          );
+          setAwaitingBackendOcr(true);
         },
         onError: (err) => {
+          snapshotBeforeOcrRef.current = null;
+          setAwaitingBackendOcr(false);
           setError(err instanceof Error ? err.message : 'Không thể xếp hàng OCR lại.');
         },
       }
     );
   };
+
+  const singlePageOcrBusy =
+    bookStatus === 'OCR_RUNNING' || reOcrSinglePage.isPending || awaitingBackendOcr;
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
@@ -1366,16 +1433,16 @@ const PageEditor: React.FC<PageEditorProps> = ({
           <button
             type="button"
             onClick={handleReOcrThisPage}
-            disabled={bookStatus === 'OCR_RUNNING' || reOcrSinglePage.isPending}
+            disabled={singlePageOcrBusy}
             title="Chạy lại pipeline Gemini + Mathpix cho đúng trang/bài này (giữ trạng thái đã verify nếu đã lưu trong Mongo)."
             className={[
               'mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition',
-              bookStatus === 'OCR_RUNNING' || reOcrSinglePage.isPending
+              singlePageOcrBusy
                 ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
                 : 'border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100',
             ].join(' ')}
           >
-            {reOcrSinglePage.isPending ? (
+            {reOcrSinglePage.isPending || awaitingBackendOcr ? (
               <Loader2 size={12} className="animate-spin" />
             ) : (
               <RefreshCw size={12} />
@@ -1433,6 +1500,16 @@ const PageEditor: React.FC<PageEditorProps> = ({
       {error && (
         <div className="mx-4 mt-3 flex items-start gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
           <AlertCircle size={16} className="mt-0.5" /> {error}
+        </div>
+      )}
+      {(reOcrSinglePage.isPending || awaitingBackendOcr) && !error && (
+        <div className="mx-4 mt-3 flex items-start gap-2 px-3 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-sm text-indigo-900">
+          <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-indigo-600" />
+          <span>
+            {reOcrSinglePage.isPending
+              ? 'Đang gửi yêu cầu OCR lại trang…'
+              : `Đang OCR trang sách ${page.pageNumber} trên máy chủ (Gemini + Mathpix). Thường 30–120 giây — có thể đổi tab; nội dung sẽ tự cập nhật khi xong.`}
+          </span>
         </div>
       )}
       {reOcrNotice && !error && (
