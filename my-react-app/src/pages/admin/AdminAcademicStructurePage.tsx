@@ -1212,7 +1212,7 @@ export default function AdminAcademicStructurePage() {
               <div className="aas-tree-shell__head">
                 <h2>
                   <FolderTree size={18} />
-                  Cây chương trình
+                  Quản lý chương trình
                 </h2>
                 <div className="aas-tree-shell__head-actions">
                   <span>{grades.length} chương trình</span>
