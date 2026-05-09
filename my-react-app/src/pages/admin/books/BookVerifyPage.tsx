@@ -35,6 +35,7 @@ import {
   useUploadBookPageImage,
 } from '../../../hooks/useBooks';
 import { AuthService } from '../../../services/api/auth.service';
+import { BookService } from '../../../services/api/book.service';
 import type {
   BookLessonPageResponse,
   BookStatus,
@@ -90,7 +91,11 @@ const ABSOLUTE_URL_REGEX = /^(https?:)?\/\//i;
  * rewriting `/api/...` to a same-origin path lets nginx on the SPA host proxy requests — avoids
  * CORS preflight rejecting `Authorization` on credentialed image fetches.
  */
-function rewriteApiUrlForBrowserOrigin(pathname: string, search: string, hash: string): string | null {
+function rewriteApiUrlForBrowserOrigin(
+  pathname: string,
+  search: string,
+  hash: string
+): string | null {
   if (typeof window === 'undefined') return null;
   if (!pathname.startsWith('/api')) return null;
   const base = API_BASE_URL?.trim();
@@ -347,6 +352,121 @@ const AuthenticatedImage: React.FC<{
 
   return (
     <img src={resolvedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />
+  );
+};
+
+/** File segment under books/{bookId}/page-images/ — matches canonical API imageUrl / MinIO key. */
+function parseBookAdminPageImageFileName(
+  bookId: string,
+  imageUrl?: string | null,
+  imagePath?: string | null
+): string | null {
+  const bid = bookId.trim().toLowerCase();
+  const url = imageUrl?.trim();
+  if (url) {
+    try {
+      const pathOnly = ABSOLUTE_URL_REGEX.test(url)
+        ? new URL(url.startsWith('//') ? `https:${url}` : url, globalThis.location.origin).pathname
+        : url.split('?')[0].split('#')[0];
+      const m = pathOnly.match(/\/api\/v1\/books\/([^/]+)\/page-images\/([^/]+)$/i);
+      if (m && m[1].toLowerCase() === bid) return decodeURIComponent(m[2]);
+    } catch {
+      /* ignore */
+    }
+  }
+  const p = imagePath?.trim();
+  if (p) {
+    const prefix = `books/${bookId}/page-images/`;
+    const prefixNorm = `books/${bid}/page-images/`;
+    if (p.startsWith(prefix)) return p.slice(prefix.length);
+    const lower = p.toLowerCase();
+    if (lower.startsWith(prefixNorm)) return p.slice(prefixNorm.length);
+  }
+  return null;
+}
+
+/**
+ * Admin-uploaded OCR block images: presigned MinIO URL (like course thumbnails). Crawler/static
+ * URLs keep using AuthenticatedImage + JWT fetch/blob.
+ */
+const VerifyBlockImage: React.FC<{
+  bookId: string;
+  imageUrl?: string | null;
+  imagePath?: string | null;
+  alt: string;
+  className?: string;
+  onLoad?: () => void;
+  onError?: () => void;
+}> = ({ bookId, imageUrl, imagePath, alt, className, onLoad, onError }) => {
+  const fileName = useMemo(
+    () => parseBookAdminPageImageFileName(bookId, imageUrl, imagePath),
+    [bookId, imageUrl, imagePath]
+  );
+  const fallbackSrc = resolveAssetUrl(imageUrl ?? imagePath ?? '');
+  const [presignedSrc, setPresignedSrc] = useState<string | null>(null);
+  const [presignPhase, setPresignPhase] = useState<'idle' | 'loading' | 'failed'>('idle');
+
+  useEffect(() => {
+    if (!fileName) {
+      setPresignedSrc(null);
+      setPresignPhase('idle');
+      return;
+    }
+    let cancelled = false;
+    setPresignedSrc(null);
+    setPresignPhase('loading');
+    void BookService.getPageImagePresignedUrl(bookId, fileName)
+      .then((res) => {
+        const u = res.result?.url?.trim();
+        if (cancelled) return;
+        if (!u) {
+          setPresignPhase('failed');
+          return;
+        }
+        setPresignedSrc(u);
+        setPresignPhase('idle');
+      })
+      .catch(() => {
+        if (!cancelled) setPresignPhase('failed');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, fileName]);
+
+  if (fileName) {
+    if (presignPhase === 'loading') {
+      return (
+        <div className={`flex min-h-[120px] items-center justify-center py-4 ${className ?? ''}`}>
+          <Loader2 size={20} className="animate-spin text-slate-400" aria-hidden />
+          <span className="sr-only">Đang tải ảnh…</span>
+        </div>
+      );
+    }
+    if (presignedSrc) {
+      return (
+        <img src={presignedSrc} alt={alt} className={className} onLoad={onLoad} onError={onError} />
+      );
+    }
+    return (
+      <AuthenticatedImage
+        src={fallbackSrc}
+        alt={alt}
+        className={className}
+        onLoad={onLoad}
+        onError={onError}
+      />
+    );
+  }
+
+  return (
+    <AuthenticatedImage
+      src={fallbackSrc}
+      alt={alt}
+      className={className}
+      onLoad={onLoad}
+      onError={onError}
+    />
   );
 };
 
@@ -1337,7 +1457,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             {blocks.length === 0 ? (
               <div className="text-xs text-slate-400 italic">Chưa có nội dung.</div>
             ) : (
-              blocks.map((b, idx) => <BlockPreview key={idx} block={b} />)
+              blocks.map((b, idx) => <BlockPreview key={idx} bookId={bookId} block={b} />)
             )}
           </div>
         </div>
@@ -1504,8 +1624,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const currentImageRef = block.imageUrl ?? block.imagePath ?? '';
-  const resolvedImagePreviewSrc = resolveAssetUrl(block.imageUrl ?? block.imagePath ?? '');
+  const currentImageRef = block.imageUrl ?? block.imagePath ?? block.thumbnailUrl ?? '';
   const hasImage = Boolean(currentImageRef);
 
   useEffect(() => {
@@ -1772,8 +1891,10 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
         <div className="space-y-2">
           {hasImage && !imageLoadFailed ? (
             <div className="rounded border border-slate-200 bg-slate-50 p-2 flex items-center justify-center">
-              <AuthenticatedImage
-                src={resolvedImagePreviewSrc}
+              <VerifyBlockImage
+                bookId={bookId}
+                imageUrl={block.imageUrl ?? block.thumbnailUrl}
+                imagePath={block.imagePath}
                 alt={block.caption ?? 'Ảnh minh hoạ'}
                 className="max-h-[180px] w-auto object-contain rounded"
                 onError={() => setImageLoadFailed(true)}
@@ -2001,7 +2122,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   );
 };
 
-const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
+const BlockPreview: React.FC<{ bookId: string; block: ContentBlockDto }> = ({ bookId, block }) => {
   const type = block.type ?? 'text';
 
   if (type === 'image' || type === 'figure') {
@@ -2009,8 +2130,10 @@ const BlockPreview: React.FC<{ block: ContentBlockDto }> = ({ block }) => {
     return (
       <figure className="text-center">
         {src ? (
-          <AuthenticatedImage
-            src={src}
+          <VerifyBlockImage
+            bookId={bookId}
+            imageUrl={block.imageUrl ?? block.thumbnailUrl}
+            imagePath={block.imagePath}
             alt={block.caption ?? 'figure'}
             className="max-h-[200px] inline-block rounded"
           />

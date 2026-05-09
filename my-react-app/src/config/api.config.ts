@@ -527,6 +527,7 @@ export const API_ENDPOINTS = {
   BOOK_PDF_UPLOAD: (bookId: string) => `/v1/books/${bookId}/pdf-upload`,
   BOOK_PDF_PREVIEW_URL: (bookId: string) => `/v1/books/${bookId}/pdf-preview-url`,
   BOOK_PAGE_IMAGE_UPLOAD: (bookId: string) => `/v1/books/${bookId}/page-images`,
+  BOOK_PAGE_IMAGE_PRESIGNED: (bookId: string) => `/v1/books/${bookId}/page-images/presigned`,
   BOOK_PAGE_IMAGE_SERVE: (bookId: string, fileName: string) =>
     `/v1/books/${bookId}/page-images/${fileName}`,
   BOOK_SERIES_RENAME: (seriesId: string) => `/v1/books/series/${seriesId}/name`,

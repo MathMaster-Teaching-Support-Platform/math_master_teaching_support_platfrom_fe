@@ -2,6 +2,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types';
 import type {
   BookLessonPageResponse,
+  BookPageImagePresignedUrlResponse,
   BookPageImageResponse,
   BookPdfPreviewUrlResponse,
   BookProgressResponse,
@@ -140,6 +141,19 @@ export class BookService {
       body: form,
     });
     return handle<BookPageImageResponse>(res, 'Failed to upload image');
+  }
+
+  /** MinIO presigned GET for admin preview — avoids JWT on the image bytes request. */
+  static async getPageImagePresignedUrl(
+    bookId: string,
+    fileName: string
+  ): Promise<ApiResponse<BookPageImagePresignedUrlResponse>> {
+    const params = new URLSearchParams({ fileName });
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.BOOK_PAGE_IMAGE_PRESIGNED(bookId)}?${params.toString()}`,
+      { method: 'GET', headers: jsonHeaders(requireToken()) }
+    );
+    return handle<BookPageImagePresignedUrlResponse>(res, 'Failed to resolve image URL');
   }
 
   static async delete(bookId: string): Promise<ApiResponse<void>> {
