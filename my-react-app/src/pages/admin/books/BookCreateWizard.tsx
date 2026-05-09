@@ -34,7 +34,13 @@ const BookCreateWizard: React.FC = () => {
   const [activeBookId, setActiveBookId] = useState<string | undefined>(undefined);
   const [stepIdx, setStepIdx] = useState<StepIdx>(0);
 
-  const seriesLookupId = seriesId || routeId;
+  /** Đổi bộ trong URL → bỏ cuốn đang chọn để không GET /books/:id của bộ cũ trong lúc fetch danh sách mới. */
+  useEffect(() => {
+    setActiveBookId(undefined);
+  }, [routeId]);
+
+  /** URL là nguồn đúng cho `:bookId` (thực tế là bookSeriesId). `seriesId` state có thể còn bộ cũ sau khi đổi route → không được ưu tiên hơn routeId. */
+  const seriesLookupId = routeId ?? seriesId;
   const seriesBooksQuery = useBookList(
     {
       bookSeriesId: seriesLookupId || undefined,
@@ -146,7 +152,7 @@ const BookCreateWizard: React.FC = () => {
           </div>
           <div>
             <h1 className="font-[Playfair_Display] text-[22px] text-[#141413]">
-              {seriesId ? 'Thiết lập bộ sách giáo khoa' : 'Thêm sách giáo khoa mới'}
+              {routeId || seriesId ? 'Thiết lập bộ sách giáo khoa' : 'Thêm sách giáo khoa mới'}
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
               Quy trình 4 bước theo bộ sách: nhập metadata + upload PDF, mapping bài học, chạy OCR,
@@ -211,7 +217,7 @@ const BookCreateWizard: React.FC = () => {
           {stepIdx === 0 && (
             <BookUploadStep
               key={book?.id ?? 'new-book'}
-              seriesId={seriesId}
+              seriesId={seriesLookupId}
               book={book}
               onCreated={handleBookCreated}
               onSelectBook={handleSelectBook}
