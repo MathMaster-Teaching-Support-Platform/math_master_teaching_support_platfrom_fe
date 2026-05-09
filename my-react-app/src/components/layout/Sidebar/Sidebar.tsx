@@ -158,7 +158,7 @@ const adminGroups: MenuGroup[] = [
     label: 'Nội dung',
     items: [
       { path: '/admin/courses/review', icon: BookOpen, label: 'Duyệt khóa học' },
-      { path: '/admin/academic-structure', icon: FolderTree, label: 'Cây chương trình' },
+      { path: '/admin/academic-structure', icon: FolderTree, label: 'Quản lý chương trình' },
       { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
       { path: '/admin/slide-templates', icon: Presentation, label: 'Slide Template' },
     ],
@@ -174,9 +174,7 @@ const adminGroups: MenuGroup[] = [
   },
   {
     label: 'OCR',
-    items: [
-      { path: '/admin/books', icon: ScanText, label: 'Sách giáo khoa' },
-    ],
+    items: [{ path: '/admin/books', icon: ScanText, label: 'Sách giáo khoa' }],
   },
 ];
 

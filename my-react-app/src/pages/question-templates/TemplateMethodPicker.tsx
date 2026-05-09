@@ -40,8 +40,7 @@ export function TemplateMethodPicker({
               <h3>Bạn muốn tạo mẫu theo cách nào?</h3>
             </div>
             <p className="modal-subtitle">
-              Cả hai cách đều tạo ra cùng một Blueprint. Hãy chọn cách phù hợp
-              với bạn.
+              Cả hai cách đều tạo ra cùng một mẫu. Hãy chọn cách phù hợp với bạn.
             </p>
           </div>
           <ModalCloseButton onClick={onClose} />
@@ -127,9 +126,12 @@ export function TemplateMethodPicker({
                 color: '#5b21b6',
               }}
             >
-              Bạn nhập đề bài, đáp án, lời giải với <em>số thật</em>. AI sẽ tự
-              xác định hệ số (a, b, c…) và ràng buộc tương ứng. Đây là cách dễ
-              nhất — không cần biết về <code>{'{{'}placeholder{'}}'}</code>.
+              Bạn nhập đề bài, đáp án, lời giải với <em>số thật</em>. AI sẽ tự xác định hệ số (a, b,
+              c…) và ràng buộc tương ứng. Đây là cách dễ nhất — không cần biết về{' '}
+              <code>
+                {'{{'}placeholder{'}}'}
+              </code>
+              .
             </p>
             <span
               style={{
@@ -215,8 +217,8 @@ export function TemplateMethodPicker({
                 color: '#1e3a8a',
               }}
             >
-              Bạn tự viết template với placeholder và mô tả ràng buộc. Phù hợp
-              khi bạn muốn kiểm soát chính xác từng chi tiết — không gọi AI.
+              Bạn tự viết template với placeholder và mô tả ràng buộc. Phù hợp khi bạn muốn kiểm
+              soát chính xác từng chi tiết — không gọi AI.
             </p>
             <span
               style={{
