@@ -404,7 +404,7 @@ export const questionTemplateService = {
     );
     return parseResponse<ApiResponse<BlueprintFromRealQuestionResponse>>(
       response,
-      'AI chưa thể chuyển câu hỏi thành Blueprint. Vui lòng thử lại.'
+      'AI chưa thể chuyển câu hỏi. Vui lòng thử lại.'
     );
   },
 

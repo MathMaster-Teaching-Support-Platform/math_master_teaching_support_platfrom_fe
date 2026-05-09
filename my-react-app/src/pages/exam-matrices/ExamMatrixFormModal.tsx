@@ -30,9 +30,7 @@ export function ExamMatrixFormModal({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
-  const [formData, setFormData] = useState<
-    ExamMatrixRequest & { numberOfParts?: number }
-  >({
+  const [formData, setFormData] = useState<ExamMatrixRequest & { numberOfParts?: number }>({
     name: '',
     description: '',
     isReusable: false,
@@ -130,7 +128,6 @@ export function ExamMatrixFormModal({
               >
                 {isCreate ? 'Tạo ma trận đề' : 'Chỉnh sửa ma trận đề'}
               </h3>
-              
             </div>
           </div>
           <ModalCloseButton onClick={onClose} />
@@ -164,12 +161,7 @@ export function ExamMatrixFormModal({
 
             {isCreate && (
               <div className="flex flex-col gap-2">
-                <span className={labelCls}>
-                  Cấp học{' '}
-                  <span className="text-red-500 font-normal">
-                    (tùy chọn — giới hạn lớp khi thêm dòng)
-                  </span>
-                </span>
+                <span className={labelCls}>Cấp học </span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {SCHOOL_LEVELS.map((lvl) => {
                     const active = selectedSchoolLevel === lvl.cap;
@@ -177,9 +169,7 @@ export function ExamMatrixFormModal({
                       <button
                         key={lvl.cap}
                         type="button"
-                        onClick={() =>
-                          setSelectedSchoolLevel(active ? null : lvl.cap)
-                        }
+                        onClick={() => setSelectedSchoolLevel(active ? null : lvl.cap)}
                         style={{
                           flex: 1,
                           padding: '8px 10px',
