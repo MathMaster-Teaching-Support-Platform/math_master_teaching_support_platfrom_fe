@@ -34,16 +34,23 @@ const BookCreateWizard: React.FC = () => {
   const [activeBookId, setActiveBookId] = useState<string | undefined>(undefined);
   const [stepIdx, setStepIdx] = useState<StepIdx>(0);
 
-  const fallbackBookQuery = useBook(routeId);
-  const seriesBooksQuery = useBookList({
-    bookSeriesId: seriesId || routeId || undefined,
-    page: 0,
-    size: 100,
-  });
+  const seriesLookupId = seriesId || routeId;
+  const seriesBooksQuery = useBookList(
+    {
+      bookSeriesId: seriesLookupId || undefined,
+      page: 0,
+      size: 100,
+    },
+    { enabled: Boolean(seriesLookupId) }
+  );
   const seriesBooks = useMemo(
     () => (seriesBooksQuery.data?.result?.content ?? []).sort((a, b) => a.title.localeCompare(b.title, 'vi')),
     [seriesBooksQuery.data]
   );
+  /** URL /wizard/:id là bookSeriesId — không gọi GET /books/:id cho đến khi biết list theo bộ rỗng (fallback: id là bookId). */
+  const fallbackBookFetchEnabled =
+    Boolean(routeId) && seriesBooksQuery.isSuccess && seriesBooks.length === 0;
+  const fallbackBookQuery = useBook(routeId, { enabled: fallbackBookFetchEnabled });
   const { data: bookData } = useBook(activeBookId);
   const book = bookData?.result;
   const seriesHasAnyMapping = useMemo(() => {

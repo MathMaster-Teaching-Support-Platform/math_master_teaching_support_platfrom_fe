@@ -36,18 +36,23 @@ export const bookKeys = {
     [...bookKeys.all, 'page-history', bookId, lessonId, pageNumber] as const,
 };
 
-export function useBookList(params: BookSearchParams = {}) {
+export function useBookList(
+  params: BookSearchParams = {},
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: bookKeys.list(params),
     queryFn: () => BookService.search(params),
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useBook(bookId: string | undefined) {
+export function useBook(bookId: string | undefined, options?: { enabled?: boolean }) {
+  const enabled = Boolean(bookId) && (options?.enabled ?? true);
   return useQuery({
     queryKey: bookKeys.detail(bookId ?? ''),
     queryFn: () => BookService.getById(bookId as string),
-    enabled: Boolean(bookId),
+    enabled,
   });
 }
 

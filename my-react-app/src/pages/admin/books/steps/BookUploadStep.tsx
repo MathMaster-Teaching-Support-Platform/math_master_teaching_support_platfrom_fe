@@ -78,11 +78,25 @@ const BookUploadStep: React.FC<Props> = ({
   const updateBook = useUpdateBook(book?.id ?? '');
   const deleteBook = useDeleteBook();
   const uploadPdf = useUploadBookPdf(isAddingAnother ? '' : (book?.id ?? ''));
-  const relatedBooksQuery = useBookList({
-    bookSeriesId: seriesId || book?.bookSeriesId || undefined,
-    page: 0,
-    size: 50,
-  });
+
+  /** Khi đã có series → chỉ lấy đúng các cuốn trong bộ. Khi chưa có series (vd. /new trước khi lưu metadata),
+   *  phải lọc theo khối+môn — nếu không BE coi bookSeriesId null là "không lọc" và trả cả kho sách. */
+  const anchorSeriesId = seriesId || book?.bookSeriesId;
+  const relatedBooksQuery = useBookList(
+    anchorSeriesId
+      ? {
+          bookSeriesId: anchorSeriesId,
+          page: 0,
+          size: 50,
+        }
+      : {
+          schoolGradeId: schoolGradeId || undefined,
+          subjectId: subjectId || undefined,
+          page: 0,
+          size: 50,
+        },
+    { enabled: Boolean(anchorSeriesId || (schoolGradeId && subjectId)) }
+  );
 
   const relatedBooks = useMemo(
     () =>
@@ -247,7 +261,9 @@ const BookUploadStep: React.FC<Props> = ({
         <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-medium text-slate-700">
-              {seriesId ? 'Các cuốn trong bộ sách' : 'Sách cùng khối/môn'} ({relatedBooks.length})
+              {anchorSeriesId
+                ? 'Các cuốn trong bộ sách'
+                : 'Sách đã có cùng khối/môn (đã chọn)'} ({relatedBooks.length})
             </div>
             {!isAddingAnother && (
               <button
