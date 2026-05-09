@@ -12,6 +12,7 @@ import {
   EyeOff,
   FileText,
   GraduationCap,
+  Languages,
   Plus,
   Search,
   Settings2,
@@ -296,43 +297,51 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                     </div>
 
                     {form.provider === 'MINISTRY' && (
-                      <div className="form-row form-row--tight-below">
-                        <div className="form-group">
-                          <label className="form-label">
-                            Lớp <span className="required">*</span>
-                          </label>
-                          <select
-                            className="form-select"
-                            value={form.schoolGradeId || ''}
-                            onChange={(e) => void handleGradeChange(e.target.value)}
-                            required
-                          >
-                            <option value="">-- Chọn lớp --</option>
-                            {grades.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">
-                            Môn học <span className="required">*</span>
-                          </label>
-                          <select
-                            className="form-select"
-                            value={form.subjectId || ''}
-                            onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-                            required
-                            disabled={!form.schoolGradeId}
-                          >
-                            <option value="">-- Chọn môn học --</option>
-                            {subjects.map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.name}
-                              </option>
-                            ))}
-                          </select>
+                      <div className="curriculum-selection-group">
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label className="form-label">
+                              Lớp <span className="required">*</span>
+                            </label>
+                            <div className="tc-icon-select-wrapper">
+                              <GraduationCap className="tc-select-icon" size={18} />
+                              <select
+                                className="form-select form-select--with-icon"
+                                value={form.schoolGradeId || ''}
+                                onChange={(e) => void handleGradeChange(e.target.value)}
+                                required
+                              >
+                                <option value="">-- Chọn lớp --</option>
+                                {grades.map((g) => (
+                                  <option key={g.id} value={g.id}>
+                                    {g.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">
+                              Môn học <span className="required">*</span>
+                            </label>
+                            <div className="tc-icon-select-wrapper">
+                              <BookOpen className="tc-select-icon" size={18} />
+                              <select
+                                className="form-select form-select--with-icon"
+                                value={form.subjectId || ''}
+                                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                                required
+                                disabled={!form.schoolGradeId}
+                              >
+                                <option value="">-- Chọn môn học --</option>
+                                {subjects.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -376,19 +385,25 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
                     <div className="form-row form-row--tight-below">
                       <div className="form-group">
-                        <label className="form-label">Ngôn ngữ</label>
-                        <select
-                          className="form-select"
-                          value={form.language || ''}
-                          onChange={(e) => setForm({ ...form, language: e.target.value })}
-                        >
-                          <option value="">-- Chọn ngôn ngữ --</option>
-                          {languageOptions.map((lang) => (
-                            <option key={lang} value={lang}>
-                              {lang}
-                            </option>
-                          ))}
-                        </select>
+                        <label className="form-label">
+                          Ngôn ngữ <span className="required">*</span>
+                        </label>
+                        <div className="tc-icon-select-wrapper">
+                          <Languages className="tc-select-icon" size={18} />
+                          <select
+                            className="form-select form-select--with-icon"
+                            value={form.language || ''}
+                            onChange={(e) => setForm({ ...form, language: e.target.value })}
+                            required
+                          >
+                            <option value="">-- Chọn ngôn ngữ --</option>
+                            {languageOptions.map((lang) => (
+                              <option key={lang} value={lang}>
+                                {lang}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                       <div className="form-group">
                         <label className="form-label">Ảnh thumbnail</label>
@@ -420,12 +435,15 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Mô tả tổng quát</label>
+                      <label className="form-label">
+                        Mô tả tổng quát <span className="required">*</span>
+                      </label>
                       <textarea
                         className="form-input form-textarea"
                         value={form.description || ''}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         rows={3}
+                        required
                       />
                     </div>
                   </div>
@@ -539,9 +557,13 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                               placeholder="Ví dụ: 10 → 10.000"
                             />
                             <p
-                              className={`form-hint ${!isOriginalPriceValid && originalThousandInput !== '' ? 'is-error' : ''}`}
+                              className={`form-hint ${(!isOriginalPriceValid || (Number.isInteger(originalThousandInt) && originalThousandInt < 20)) && originalThousandInput !== '' ? 'is-error' : ''}`}
                             >
-                              Chỉ nhập số nguyên dương (nghìn VND), ví dụ 10 tương ứng 10.000 VND.
+                              {Number.isInteger(originalThousandInt) &&
+                                originalThousandInt < 20 &&
+                                originalThousandInt > 0
+                                ? ''
+                                : 'Vui lòng nhập số theo đơn vị nghìn VNĐ. Ví dụ: nhập 10 tương ứng 10.000 VNĐ.'}
                             </p>
                           </div>
                           <div className="form-group">
@@ -556,10 +578,10 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                               autoComplete="off"
                               value={discountPercent === 0 ? '' : String(discountPercent)}
                               onChange={(e) => handleDiscountPercentInput(e.target.value)}
-                              placeholder="0, 5, 10...100"
+                              placeholder="Ví dụ: 10"
                             />
                             <p className={`form-hint ${!isDiscountPercentValid ? 'is-error' : ''}`}>
-                              Giảm giá: số nguyên từ 0 đến 100, chia hết cho 5.
+                              Giảm giá (%): Vui lòng nhập mức giảm từ 0% đến 100%
                             </p>
                           </div>
                         </div>
@@ -569,20 +591,23 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                             <span>Giá bán thực tế:</span>
                             <strong>{form.discountedPrice?.toLocaleString('vi-VN')}₫</strong>
                           </div>
-                          <div className="pricing-summary-row">
-                            <span>Tiết kiệm cho học viên:</span>
-                            <span className="pricing-summary-savings">
-                              {(
-                                Number(form.originalPrice) - Number(form.discountedPrice)
-                              ).toLocaleString('vi-VN')}
-                              ₫ ({discountPercent}%)
-                            </span>
-                          </div>
+                          {discountPercent > 0 && (
+                            <div className="pricing-summary-row">
+                              <span>Tiết kiệm cho học viên:</span>
+                              <span className="pricing-summary-savings">
+                                {(
+                                  Number(form.originalPrice) - Number(form.discountedPrice)
+                                ).toLocaleString('vi-VN')}
+                                ₫ ({discountPercent}%)
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="form-group">
                           <label className="form-label" htmlFor="create-discount-expiry">
-                            Ngày hết hạn giảm giá
+                            Ngày hết hạn giảm giá{' '}
+                            <span className="label-format-hint">(Ngày/Tháng/Năm)</span>
                           </label>
                           <input
                             id="create-discount-expiry"
@@ -600,7 +625,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                             }
                           />
                           <p className={`form-hint ${!isExpiryDateValid ? 'is-error' : ''}`}>
-                            Chỉ chọn từ hôm nay trở đi. Để trống nếu không giới hạn thời gian.
+                            Định dạng dd/mm/yyyy. Để trống nếu không giới hạn thời gian.
                           </p>
                         </div>
                       </>
@@ -1005,11 +1030,10 @@ const TeacherCourses: React.FC = () => {
                         setFilterStatus(tab.id);
                         setCurrentPage(1);
                       }}
-                      className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
-                        filterStatus === tab.id
-                          ? 'bg-white text-[#141413] shadow-sm'
-                          : 'text-[#87867F] hover:text-[#5E5D59]'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${filterStatus === tab.id
+                        ? 'bg-white text-[#141413] shadow-sm'
+                        : 'text-[#87867F] hover:text-[#5E5D59]'
+                        }`}
                     >
                       {tab.label}
                     </button>
