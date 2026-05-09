@@ -72,7 +72,7 @@ function AddAssessmentModal({
 }) {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
-  const [orderIndex, setOrderIndex] = useState(1);
+  const [orderIndex] = useState(existingAssessmentIds.length + 1);
   const [isRequired, setIsRequired] = useState(true);
   const [allowOutOfCourseLessons, setAllowOutOfCourseLessons] = useState(provider === 'CUSTOM');
   const [error, setError] = useState('');
@@ -171,27 +171,34 @@ function AddAssessmentModal({
             )}
           </div>
 
-          {/* Override toggle */}
-          <label className="cat-checkbox-wrapper">
-            <input
-              type="checkbox"
-              checked={allowOutOfCourseLessons}
-              onChange={(e) => setAllowOutOfCourseLessons(e.target.checked)}
-              disabled={provider === 'CUSTOM'}
-            />
+          {/* Independent Assessments Toggle */}
+          <div
+            className="cat-toggle-wrapper"
+            onClick={() => provider !== 'CUSTOM' && setAllowOutOfCourseLessons(!allowOutOfCourseLessons)}
+          >
             <div className="flex-1 min-w-0">
               <span className="font-[Be_Vietnam_Pro] text-[0.9rem] font-semibold text-[#141413]">
                 {provider === 'CUSTOM'
                   ? 'Cho phép chọn tất cả bài kiểm tra (Mặc định cho khóa Custom)'
-                  : 'Cho phép bài kiểm tra không theo bài học'}
+                  : 'Hiển thị thêm bài kiểm tra cuối kỳ và bài thi tổng hợp'}
               </span>
               <p className="font-[Be_Vietnam_Pro] text-[0.8rem] text-[#87867F] mt-1 mb-0">
                 {provider === 'CUSTOM'
                   ? 'Vì đây là khóa học tự do, bạn có thể chọn bất kỳ bài kiểm tra PUBLISHED nào của mình.'
-                  : 'Bật tùy chọn này để chọn các bài kiểm tra Cuối kỳ không nằm trong bài học cụ thể.'}
+                  : 'Bao gồm bài kiểm tra không thuộc bài học nào trong khóa học'}
               </p>
             </div>
-          </label>
+            <div className="cat-toggle-container">
+              <input
+                type="checkbox"
+                checked={allowOutOfCourseLessons}
+                onChange={() => { }} // Controlled by wrapper click
+                disabled={provider === 'CUSTOM'}
+                className="hidden-checkbox"
+              />
+              <div className={`cat-toggle ${allowOutOfCourseLessons ? 'active' : ''}`} />
+            </div>
+          </div>
 
           {/* Error */}
           {error && (
@@ -244,15 +251,9 @@ function AddAssessmentModal({
                         <span className="cat-badge published">
                           {statusLabel[assessment.status]}
                         </span>
-                        <span className={`cat-badge ${category}`}>
-                          {typeLabel[assessment.assessmentType]}
-                        </span>
-                        {allowOutOfCourseLessons && isSelected && (
-                          <span className="cat-badge warning">Override</span>
-                        )}
                       </div>
                       {isSelected && (
-                        <CheckCircle2 size={20} className="text-[#C96442] flex-shrink-0" />
+                        <CheckCircle2 size={18} className="text-[#818cf8] flex-shrink-0" />
                       )}
                     </div>
 
@@ -267,74 +268,25 @@ function AddAssessmentModal({
                     )}
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-[Be_Vietnam_Pro] text-[0.8rem] text-[#87867F]">
-                      <span>📝 {assessment.totalQuestions} câu</span>
+                      <span>{assessment.totalQuestions} câu</span>
                       <span className="text-[#E8E6DC]">·</span>
-                      <span>⭐ {assessment.totalPoints} điểm</span>
+                      <span>{assessment.totalPoints} điểm</span>
                       {assessment.timeLimitMinutes && (
                         <>
                           <span className="text-[#E8E6DC]">·</span>
-                          <span>⏱ {assessment.timeLimitMinutes} phút</span>
+                          <span>{assessment.timeLimitMinutes} phút</span>
                         </>
                       )}
                     </div>
 
-                    {provider === 'MINISTRY' ? (
-                      <div className="mt-2">
-                        <p className="font-[Be_Vietnam_Pro] text-[0.8rem] text-[#87867F]">
-                          Khớp {assessment.matchedLessonCount} bài học
-                          {assessment.matchedLessonTitles.length > 0
-                            ? `: ${assessment.matchedLessonTitles.join(', ')}`
-                            : ''}
-                        </p>
-                        {assessment.matchedLessonCount === 0 && (
-                          <p className="font-[Be_Vietnam_Pro] text-[0.8rem] text-red-600 font-semibold mt-0.5">
-                            ⚠ Không khớp bài học nào của {UI_TEXT.COURSE.toLowerCase()}.
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="font-[Be_Vietnam_Pro] text-[0.8rem] text-emerald-600 font-semibold mt-2">
-                        ✓ {UI_TEXT.COURSE} tự do — cho phép chọn bất kỳ bài kiểm tra nào
-                      </p>
-                    )}
+
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Settings panel for selected assessment */}
-          {selectedId && (
-            <div className="mt-5 p-4 bg-[#FAF9F5] border border-[#F0EEE6] rounded-2xl">
-              <p className="font-[Be_Vietnam_Pro] text-[0.75rem] font-bold text-[#5E5D59] uppercase tracking-wide mb-3">
-                Cài đặt bài kiểm tra
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <label className="flex-1">
-                  <p className="font-[Be_Vietnam_Pro] text-[0.8rem] font-semibold text-[#5E5D59] mb-1.5">
-                    Thứ tự hiển thị
-                  </p>
-                  <input
-                    className="w-full px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[0.875rem] text-[#141413] focus:outline-none focus:border-[#C96442] focus:ring-2 focus:ring-[#C96442]/15 transition"
-                    type="number"
-                    min={1}
-                    value={orderIndex}
-                    onChange={(e) => setOrderIndex(Number(e.target.value))}
-                  />
-                </label>
-                <label className="cat-checkbox-wrapper flex-1 !mt-6 !py-2.5 !px-3">
-                  <input
-                    type="checkbox"
-                    checked={isRequired}
-                    onChange={(e) => setIsRequired(e.target.checked)}
-                  />
-                  <span className="font-[Be_Vietnam_Pro] text-[0.9rem] font-semibold text-[#141413]">
-                    Là bài bắt buộc
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Footer */}
@@ -425,7 +377,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
   return (
     <div className="cat-container assessments-tab course-detail-tab">
-     
+
 
       {/* ── Curriculum hierarchy filter — only meaningful for Ministry courses ── */}
       {course.provider === 'MINISTRY' && (
@@ -534,22 +486,21 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
-                          className={`cat-badge ${
-                            assessment.assessmentStatus === 'PUBLISHED'
-                              ? 'published'
-                              : assessment.assessmentStatus === 'CLOSED'
-                                ? 'closed'
-                                : 'draft'
-                          }`}
+                          className={`cat-badge ${assessment.assessmentStatus === 'PUBLISHED'
+                            ? 'published'
+                            : assessment.assessmentStatus === 'CLOSED'
+                              ? 'closed'
+                              : 'draft'
+                            }`}
                         >
                           {statusLabel[assessment.assessmentStatus ?? 'DRAFT']}
                         </span>
-                        
+
                         {assessment.isRequired && (
                           <span className="cat-badge required">⭐ Bắt buộc</span>
                         )}
                       </div>
-                      
+
                     </div>
 
                     {/* Title */}
@@ -595,7 +546,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                       )}
                     </div>
 
-                    
+
 
                     {/* Actions — revealed on card hover */}
                     <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#F0EEE6] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
