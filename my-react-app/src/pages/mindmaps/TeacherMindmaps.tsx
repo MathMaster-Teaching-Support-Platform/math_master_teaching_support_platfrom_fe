@@ -19,13 +19,11 @@ import {
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
-import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import type { Mindmap } from '../../types';
 import type {
   ChapterBySubject,
@@ -151,16 +149,6 @@ export default function TeacherMindmaps() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'PUBLISHED' | 'ALL'>('ALL');
 
-  const [listGradeId, setListGradeId] = useState('');
-  const [listSubjectId, setListSubjectId] = useState('');
-  const [listChapterId, setListChapterId] = useState('');
-  const [listLessonId, setListLessonId] = useState('');
-  const { lessons: listLessons } = useCurriculumHierarchyCatalog({
-    gradeId: listGradeId,
-    subjectId: listSubjectId,
-    chapterId: listChapterId,
-  });
-
   const [generatorForm, setGeneratorForm] = useState({ title: '', prompt: '', levels: 3 });
   const [activeGeneratorStep, setActiveGeneratorStep] = useState(1);
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
@@ -202,23 +190,14 @@ export default function TeacherMindmaps() {
     [visibleMindmaps]
   );
 
-  const lessonFilterIds = useMemo(() => {
-    if (listLessonId) return new Set([listLessonId]);
-    if (listChapterId) return new Set(listLessons.map((l) => l.id));
-    return null;
-  }, [listLessonId, listChapterId, listLessons]);
-
   const filteredMindmaps = useMemo(
     () =>
       visibleMindmaps.filter((m) => {
         const statusMatch = statusFilter === 'ALL' || m.status === statusFilter;
         const searchMatch = m.title.toLowerCase().includes(search.toLowerCase());
-        const curriculumMatch =
-          lessonFilterIds === null ||
-          (m.lessonId != null && lessonFilterIds.has(m.lessonId));
-        return statusMatch && searchMatch && curriculumMatch;
+        return statusMatch && searchMatch;
       }),
-    [visibleMindmaps, statusFilter, search, lessonFilterIds]
+    [visibleMindmaps, statusFilter, search]
   );
 
   const filterTabs = [
@@ -810,30 +789,6 @@ export default function TeacherMindmaps() {
 
           {!showGenerator && (
             <>
-              <CurriculumHierarchyFilter
-                gradeId={listGradeId}
-                subjectId={listSubjectId}
-                chapterId={listChapterId}
-                lessonId={listLessonId}
-                onGradeChange={(id) => {
-                  setListGradeId(id);
-                  setListSubjectId('');
-                  setListChapterId('');
-                  setListLessonId('');
-                }}
-                onSubjectChange={(id) => {
-                  setListSubjectId(id);
-                  setListChapterId('');
-                  setListLessonId('');
-                }}
-                onChapterChange={(id) => {
-                  setListChapterId(id);
-                  setListLessonId('');
-                }}
-                onLessonChange={setListLessonId}
-                footnote="Mindmap gắn với bài học Bộ SGK — chọn chương/bài để thu hẹp danh sách."
-              />
-
               {/* ── Toolbar ── */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
