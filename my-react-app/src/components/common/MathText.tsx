@@ -1,10 +1,59 @@
 import type { ReactNode } from 'react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
+import { prepareBookOcrMathContent } from '../../utils/bookOcrMathNormalize';
 
 interface MathTextProps {
   text: string;
   block?: boolean;
+  /** Chuẩn hóa LaTeX thiếu `$…$` từ OCR sách (xem trước verify). */
+  bookOcr?: boolean;
+}
+
+type TexSeg =
+  | { kind: 'plain'; value: string }
+  | { kind: 'display'; value: string }
+  | { kind: 'inline'; value: string };
+
+function splitSegQueue(
+  queue: TexSeg[],
+  open: string,
+  close: string,
+  outKind: 'display' | 'inline'
+): TexSeg[] {
+  const next: TexSeg[] = [];
+  for (const seg of queue) {
+    if (seg.kind !== 'plain') {
+      next.push(seg);
+      continue;
+    }
+    let rest = seg.value;
+    while (rest.length > 0) {
+      const oi = rest.indexOf(open);
+      if (oi === -1) {
+        next.push({ kind: 'plain', value: rest });
+        break;
+      }
+      if (oi > 0) next.push({ kind: 'plain', value: rest.slice(0, oi) });
+      const afterOpen = rest.slice(oi + open.length);
+      const ci = afterOpen.indexOf(close);
+      if (ci === -1) {
+        next.push({ kind: 'plain', value: rest });
+        break;
+      }
+      const inner = afterOpen.slice(0, ci).trim();
+      next.push({ kind: outKind, value: inner });
+      rest = afterOpen.slice(ci + close.length);
+    }
+  }
+  return next;
+}
+
+function splitExplicitTexSegments(input: string): TexSeg[] {
+  let queue: TexSeg[] = [{ kind: 'plain', value: input }];
+  queue = splitSegQueue(queue, '\\[', '\\]', 'display');
+  queue = splitSegQueue(queue, '\\(', '\\)', 'inline');
+  return queue;
 }
 
 type TextPart = string | { type: 'math'; content: string };
@@ -197,50 +246,10 @@ function splitInlineMathParts(value: string): TextPart[] {
   return parts;
 }
 
-/**
- * Component to render text with LaTeX math formulas
- * Supports inline math: $formula$
- * Supports block math: $$formula$$
- *
- * Multi-line text (e.g. solution steps separated by \n) is rendered with each
- * line on its own row so the steps appear as a vertical list, not collapsed
- * onto a single line by HTML whitespace handling.
- */
-export default function MathText({ text, block = false }: Readonly<MathTextProps>) {
-  if (!text) return null;
-
-  // Multi-line: split on newline so each step / paragraph gets its own row.
-  if (!block && text.includes('\n')) {
-    const lines = text.split('\n');
-    return (
-      <span style={{ display: 'inline-block', width: '100%' }}>
-        {lines.map((line, idx) => (
-          <span
-            key={`mt-line-${idx}`}
-            style={{ display: 'block', minHeight: '1em' }}
-          >
-            {line.length > 0 ? <MathText text={line} /> : ' '}
-          </span>
-        ))}
-      </span>
-    );
-  }
-
-  const normalizedInput = normalizeInlineMathDelimiters(text);
-
-  // If block mode, render as block math
-  if (block) {
-    const withoutLeading = normalizedInput.startsWith('$') ? normalizedInput.slice(1) : normalizedInput;
-    const withoutTrailing = withoutLeading.endsWith('$')
-      ? withoutLeading.slice(0, -1)
-      : withoutLeading;
-    const cleanText = sanitizeMathContent(withoutTrailing);
-    return <BlockMath math={cleanText} renderError={() => <span>{text}</span>} />;
-  }
-
+function renderPlainWithMathDelimiters(plain: string): ReactNode {
+  const normalizedInput = normalizeInlineMathDelimiters(plain);
   const parts = splitInlineMathParts(normalizedInput);
 
-  // If no math found, still render markdown image + inline formatting tokens.
   if (parts.length === 1 && typeof parts[0] === 'string') {
     const renderableParts = splitMarkdownImageParts(parts[0]);
     return (
@@ -267,11 +276,10 @@ export default function MathText({ text, block = false }: Readonly<MathTextProps
     );
   }
 
-  // Render mixed text and math
   return (
     <>
-      {parts.map((part) => {
-        const key = typeof part === 'string' ? `text-${part}` : `math-${part.content}`;
+      {parts.map((part, pi) => {
+        const key = typeof part === 'string' ? `text-${pi}-${part.slice(0, 24)}` : `math-${pi}-${part.content.slice(0, 24)}`;
         if (typeof part === 'string') {
           const renderableParts = splitMarkdownImageParts(part);
           return (
@@ -286,7 +294,7 @@ export default function MathText({ text, block = false }: Readonly<MathTextProps
                 }
                 return (
                   <img
-                    key={`img-${item.src}-${item.alt}-${item.title ?? ''}`}
+                    key={`img-${item.src}-${item.alt}-${item.title ?? ''}-${ii}`}
                     src={item.src}
                     alt={item.alt || 'image'}
                     title={item.title ?? item.alt}
@@ -296,11 +304,102 @@ export default function MathText({ text, block = false }: Readonly<MathTextProps
               })}
             </span>
           );
-        } else {
-          const safeMath = sanitizeMathContent(part.content);
-          return <InlineMath key={key} math={safeMath} renderError={() => <span>{`$${part.content}$`}</span>} />;
         }
+        const safeMath = sanitizeMathContent(part.content);
+        return <InlineMath key={key} math={safeMath} renderError={() => <span>{`$${part.content}$`}</span>} />;
       })}
     </>
   );
+}
+
+function renderSingleLineTexAware(line: string): ReactNode {
+  const segments = splitExplicitTexSegments(line);
+  const onlyPlain = segments.length === 1 && segments[0].kind === 'plain';
+  if (onlyPlain) return renderPlainWithMathDelimiters(segments[0].value);
+
+  return (
+    <>
+      {segments.map((seg, idx) => {
+        if (seg.kind === 'display') {
+          const cleanText = sanitizeMathContent(seg.value);
+          return (
+            <span
+              key={`tex-disp-${idx}`}
+              className="block w-full overflow-x-auto my-1"
+            >
+              <BlockMath math={cleanText} renderError={() => <span>{seg.value}</span>} />
+            </span>
+          );
+        }
+        if (seg.kind === 'inline') {
+          const cleanText = sanitizeMathContent(seg.value);
+          return (
+            <InlineMath
+              key={`tex-inl-${idx}`}
+              math={cleanText}
+              renderError={() => <span>{`(${seg.value})`}</span>}
+            />
+          );
+        }
+        return <span key={`tex-plain-${idx}`}>{renderPlainWithMathDelimiters(seg.value)}</span>;
+      })}
+    </>
+  );
+}
+
+/**
+ * Component to render text with LaTeX math formulas
+ * Supports inline math: $formula$
+ * Supports block math: $$formula$$
+ * Supports \\[ display \\] and \\( inline \\) (LaTeX chuẩn).
+ *
+ * Multi-line text (e.g. solution steps separated by \n) is rendered with each
+ * line on its own row so the steps appear as a vertical list, not collapsed
+ * onto a single line by HTML whitespace handling.
+ */
+export default function MathText({
+  text,
+  block = false,
+  bookOcr = false,
+}: Readonly<MathTextProps>) {
+  if (!text) return null;
+
+  const prepared = bookOcr ? prepareBookOcrMathContent(text) : text;
+
+  // Multi-line: split on newline so each step / paragraph gets its own row.
+  if (!block && prepared.includes('\n')) {
+    const lines = prepared.split('\n');
+    return (
+      <span style={{ display: 'inline-block', width: '100%' }}>
+        {lines.map((line, idx) => (
+          <span
+            key={`mt-line-${idx}`}
+            style={{ display: 'block', minHeight: '1em' }}
+          >
+            {line.length > 0 ? (
+              <MathText text={line} block={false} bookOcr={false} />
+            ) : (
+              ' '
+            )}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  const normalizedInput = normalizeInlineMathDelimiters(prepared);
+
+  // If block mode, render as block math
+  if (block) {
+    const withoutLeading = normalizedInput.startsWith('$') ? normalizedInput.slice(1) : normalizedInput;
+    const withoutTrailing = withoutLeading.endsWith('$')
+      ? withoutLeading.slice(0, -1)
+      : withoutLeading;
+    const cleanText = sanitizeMathContent(withoutTrailing);
+    return (
+      <BlockMath math={cleanText} renderError={() => <span>{prepared}</span>} />
+    );
+  }
+
+  return renderSingleLineTexAware(prepared);
 }
