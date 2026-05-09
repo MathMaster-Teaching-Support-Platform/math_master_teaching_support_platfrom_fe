@@ -179,6 +179,50 @@ const buildAssetCandidates = (url: string): string[] => {
   return Array.from(new Set(candidates));
 };
 
+const IMAGE_URL_EXT_REGEX = /\.(jpe?g|png|gif|webp|bmp|svg)$/i;
+
+function looksLikeImageAssetUrl(url: string): boolean {
+  try {
+    const path = new URL(url, globalThis.location.origin).pathname;
+    return IMAGE_URL_EXT_REGEX.test(path);
+  } catch {
+    return IMAGE_URL_EXT_REGEX.test(url.split('?')[0].split('#')[0]);
+  }
+}
+
+async function blobLooksLikeImageBytes(blob: Blob): Promise<boolean> {
+  if (blob.size < 3) return false;
+  const buf = await blob.slice(0, 12).arrayBuffer();
+  const u = new Uint8Array(buf);
+  if (u[0] === 0xff && u[1] === 0xd8 && u[2] === 0xff) return true;
+  if (u[0] === 0x89 && u[1] === 0x50 && u[2] === 0x4e && u[3] === 0x47) return true;
+  if (u[0] === 0x47 && u[1] === 0x49 && u[2] === 0x46) return true;
+  if (
+    u.length >= 12 &&
+    u[0] === 0x52 &&
+    u[1] === 0x49 &&
+    u[2] === 0x46 &&
+    u[3] === 0x46 &&
+    u[8] === 0x57 &&
+    u[9] === 0x45 &&
+    u[10] === 0x42 &&
+    u[11] === 0x50
+  )
+    return true;
+  return false;
+}
+
+/** Proxies often strip or rewrite Content-Type to octet-stream; blob.type then breaks <img> via blob URL. */
+async function isRenderableAuthenticatedImageBlob(blob: Blob, urlHint: string): Promise<boolean> {
+  const ct = (blob.type ?? '').toLowerCase();
+  if (ct.startsWith('image/')) return true;
+  if (blob.size <= 0) return false;
+  if (looksLikeImageAssetUrl(urlHint)) {
+    if (!ct || ct === 'application/octet-stream') return true;
+  }
+  return blobLooksLikeImageBytes(blob);
+}
+
 const AuthenticatedImage: React.FC<{
   src: string;
   alt: string;
@@ -229,7 +273,7 @@ const AuthenticatedImage: React.FC<{
             continue;
           }
           const blob = await response.blob();
-          if (!blob.type.startsWith('image/')) {
+          if (!(await isRenderableAuthenticatedImageBlob(blob, candidateSrc))) {
             continue;
           }
           revokedObjectUrl = URL.createObjectURL(blob);
