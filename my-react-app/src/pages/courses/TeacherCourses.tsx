@@ -745,7 +745,7 @@ const TeacherCourses: React.FC = () => {
         if (!lessonData || lessonData.isLoading || !lessonData.data) {
           return true; // Keep visible while loading
         }
-        
+
         let hasMatch = false;
         for (const lesson of lessonData.data) {
           const chapterMatch = !filterChapterId || lesson.chapterId === filterChapterId;
@@ -939,8 +939,8 @@ const TeacherCourses: React.FC = () => {
 
             {/* ── Toolbar ── */}
             <div className="flex flex-col gap-3">
-              <div className="flex flex-col lg:flex-row lg:items-start gap-3">
-                <label className="flex-1 min-w-0 flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+              <div className="bg-white rounded-2xl border border-[#E8E6DC] overflow-hidden">
+                <label className="flex items-center gap-3 px-4 py-3 border-b border-[#E8E6DC] focus-within:bg-[#FAF9F5] transition-colors duration-150">
                   <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" aria-hidden />
                   <input
                     className="flex-1 min-w-0 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
@@ -964,7 +964,7 @@ const TeacherCourses: React.FC = () => {
                 </label>
 
                 <CurriculumHierarchyFilter
-                  className="lg:flex-1 lg:min-w-0 !p-4"
+                  className="!bg-transparent !border-0 !rounded-none !p-4"
                   gradeId={filterGradeId}
                   subjectId={filterSubjectId}
                   chapterId={filterChapterId}

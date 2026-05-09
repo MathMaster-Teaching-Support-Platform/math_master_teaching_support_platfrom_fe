@@ -19,6 +19,7 @@ import {
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -148,6 +149,10 @@ export default function TeacherMindmaps() {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'PUBLISHED' | 'ALL'>('ALL');
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
 
   const [generatorForm, setGeneratorForm] = useState({ title: '', prompt: '', levels: 3 });
   const [activeGeneratorStep, setActiveGeneratorStep] = useState(1);
@@ -206,15 +211,30 @@ export default function TeacherMindmaps() {
     { id: 'DRAFT' as const, label: `Nháp (${stats.draft})` },
   ];
 
+  const hasCurriculumFilter = Boolean(
+    filterGradeId || filterSubjectId || filterChapterId || filterLessonId
+  );
+
+  const resetMindmapFilters = () => {
+    setFilterGradeId('');
+    setFilterSubjectId('');
+    setFilterChapterId('');
+    setFilterLessonId('');
+  };
+
   useEffect(() => {
     loadMindmaps();
-  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [statusFilter, filterGradeId, filterSubjectId, filterChapterId, filterLessonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMindmaps = async () => {
     try {
       setLoading(true);
       setError(null);
       const params: {
+        gradeId?: string;
+        subjectId?: string;
+        chapterId?: string;
+        lessonId?: string;
         page?: number;
         size?: number;
         status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -222,6 +242,10 @@ export default function TeacherMindmaps() {
         direction?: 'ASC' | 'DESC';
       } = { page: 0, size: 10, sortBy: 'createdAt', direction: 'DESC' };
       if (statusFilter !== 'ALL') params.status = statusFilter;
+      if (filterGradeId) params.gradeId = filterGradeId;
+      if (filterSubjectId) params.subjectId = filterSubjectId;
+      if (filterChapterId) params.chapterId = filterChapterId;
+      if (filterLessonId) params.lessonId = filterLessonId;
       const response = await MindmapService.getMyMindmaps(params);
       setMindmaps(response.result.content);
     } catch (err) {
@@ -789,6 +813,44 @@ export default function TeacherMindmaps() {
 
           {!showGenerator && (
             <>
+              <div className="space-y-3">
+                <CurriculumHierarchyFilter
+                  gradeId={filterGradeId}
+                  subjectId={filterSubjectId}
+                  chapterId={filterChapterId}
+                  lessonId={filterLessonId}
+                  onGradeChange={(id) => {
+                    setFilterGradeId(id);
+                    setFilterSubjectId('');
+                    setFilterChapterId('');
+                    setFilterLessonId('');
+                  }}
+                  onSubjectChange={(id) => {
+                    setFilterSubjectId(id);
+                    setFilterChapterId('');
+                    setFilterLessonId('');
+                  }}
+                  onChapterChange={(id) => {
+                    setFilterChapterId(id);
+                    setFilterLessonId('');
+                  }}
+                  onLessonChange={setFilterLessonId}
+                  depth="lesson"
+                  footnote="Lọc danh sách mindmap theo chương trình học (Lớp -> Môn -> Chương -> Bài học)."
+                />
+                {hasCurriculumFilter && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={resetMindmapFilters}
+                      className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* ── Toolbar ── */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
