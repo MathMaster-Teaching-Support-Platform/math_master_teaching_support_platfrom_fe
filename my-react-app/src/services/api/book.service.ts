@@ -192,6 +192,22 @@ export class BookService {
     return handle<OcrTriggerResponse>(res, 'Failed to trigger OCR');
   }
 
+  /** Step 4: queue Python re-OCR for one (lesson, PDF page). */
+  static async reOcrSingleBookPage(
+    bookId: string,
+    body: { lessonId: string; pageNumber: number }
+  ): Promise<ApiResponse<void>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_OCR_SINGLE_PAGE(bookId)}`, {
+      method: 'POST',
+      headers: jsonHeaders(requireToken()),
+      body: JSON.stringify({
+        lessonId: body.lessonId,
+        pageNumber: body.pageNumber,
+      }),
+    });
+    return handle<void>(res, 'Failed to queue page OCR');
+  }
+
   static async getSeriesPageMapping(bookId: string): Promise<ApiResponse<BookLessonPageResponse[]>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_SERIES_PAGE_MAPPING(bookId)}`, {
       method: 'GET',
