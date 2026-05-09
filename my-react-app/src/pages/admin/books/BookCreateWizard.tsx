@@ -43,7 +43,7 @@ function readWizardStepFromLocationSearch(): StepIdx {
 
 const STEPS: Array<{ key: StepIdx; title: string; icon: React.ReactNode }> = [
   { key: 0, title: 'Thông tin & Upload PDF', icon: <FileText size={16} /> },
-  { key: 1, title: 'Mapping bài học → trang', icon: <ListTree size={16} /> },
+  { key: 1, title: 'Liên kết bài học → trang', icon: <ListTree size={16} /> },
   { key: 2, title: 'Chạy OCR', icon: <Rocket size={16} /> },
   { key: 3, title: 'Xác minh nội dung', icon: <ClipboardCheck size={16} /> },
 ];
@@ -191,7 +191,9 @@ const BookCreateWizard: React.FC = () => {
 
     let fromStorage: StepIdx | null = null;
     try {
-      fromStorage = parseWizardStepParam(sessionStorage.getItem(wizardStepStorageKey(routeId, activeBookId)));
+      fromStorage = parseWizardStepParam(
+        sessionStorage.getItem(wizardStepStorageKey(routeId, activeBookId))
+      );
     } catch {
       fromStorage = null;
     }
@@ -269,7 +271,11 @@ const BookCreateWizard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout role="admin" user={mockAdmin} contentClassName="dashboard-content--flush-bleed">
+    <DashboardLayout
+      role="admin"
+      user={mockAdmin}
+      contentClassName="dashboard-content--flush-bleed"
+    >
       <div className="px-6 py-8 lg:px-8">
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -291,8 +297,7 @@ const BookCreateWizard: React.FC = () => {
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
               Quy trình 4 bước theo bộ sách: nhập metadata + upload PDF, mapping bài học, chạy OCR,
-              sau đó xác
-              minh nội dung.
+              sau đó xác minh nội dung.
             </p>
           </div>
         </div>
@@ -342,7 +347,9 @@ const BookCreateWizard: React.FC = () => {
                   {s.icon}
                   {s.title}
                 </button>
-                {i < STEPS.length - 1 && <ArrowRight size={14} className="text-slate-400 hidden md:block" />}
+                {i < STEPS.length - 1 && (
+                  <ArrowRight size={14} className="text-slate-400 hidden md:block" />
+                )}
               </li>
             );
           })}
@@ -360,9 +367,7 @@ const BookCreateWizard: React.FC = () => {
               onUploaded={() => goToWizardStep(1)}
             />
           )}
-          {stepIdx === 1 && activeBookId && book && (
-            <PageMappingStep book={book} />
-          )}
+          {stepIdx === 1 && activeBookId && book && <PageMappingStep book={book} />}
           {stepIdx === 2 && activeBookId && book && (
             <OcrTriggerStep
               book={book}
@@ -377,7 +382,7 @@ const BookCreateWizard: React.FC = () => {
                   <CheckCircle2 size={18} /> Bước 4 · Xác minh nội dung
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Xác minh trực tiếp tại đây: kiểm tra/chỉnh sửa block và đánh dấu theo từng trang.
+                  Xác minh trực tiếp tại đây: kiểm tra/chỉnh sửa đoạn và đánh dấu theo từng trang.
                 </p>
               </div>
               <BookVerifyContent
