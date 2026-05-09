@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +20,27 @@ import OcrTriggerStep from './steps/OcrTriggerStep';
 
 type StepIdx = 0 | 1 | 2 | 3;
 
+function parseWizardStepParam(raw: string | null): StepIdx | null {
+  if (raw == null || raw === '') return null;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n) || n < 1 || n > 4) return null;
+  return (n - 1) as StepIdx;
+}
+
+/** Giữ bước wizard sau F5 — key theo bộ + cuốn đang chọn. */
+function wizardStepStorageKey(seriesRouteId: string, activeBookId: string): string {
+  return `bookWizardStep:${seriesRouteId}:${activeBookId}`;
+}
+
+function readWizardStepFromLocationSearch(): StepIdx {
+  try {
+    const params = new URLSearchParams(globalThis.location.search);
+    return parseWizardStepParam(params.get('wizardStep')) ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 const STEPS: Array<{ key: StepIdx; title: string; icon: React.ReactNode }> = [
   { key: 0, title: 'Thông tin & Upload PDF', icon: <FileText size={16} /> },
   { key: 1, title: 'Mapping bài học → trang', icon: <ListTree size={16} /> },
@@ -30,9 +51,11 @@ const STEPS: Array<{ key: StepIdx; title: string; icon: React.ReactNode }> = [
 const BookCreateWizard: React.FC = () => {
   const { bookId: routeId } = useParams<{ bookId?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [seriesId, setSeriesId] = useState<string | undefined>(routeId);
   const [activeBookId, setActiveBookId] = useState<string | undefined>(undefined);
-  const [stepIdx, setStepIdx] = useState<StepIdx>(0);
+  const [stepIdx, setStepIdx] = useState<StepIdx>(() => readWizardStepFromLocationSearch());
+  const wizardHydratedKeyRef = useRef<string>('');
 
   /** Đổi bộ trong URL → bỏ cuốn đang chọn để không GET /books/:id của bộ cũ trong lúc fetch danh sách mới. */
   useEffect(() => {
@@ -100,9 +123,12 @@ const BookCreateWizard: React.FC = () => {
     setSeriesId(resolvedSeriesId);
     setActiveBookId(fallbackBook.id);
     if (routeId !== resolvedSeriesId) {
-      navigate(`/admin/books/${resolvedSeriesId}/wizard`, { replace: true });
+      const qs = searchParams.toString();
+      navigate(`/admin/books/${resolvedSeriesId}/wizard${qs ? `?${qs}` : ''}`, {
+        replace: true,
+      });
     }
-  }, [routeId, seriesBooks, activeBookId, fallbackBookQuery.data, navigate]);
+  }, [routeId, seriesBooks, activeBookId, fallbackBookQuery.data, navigate, searchParams]);
 
   const canGoNext = useMemo(() => {
     if (stepIdx === 0) return Boolean(book?.pdfPath);
@@ -111,14 +137,84 @@ const BookCreateWizard: React.FC = () => {
     return false;
   }, [stepIdx, book, seriesHasAnyMapping]);
 
-  const canAccessStep = (targetStep: StepIdx) => {
-    if (targetStep === 0) return true;
-    if (!activeBookId || !book) return false;
-    if (targetStep >= 1 && !book.pdfPath) return false;
-    if (targetStep >= 2 && !seriesHasAnyMapping) return false;
-    if (targetStep >= 3 && book.status !== 'OCR_DONE') return false;
-    return true;
-  };
+  const canAccessStep = useCallback(
+    (targetStep: StepIdx) => {
+      if (targetStep === 0) return true;
+      if (!activeBookId || !book) return false;
+      if (targetStep >= 1 && !book.pdfPath) return false;
+      if (targetStep >= 2 && !seriesHasAnyMapping) return false;
+      if (targetStep >= 3 && book.status !== 'OCR_DONE') return false;
+      return true;
+    },
+    [activeBookId, book, seriesHasAnyMapping]
+  );
+
+  const persistWizardStep = useCallback(
+    (s: StepIdx) => {
+      const param = String(s + 1);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('wizardStep', param);
+          return next;
+        },
+        { replace: true }
+      );
+      if (routeId && activeBookId) {
+        try {
+          sessionStorage.setItem(wizardStepStorageKey(routeId, activeBookId), param);
+        } catch {
+          /* quota / private mode */
+        }
+      }
+    },
+    [setSearchParams, routeId, activeBookId]
+  );
+
+  const goToWizardStep = useCallback(
+    (s: StepIdx) => {
+      setStepIdx(s);
+      persistWizardStep(s);
+    },
+    [persistWizardStep]
+  );
+
+  /** Sau F5 / đổi cuốn: khôi phục bước từ sessionStorage (đúng book) hoặc ?wizardStep= (nếu hợp lệ). */
+  useEffect(() => {
+    if (!routeId || !activeBookId) return;
+    if (book?.id !== activeBookId) return;
+    if (activeBookQuery.isFetching || activeBookQuery.isPending) return;
+
+    const hydrateKey = `${routeId}:${activeBookId}`;
+    if (wizardHydratedKeyRef.current === hydrateKey) return;
+    wizardHydratedKeyRef.current = hydrateKey;
+
+    let fromStorage: StepIdx | null = null;
+    try {
+      fromStorage = parseWizardStepParam(sessionStorage.getItem(wizardStepStorageKey(routeId, activeBookId)));
+    } catch {
+      fromStorage = null;
+    }
+    const fromUrl = parseWizardStepParam(searchParams.get('wizardStep'));
+
+    let candidate: StepIdx | null = null;
+    if (fromStorage !== null && canAccessStep(fromStorage)) candidate = fromStorage;
+    else if (fromUrl !== null && canAccessStep(fromUrl)) candidate = fromUrl;
+
+    if (candidate !== null) {
+      setStepIdx(candidate);
+      persistWizardStep(candidate);
+    }
+  }, [
+    routeId,
+    activeBookId,
+    book?.id,
+    searchParams,
+    canAccessStep,
+    persistWizardStep,
+    activeBookQuery.isFetching,
+    activeBookQuery.isPending,
+  ]);
 
   useEffect(() => {
     // Khi đổi cuốn trong bộ, detail query của cuốn mới có khoảng trống book === undefined.
@@ -131,14 +227,17 @@ const BookCreateWizard: React.FC = () => {
     if (stepIdx > 0 && !book.pdfPath) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStepIdx(0);
+      persistWizardStep(0);
       return;
     }
     if (stepIdx > 1 && !seriesHasAnyMapping) {
       setStepIdx(1);
+      persistWizardStep(1);
       return;
     }
     if (stepIdx > 2 && book.status !== 'OCR_DONE') {
       setStepIdx(2);
+      persistWizardStep(2);
     }
   }, [
     book,
@@ -147,6 +246,7 @@ const BookCreateWizard: React.FC = () => {
     seriesHasAnyMapping,
     activeBookQuery.isFetching,
     activeBookQuery.isPending,
+    persistWizardStep,
   ]);
 
   const handleBookCreated = ({ bookId, seriesId }: { bookId: string; seriesId: string }) => {
@@ -162,7 +262,9 @@ const BookCreateWizard: React.FC = () => {
   const handleSwitchToNew = () => {
     setSeriesId(undefined);
     setActiveBookId(undefined);
+    wizardHydratedKeyRef.current = '';
     setStepIdx(0);
+    setSearchParams({}, { replace: true });
     navigate('/admin/books/new', { replace: true });
   };
 
@@ -220,7 +322,7 @@ const BookCreateWizard: React.FC = () => {
                   disabled={!stepIsAccessible}
                   onClick={() => {
                     if (stepIsAccessible) {
-                      setStepIdx(s.key);
+                      goToWizardStep(s.key);
                     }
                   }}
                   className={[
@@ -255,7 +357,7 @@ const BookCreateWizard: React.FC = () => {
               onCreated={handleBookCreated}
               onSelectBook={handleSelectBook}
               onSwitchToNew={handleSwitchToNew}
-              onUploaded={() => setStepIdx(1)}
+              onUploaded={() => goToWizardStep(1)}
             />
           )}
           {stepIdx === 1 && activeBookId && book && (
@@ -265,7 +367,7 @@ const BookCreateWizard: React.FC = () => {
             <OcrTriggerStep
               book={book}
               onSelectSeriesBook={handleSelectBook}
-              onComplete={() => setStepIdx(3)}
+              onComplete={() => goToWizardStep(3)}
             />
           )}
           {stepIdx === 3 && activeBookId && book && (
@@ -291,7 +393,7 @@ const BookCreateWizard: React.FC = () => {
           <div className="flex justify-between items-center mt-6">
             <button
               type="button"
-              onClick={() => setStepIdx(0)}
+              onClick={() => goToWizardStep(0)}
               className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50"
             >
               <ArrowLeft size={14} /> Quay lại
@@ -299,7 +401,7 @@ const BookCreateWizard: React.FC = () => {
             <button
               type="button"
               disabled={!canGoNext}
-              onClick={() => setStepIdx(2)}
+              onClick={() => goToWizardStep(2)}
               className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
             >
               Tiếp tục <ArrowRight size={14} />
