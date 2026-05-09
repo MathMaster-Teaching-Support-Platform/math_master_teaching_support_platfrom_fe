@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
 import MathText from '../../components/common/MathText';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -38,6 +38,10 @@ import type { AttemptQuestionResponse } from '../../types/studentAssessment.type
 export default function AssessmentPreview() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const layoutRole = (searchParams.get('role') ?? 'teacher') as 'teacher' | 'admin';
+  const isAdmin = layoutRole === 'admin';
+  const handleBack = () => (isAdmin ? navigate(-1) : navigate(`/teacher/assessments/${id}`));
 
   // Loaded data
   const [assessment, setAssessment] = useState<AssessmentResponse | null>(null);
@@ -202,8 +206,8 @@ export default function AssessmentPreview() {
 
   const layoutShell = (children: ReactNode) => (
     <DashboardLayout
-      role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      role={layoutRole}
+      user={{ name: layoutRole === 'admin' ? 'Admin' : 'Teacher', avatar: '', role: layoutRole }}
       notificationCount={0}
       contentClassName="dashboard-content--flush-bleed"
     >
@@ -240,10 +244,10 @@ export default function AssessmentPreview() {
           <button
             type="button"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-            onClick={() => navigate(`/teacher/assessments/${id}`)}
+            onClick={handleBack}
           >
             <ArrowLeft className="w-4 h-4" aria-hidden />
-            Về chi tiết đề
+            {isAdmin ? 'Quay lại' : 'Về chi tiết đề'}
           </button>
         ) : null}
       </div>
@@ -256,10 +260,10 @@ export default function AssessmentPreview() {
         <button
           type="button"
           className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-          onClick={() => navigate(`/teacher/assessments/${id}`)}
+          onClick={handleBack}
         >
           <ArrowLeft size={15} aria-hidden />
-          Quay lại chi tiết đề
+          {isAdmin ? 'Quay lại' : 'Quay lại chi tiết đề'}
         </button>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
           <Eye className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" aria-hidden />
@@ -288,10 +292,10 @@ export default function AssessmentPreview() {
       <button
         type="button"
         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-        onClick={() => navigate(`/teacher/assessments/${id}`)}
+        onClick={handleBack}
       >
         <ArrowLeft size={15} aria-hidden />
-        Quay lại chi tiết đề
+        {isAdmin ? 'Quay lại' : 'Quay lại chi tiết đề'}
       </button>
 
       <div className="rounded-xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 flex items-start gap-3 shadow-sm">
@@ -348,7 +352,7 @@ export default function AssessmentPreview() {
             <button
               type="button"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors active:scale-[0.98]"
-              onClick={() => navigate(`/teacher/assessments/${id}`)}
+              onClick={handleBack}
             >
               Đóng xem trước
             </button>

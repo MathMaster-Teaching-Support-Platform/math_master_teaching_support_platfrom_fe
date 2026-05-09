@@ -39,13 +39,13 @@ const featureMeta: Record<string, { icon: React.ReactNode; label: string; descri
     icon: <Wand2 className="w-4 h-4" />,
     label: 'Tạo mẫu từ câu hỏi (AI)',
     description:
-      'Giáo viên dán một câu hỏi thật, AI gợi ý mẫu (Blueprint) gồm biến số, ràng buộc và công thức đáp án. Mỗi lần gọi tốn số token cấu hình ở đây.',
+      'Giáo viên dán một câu hỏi thật, AI gợi ý mẫu gồm biến số, ràng buộc và công thức đáp án',
   },
   'question-generate': {
     icon: <Sparkles className="w-4 h-4" />,
     label: 'Sinh câu hỏi từ mẫu (AI)',
     description:
-      'AI sinh nhiều câu hỏi mới từ một mẫu sẵn có. Số token tiêu hao = giá trị cấu hình ở đây × số câu giáo viên yêu cầu.',
+      'AI sinh nhiều câu hỏi mới từ một mẫu sẵn có. Số token tiêu hao = số câu giáo viên yêu cầu.',
   },
 };
 

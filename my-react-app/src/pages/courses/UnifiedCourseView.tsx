@@ -734,8 +734,8 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                         </div>
                       )}
                       {activeTab === 'assessments' &&
-                        (hasFullAccess ? (
-                          <StudentAssessmentsTab courseId={courseId!} />
+                        (hasFullAccess && course ? (
+                          <StudentAssessmentsTab courseId={courseId!} course={course} />
                         ) : (
                           <div className="rounded-2xl border border-[#E8E6DC] bg-white p-8 md:p-10 text-center max-w-lg mx-auto shadow-sm">
                             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F4ED] text-[#87867F] mb-4">

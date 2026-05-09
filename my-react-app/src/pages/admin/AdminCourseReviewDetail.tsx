@@ -484,7 +484,7 @@ const AdminCourseReviewDetail: React.FC = () => {
                     <CourseLessonsTab courseId={course.id} course={course} />
                   )}
                   {activeTab === 'assessments' && (
-                    <CourseAssessmentsTab courseId={course.id} course={course} />
+                    <CourseAssessmentsTab courseId={course.id} course={course} readOnly />
                   )}
                   {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
                   {activeTab === 'reviews' && <CourseReviewsTab courseId={course.id} />}

@@ -34,6 +34,7 @@ import './CourseAssessmentsTab.css';
 interface CourseAssessmentsTabProps {
   courseId: string;
   course: CourseResponse;
+  readOnly?: boolean;
 }
 
 const typeLabel: Record<string, string> = {
@@ -362,7 +363,7 @@ function AddAssessmentModal({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, course }) => {
+const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, course, readOnly = false }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -385,27 +386,12 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   // Only filter when a specific lesson is selected — assessments have no chapter field
   const filteredAssessments = useMemo(() => {
     if (!filterLessonId) return assessments;
-    console.debug('[CAT filter] lessonId =', filterLessonId);
-    console.debug('[CAT filter] assessments =', assessments.map(a => ({
-      title: a.assessmentTitle,
-      assessmentLessonIds: a.assessmentLessonIds,
-    })));
     return assessments.filter((a) =>
       (a.assessmentLessonIds ?? []).includes(filterLessonId)
     );
   }, [assessments, filterLessonId]);
 
   const hasActiveFilters = !!(filterGradeId || filterSubjectId || filterChapterId || filterLessonId);
-
-  const stats = useMemo(
-    () => ({
-      total: assessments.length,
-      required: assessments.filter((a) => a.isRequired).length,
-      published: assessments.filter((a) => a.assessmentStatus === 'PUBLISHED').length,
-      totalSubmissions: assessments.reduce((sum, a) => sum + (a.submissionCount ?? 0), 0),
-    }),
-    [assessments]
-  );
 
   const handleRemove = async (assessment: CourseAssessmentResponse) => {
     if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi ${UI_TEXT.COURSE.toLowerCase()}?`))
@@ -439,49 +425,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
   return (
     <div className="cat-container assessments-tab course-detail-tab">
-      {/* ── Stats ── */}
-      <div className="stats-grid">
-        <div className="stat-card stat-blue">
-          <div className="stat-icon-wrap" aria-hidden>
-            <FileText size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{stats.total}</h3>
-            <p>Tổng bài kiểm tra</p>
-            <span className="stat-card__sub">đã thêm vào {UI_TEXT.COURSE.toLowerCase()}</span>
-          </div>
-        </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon-wrap" aria-hidden>
-            <Star size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{stats.required}</h3>
-            <p>Bắt buộc</p>
-            <span className="stat-card__sub">bài kiểm tra bắt buộc</span>
-          </div>
-        </div>
-        <div className="stat-card stat-emerald">
-          <div className="stat-icon-wrap" aria-hidden>
-            <CheckCircle2 size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{stats.published}</h3>
-            <p>Đã công khai</p>
-            <span className="stat-card__sub">sẵn sàng cho học viên</span>
-          </div>
-        </div>
-        <div className="stat-card stat-violet">
-          <div className="stat-icon-wrap" aria-hidden>
-            <Users size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{stats.totalSubmissions}</h3>
-            <p>Bài nộp</p>
-            <span className="stat-card__sub">tổng số bài đã nộp</span>
-          </div>
-        </div>
-      </div>
+     
 
       {/* ── Curriculum hierarchy filter — only meaningful for Ministry courses ── */}
       {course.provider === 'MINISTRY' && (
@@ -530,14 +474,16 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           )}
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 flex-shrink-0"
-          onClick={() => setShowAddModal(true)}
-        >
-          <Plus size={15} />
-          Thêm bài kiểm tra
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 flex-shrink-0"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus size={15} />
+            Thêm bài kiểm tra
+          </button>
+        )}
       </div>
 
       {/* ── Loading skeleton ── */}
@@ -653,23 +599,35 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
                     {/* Actions — revealed on card hover */}
                     <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#F0EEE6] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      
-                      <button
-                        type="button"
-                        className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-                        onClick={() => navigate(`/teacher/assessments/${assessment.assessmentId}`)}
-                      >
-                        Xem chi tiết
-                      </button>
-                      <button
-                        type="button"
-                        className="px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 font-[Be_Vietnam_Pro] text-[12px] font-medium text-red-600 hover:bg-red-100 transition-colors inline-flex items-center gap-1.5"
-                        disabled={removeMutation.isPending}
-                        onClick={() => void handleRemove(assessment)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5 flex-shrink-0" />
-                        Xóa
-                      </button>
+                      {readOnly ? (
+                        <button
+                          type="button"
+                          className="px-3 py-1.5 rounded-lg border border-[#C96442] bg-[#FEF0EA] font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#C96442] hover:bg-[#FDDECE] transition-colors inline-flex items-center gap-1.5"
+                          onClick={() => navigate(`/teacher/assessments/${assessment.assessmentId}/preview?role=admin`)}
+                        >
+                          <Star className="w-3.5 h-3.5 flex-shrink-0" />
+                          Xem trước / Thử bài
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                            onClick={() => navigate(`/teacher/assessments/${assessment.assessmentId}`)}
+                          >
+                            Xem chi tiết
+                          </button>
+                          <button
+                            type="button"
+                            className="px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 font-[Be_Vietnam_Pro] text-[12px] font-medium text-red-600 hover:bg-red-100 transition-colors inline-flex items-center gap-1.5"
+                            disabled={removeMutation.isPending}
+                            onClick={() => void handleRemove(assessment)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 flex-shrink-0" />
+                            Xóa
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </article>

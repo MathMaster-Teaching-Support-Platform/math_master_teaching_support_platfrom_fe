@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -15,18 +15,49 @@ import {
   NotebookPen,
   Play,
   Star,
+  X,
 } from 'lucide-react';
+import { CurriculumHierarchyFilter } from '../../../components/filters/CurriculumHierarchyFilter';
 import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
+import type { CourseResponse } from '../../../types';
 import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
 import './StudentAssessmentsTab.css';
 import { UI_TEXT } from '../../../constants/uiText';
 
 interface StudentAssessmentsTabProps {
   courseId: string;
+  course: CourseResponse;
 }
 
-const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId }) => {
+const typeLabel: Record<string, string> = {
+  QUIZ: 'Trắc nghiệm (Thường xuyên)',
+  HOMEWORK: 'Bài tập (Thường xuyên)',
+  TEST: 'Kiểm tra (Định kỳ)',
+  EXAM: 'Thi (Cuối kỳ)',
+};
+
+const typeCategory: Record<string, 'formative' | 'summative'> = {
+  QUIZ: 'formative',
+  HOMEWORK: 'formative',
+  TEST: 'summative',
+  EXAM: 'summative',
+};
+
+const typeGlyph: Record<string, LucideIcon> = {
+  QUIZ: ListChecks,
+  HOMEWORK: NotebookPen,
+  TEST: ClipboardList,
+  EXAM: GraduationCap,
+};
+
+const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId, course }) => {
   const navigate = useNavigate();
+
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
+  const [filterLessonId, setFilterLessonId] = useState('');
+
   const { data: assessmentsData, isLoading } = useMyAssessmentsByCourse(courseId, {
     page: 0,
     size: 200,
@@ -36,34 +67,20 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
 
   const assessments: StudentAssessmentResponse[] = assessmentsData?.result?.content ?? [];
 
-  const stats = useMemo(() => {
-    return {
-      total: assessments.length,
-      required: assessments.filter((a) => a.isRequired === true).length,
-      optional: assessments.filter((a) => a.isRequired !== true).length,
-    };
-  }, [assessments]);
+  const filteredAssessments = useMemo(() => {
+    if (!filterLessonId) return assessments;
+    return assessments.filter((a) =>
+      (a.lessonIds ?? []).includes(filterLessonId)
+    );
+  }, [assessments, filterLessonId]);
 
-  // MoE Terminology Mapping
-  const typeLabel: Record<string, string> = {
-    QUIZ: 'Trắc nghiệm (Thường xuyên)',
-    HOMEWORK: 'Bài tập (Thường xuyên)',
-    TEST: 'Kiểm tra (Định kỳ)',
-    EXAM: 'Thi (Cuối kỳ)',
-  };
+  const hasActiveFilters = !!(filterGradeId || filterSubjectId || filterChapterId || filterLessonId);
 
-  const typeCategory: Record<string, 'formative' | 'summative'> = {
-    QUIZ: 'formative',
-    HOMEWORK: 'formative',
-    TEST: 'summative',
-    EXAM: 'summative',
-  };
-
-  const typeGlyph: Record<string, LucideIcon> = {
-    QUIZ: ListChecks,
-    HOMEWORK: NotebookPen,
-    TEST: ClipboardList,
-    EXAM: GraduationCap,
+  const clearFilters = () => {
+    setFilterGradeId('');
+    setFilterSubjectId('');
+    setFilterChapterId('');
+    setFilterLessonId('');
   };
 
   const fmtDate = (d?: string | null) => {
@@ -102,36 +119,6 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
 
   return (
     <div className="sat-container">
-      {/* Stats */}
-      <div className="sat-stats-grid">
-        <div className="sat-stat-card sat-stat-ink">
-          <div className="sat-stat-icon">
-            <FileText size={18} strokeWidth={2} />
-          </div>
-          <div className="sat-stat-content">
-            <h3>{stats.total}</h3>
-            <p>Tổng</p>
-          </div>
-        </div>
-        <div className="sat-stat-card sat-stat-warm">
-          <div className="sat-stat-icon">
-            <Star size={18} strokeWidth={2} />
-          </div>
-          <div className="sat-stat-content">
-            <h3>{stats.required}</h3>
-            <p>Bắt buộc</p>
-          </div>
-        </div>
-        <div className="sat-stat-card sat-stat-soft">
-          <div className="sat-stat-icon">
-            <CheckCircle size={18} strokeWidth={2} />
-          </div>
-          <div className="sat-stat-content">
-            <h3>{stats.optional}</h3>
-            <p>Tùy chọn</p>
-          </div>
-        </div>
-      </div>
 
       {/* Info Banner */}
       <div className="sat-banner">
@@ -141,10 +128,56 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
         </span>
       </div>
 
+      {/* Curriculum hierarchy filter — only for Ministry courses */}
+      {course.provider === 'MINISTRY' && (
+        <CurriculumHierarchyFilter
+          gradeId={filterGradeId}
+          subjectId={filterSubjectId}
+          chapterId={filterChapterId}
+          lessonId={filterLessonId}
+          onGradeChange={(id) => {
+            setFilterGradeId(id);
+            setFilterSubjectId('');
+            setFilterChapterId('');
+            setFilterLessonId('');
+          }}
+          onSubjectChange={(id) => {
+            setFilterSubjectId(id);
+            setFilterChapterId('');
+            setFilterLessonId('');
+          }}
+          onChapterChange={(id) => {
+            setFilterChapterId(id);
+            setFilterLessonId('');
+          }}
+          onLessonChange={setFilterLessonId}
+          footnote="Chọn chương hoặc bài để lọc bài kiểm tra theo bài học đã gán."
+        />
+      )}
+
+      {/* Clear filter toolbar */}
+      {course.provider === 'MINISTRY' && hasActiveFilters && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+            onClick={clearFilters}
+          >
+            <X size={13} />
+            Xóa bộ lọc
+          </button>
+          {filterLessonId && filteredAssessments.length < assessments.length && (
+            <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+              {filteredAssessments.length}/{assessments.length} bài kiểm tra
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Loading */}
       {isLoading && <div className="sat-empty">Đang tải danh sách bài kiểm tra...</div>}
 
-      {/* Empty State */}
+      {/* Empty State — no assessments at all */}
       {!isLoading && assessments.length === 0 && (
         <div className="sat-empty">
           <FileText size={56} strokeWidth={1} />
@@ -152,10 +185,18 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
         </div>
       )}
 
+      {/* Empty State — no results after filter */}
+      {!isLoading && assessments.length > 0 && filteredAssessments.length === 0 && (
+        <div className="sat-empty">
+          <FileText size={56} strokeWidth={1} />
+          <p>Không có bài kiểm tra nào khớp với bài học đã chọn.</p>
+        </div>
+      )}
+
       {/* Assessment List */}
-      {!isLoading && assessments.length > 0 && (
+      {!isLoading && filteredAssessments.length > 0 && (
         <div className="sat-list">
-          {assessments
+          {filteredAssessments
             .sort((a, b) => (a.courseOrderIndex ?? 0) - (b.courseOrderIndex ?? 0))
             .map((assessment) => {
               const available = isAssessmentAvailable(assessment);
@@ -179,12 +220,6 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                           <Glyph size={14} strokeWidth={2} />
                         </span>
                         <span className={`sat-badge ${category}`}>{typeLabel[typeCode]}</span>
-                        {assessment.isRequired ? (
-                          <span className="sat-badge required">
-                            <Star size={11} strokeWidth={2} className="sat-badge-star" />
-                            Bắt buộc
-                          </span>
-                        ) : null}
                       </div>
                       <h3 className="sat-title">{assessment.title ?? 'Không có tiêu đề'}</h3>
                       {assessment.description ? (
