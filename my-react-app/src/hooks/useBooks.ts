@@ -112,6 +112,7 @@ export function useUploadBookPdf(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.pdfPreviewUrl(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }

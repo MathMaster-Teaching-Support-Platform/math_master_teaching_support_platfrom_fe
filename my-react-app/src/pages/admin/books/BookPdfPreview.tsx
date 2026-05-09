@@ -35,7 +35,10 @@ const BookPdfPreview: React.FC<BookPdfPreviewProps> = ({
           {localObjectUrl ? (
             <p className="text-xs text-slate-500">Bản xem trước từ file vừa chọn (chưa upload)</p>
           ) : (
-            <p className="text-xs text-slate-500">Kiểm tra lại sách để chuẩn bị tiến hành OCR</p>
+            <p className="text-xs text-slate-500">
+              Kiểm tra lại sách để chuẩn bị OCR. Khung trống hoặc lỗi MinIO → quay lại bước 1 và{' '}
+              <strong>Thay thế PDF trên server</strong>.
+            </p>
           )}
         </div>
         {src ? (
