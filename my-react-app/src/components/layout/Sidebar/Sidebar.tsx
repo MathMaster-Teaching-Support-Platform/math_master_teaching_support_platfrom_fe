@@ -132,7 +132,7 @@ const studentGroups: MenuGroup[] = [
 const adminGroups: MenuGroup[] = [
   {
     label: 'Tổng quan',
-    items: [{ path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' }],
+    items: [{ path: '/admin/dashboard', icon: LayoutDashboard, label: 'Thống Kê' }],
   },
   {
     label: 'Người dùng',
