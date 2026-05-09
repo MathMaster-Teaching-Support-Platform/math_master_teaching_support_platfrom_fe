@@ -95,14 +95,6 @@ const AdminDashboard: React.FC = () => {
   const pendingProfiles = dashboardQuery.data?.pendingProfiles ?? 0;
   const systemServices = dashboardQuery.data?.systemServices ?? [];
 
-  const formatRevenue = (amount: number): string => {
-    if (amount >= 1_000_000) return `₫${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1_000) return `₫${(amount / 1_000).toFixed(0)}K`;
-    return `₫${amount.toLocaleString('vi-VN')}`;
-  };
-
-
-
   const statsCards = dashboardStats
     ? [
         {
