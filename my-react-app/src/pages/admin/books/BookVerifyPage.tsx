@@ -31,6 +31,7 @@ import {
   useBookPageMapping,
   usePageHistory,
   useRefreshVerification,
+  useReOcrSingleBookPage,
   useUpdatePage,
   useUploadBookPageImage,
 } from '../../../hooks/useBooks';
@@ -901,6 +902,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                   lessonMappingByLessonId.get(lessonLookupKey(resolvedLessonId))?.chapterTitle ?? ''
                 }
                 page={activePage}
+                bookStatus={book?.status}
               />
             ) : (
               <div className="p-10 text-center text-sm text-slate-500">
@@ -957,6 +959,8 @@ interface PageEditorProps {
   lessonTitle: string;
   chapterTitle: string;
   page: LessonPageResponse;
+  /** Trạng thái sách Postgres — chặn OCR 1 trang khi đang OCR full sách. */
+  bookStatus?: BookStatus | null;
 }
 
 interface PageVersionEntry {
@@ -1165,8 +1169,10 @@ const PageEditor: React.FC<PageEditorProps> = ({
   lessonTitle,
   chapterTitle,
   page,
+  bookStatus,
 }) => {
   const updatePage = useUpdatePage(bookId, lessonId);
+  const reOcrSinglePage = useReOcrSingleBookPage(bookId);
   const cloneBlocks = (items: ContentBlockDto[]) => items.map((b) => ({ ...b }));
   const [blocks, setBlocks] = useState<ContentBlockDto[]>(cloneBlocks(page.contentBlocks ?? []));
   const [verified, setVerified] = useState<boolean>(page.verified);
@@ -1175,6 +1181,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   );
   const [lastSavedVerified, setLastSavedVerified] = useState<boolean>(page.verified);
   const [error, setError] = useState<string | null>(null);
+  const [reOcrNotice, setReOcrNotice] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const {
@@ -1182,6 +1189,10 @@ const PageEditor: React.FC<PageEditorProps> = ({
     refetch: refetchPageHistory,
     isLoading: pageHistoryLoading,
   } = usePageHistory(bookId, lessonId, page.pageNumber);
+
+  useEffect(() => {
+    setReOcrNotice(null);
+  }, [lessonId, page.pageNumber]);
 
   const historyEntries: PageVersionEntry[] = useMemo(() => {
     const rows = pageHistoryData?.result ?? [];
@@ -1223,6 +1234,34 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   const isDirty =
     verified !== lastSavedVerified || JSON.stringify(blocks) !== JSON.stringify(lastSavedBlocks);
+
+  const handleReOcrThisPage = () => {
+    if (bookStatus === 'OCR_RUNNING') return;
+    if (
+      isDirty &&
+      !window.confirm(
+        'Trang có chỉnh sửa chưa lưu. Sau khi OCR xong, làm mới sẽ lấy nội dung từ máy chủ và có thể ghi đè những gì bạn đang sửa. Tiếp tục?'
+      )
+    ) {
+      return;
+    }
+    setError(null);
+    setReOcrNotice(null);
+    reOcrSinglePage.mutate(
+      { lessonId, pageNumber: page.pageNumber },
+      {
+        onSuccess: () => {
+          setReOcrNotice(
+            'Đã xếp hàng OCR lại trang (Gemini + Mathpix). Đợi vài giây rồi nội dung sẽ cập nhật hoặc chọn lại trang.'
+          );
+        },
+        onError: (err) => {
+          setError(err instanceof Error ? err.message : 'Không thể xếp hàng OCR lại.');
+        },
+      }
+    );
+  };
+
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -1324,6 +1363,25 @@ const PageEditor: React.FC<PageEditorProps> = ({
             {page.ocrConfidence != null ? page.ocrConfidence.toFixed(2) : 'n/a'}
             {savedAt ? ` · Đã lưu lúc ${savedAt}` : ''}
           </div>
+          <button
+            type="button"
+            onClick={handleReOcrThisPage}
+            disabled={bookStatus === 'OCR_RUNNING' || reOcrSinglePage.isPending}
+            title="Chạy lại pipeline Gemini + Mathpix cho đúng trang/bài này (giữ trạng thái đã verify nếu đã lưu trong Mongo)."
+            className={[
+              'mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition',
+              bookStatus === 'OCR_RUNNING' || reOcrSinglePage.isPending
+                ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                : 'border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100',
+            ].join(' ')}
+          >
+            {reOcrSinglePage.isPending ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <RefreshCw size={12} />
+            )}
+            OCR lại trang (Gemini + Mathpix)
+          </button>
         </div>
         <div className="flex items-center gap-2">
           <label className="inline-flex items-center gap-2 text-sm text-slate-700 select-none">
@@ -1375,6 +1433,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
       {error && (
         <div className="mx-4 mt-3 flex items-start gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
           <AlertCircle size={16} className="mt-0.5" /> {error}
+        </div>
+      )}
+      {reOcrNotice && !error && (
+        <div className="mx-4 mt-3 flex items-start gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-sm text-emerald-800">
+          <CheckCircle2 size={16} className="mt-0.5 shrink-0" /> {reOcrNotice}
         </div>
       )}
       <div className="grid md:grid-cols-2 gap-4 p-4 overflow-y-auto">
