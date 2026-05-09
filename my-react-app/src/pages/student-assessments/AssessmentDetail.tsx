@@ -411,6 +411,21 @@ export default function AssessmentDetail() {
             </StatBentoCard>
           ) : null}
 
+          {assessment.lastScore !== undefined && assessment.lastScore !== null && (
+            <StatBentoCard
+              icon={CheckCircle2}
+              iconBg="bg-emerald-100 text-emerald-800"
+              label="Điểm gần nhất"
+              className="lg:col-span-6"
+            >
+              Bạn đã đạt:{' '}
+              <span className="font-[Playfair_Display] text-[32px] font-bold text-emerald-900">
+                {assessment.lastScore}
+              </span>
+              <span className="text-[#87867F]"> / {assessment.totalPoints} điểm</span>
+            </StatBentoCard>
+          )}
+
           {assessment.allowMultipleAttempts ? (
             <StatBentoCard
               icon={RefreshCw}

@@ -465,10 +465,16 @@ function AssessmentCard({
               Đạt: {assessment.passingScore}đ
             </span>
           )}
+          {assessment.lastScore !== undefined && assessment.lastScore !== null && (
+            <span className="metric highlight-green">
+              <CheckCircle2 size={11} />
+              Đạt {assessment.lastScore}đ
+            </span>
+          )}
           {assessment.allowMultipleAttempts && (
             <span className="metric">
               <RefreshCw size={11} />
-              {assessment.attemptNumber || 0}
+              Đã làm {assessment.attemptNumber || 0}
               {assessment.maxAttempts ? `/${assessment.maxAttempts}` : ''} lần
             </span>
           )}

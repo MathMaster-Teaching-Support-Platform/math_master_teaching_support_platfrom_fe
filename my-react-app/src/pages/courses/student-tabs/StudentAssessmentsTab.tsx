@@ -235,6 +235,18 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId,
                           <Star size={13} strokeWidth={2} aria-hidden />
                           {assessment.totalPoints ?? 0} điểm
                         </span>
+                        {assessment.lastScore !== undefined && assessment.lastScore !== null && (
+                          <span className="sat-chip sat-chip-score">
+                            <CheckCircle size={13} strokeWidth={2} aria-hidden className="text-emerald-500" />
+                            Đã đạt: <strong>{assessment.lastScore}</strong>/{assessment.totalPoints}
+                          </span>
+                        )}
+                        {assessment.attemptNumber !== undefined && assessment.attemptNumber > 0 && (
+                          <span className="sat-chip sat-chip-attempts">
+                            <Play size={13} strokeWidth={2} aria-hidden />
+                            Đã làm: {assessment.attemptNumber} lần
+                          </span>
+                        )}
                         {assessment.timeLimitMinutes ? (
                           <span className="sat-chip">
                             <Clock size={13} strokeWidth={2} aria-hidden />
