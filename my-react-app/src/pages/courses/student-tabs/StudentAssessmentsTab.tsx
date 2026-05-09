@@ -18,7 +18,9 @@ import {
   X,
 } from 'lucide-react';
 import { CurriculumHierarchyFilter } from '../../../components/filters/CurriculumHierarchyFilter';
+import { useCurriculumHierarchyCatalog } from '../../../hooks/useCurriculumHierarchyCatalog';
 import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
+import { entityMatchesGradeSubject } from '../../../utils/curriculumFilter';
 import type { CourseResponse } from '../../../types';
 import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
 import './StudentAssessmentsTab.css';
@@ -67,12 +69,32 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId,
 
   const assessments: StudentAssessmentResponse[] = assessmentsData?.result?.content ?? [];
 
+  const { schoolGrades, lessons: chapterLessons } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: filterChapterId,
+  });
+
   const filteredAssessments = useMemo(() => {
-    if (!filterLessonId) return assessments;
-    return assessments.filter((a) =>
-      (a.lessonIds ?? []).includes(filterLessonId)
-    );
-  }, [assessments, filterLessonId]);
+    if (!entityMatchesGradeSubject(course, filterGradeId, filterSubjectId, schoolGrades)) {
+      return [];
+    }
+
+    let filtered = assessments;
+    if (filterLessonId) {
+      filtered = filtered.filter((a) => (a.lessonIds ?? []).includes(filterLessonId));
+    } else if (filterChapterId) {
+      const chapterLessonIds = chapterLessons.map((l) => l.id);
+      if (chapterLessonIds.length > 0) {
+        filtered = filtered.filter((a) =>
+          (a.lessonIds ?? []).some((id) => chapterLessonIds.includes(id))
+        );
+      } else {
+        filtered = [];
+      }
+    }
+    return filtered;
+  }, [assessments, course, filterLessonId, filterChapterId, filterGradeId, filterSubjectId, chapterLessons, schoolGrades]);
 
   const hasActiveFilters = !!(filterGradeId || filterSubjectId || filterChapterId || filterLessonId);
 

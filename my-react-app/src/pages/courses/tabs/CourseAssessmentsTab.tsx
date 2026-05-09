@@ -20,6 +20,8 @@ import {
   useCourseAssessments,
   useRemoveAssessmentFromCourse,
 } from '../../../hooks/useCourses';
+import { useCurriculumHierarchyCatalog } from '../../../hooks/useCurriculumHierarchyCatalog';
+import { entityMatchesGradeSubject } from '../../../utils/curriculumFilter';
 import '../../../styles/module-refactor.css';
 import type {
   AddAssessmentToCourseRequest,
@@ -320,13 +322,32 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   );
   const existingIds = assessments.map((a) => a.assessmentId);
 
-  // Only filter when a specific lesson is selected — assessments have no chapter field
+  const { schoolGrades, lessons: chapterLessons } = useCurriculumHierarchyCatalog({
+    gradeId: filterGradeId,
+    subjectId: filterSubjectId,
+    chapterId: filterChapterId,
+  });
+
   const filteredAssessments = useMemo(() => {
-    if (!filterLessonId) return assessments;
-    return assessments.filter((a) =>
-      (a.assessmentLessonIds ?? []).includes(filterLessonId)
-    );
-  }, [assessments, filterLessonId]);
+    if (!entityMatchesGradeSubject(course, filterGradeId, filterSubjectId, schoolGrades)) {
+      return [];
+    }
+
+    let filtered = assessments;
+    if (filterLessonId) {
+      filtered = filtered.filter((a) => (a.assessmentLessonIds ?? []).includes(filterLessonId));
+    } else if (filterChapterId) {
+      const chapterLessonIds = chapterLessons.map((l) => l.id);
+      if (chapterLessonIds.length > 0) {
+        filtered = filtered.filter((a) =>
+          (a.assessmentLessonIds ?? []).some((id) => chapterLessonIds.includes(id))
+        );
+      } else {
+        filtered = [];
+      }
+    }
+    return filtered;
+  }, [assessments, course, filterLessonId, filterChapterId, filterGradeId, filterSubjectId, chapterLessons, schoolGrades]);
 
   const hasActiveFilters = !!(filterGradeId || filterSubjectId || filterChapterId || filterLessonId);
 
