@@ -15,6 +15,7 @@ import {
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CurriculumHierarchyFilter } from '../../components/filters/CurriculumHierarchyFilter';
+import { useCurriculumHierarchyCatalog } from '../../hooks/useCurriculumHierarchyCatalog';
 import { CourseCard } from '../../components/course/CourseCard';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
@@ -23,7 +24,7 @@ import { UI_TEXT } from '../../constants/uiText';
 import { courseKeys, useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { CourseService } from '../../services/api/course.service';
 import '../../styles/module-refactor.css';
-import type { CourseResponse, EnrollmentResponse } from '../../types';
+import type { CourseLessonResponse, CourseResponse, EnrollmentResponse } from '../../types';
 import type { Order } from '../../types/order.types';
 import './StudentCourses.css';
 import './TeacherCourses.css';
@@ -234,6 +235,11 @@ const StudentCourses: React.FC = () => {
     size: PAGE_SIZE,
   });
   const enrollMutation = useEnroll();
+  const { schoolGrades } = useCurriculumHierarchyCatalog({
+    gradeId: '',
+    subjectId: '',
+    chapterId: '',
+  });
 
   const handleFilterGradeChange = (nextGradeId: string) => {
     setFilterGradeId(nextGradeId);
@@ -304,6 +310,27 @@ const StudentCourses: React.FC = () => {
     return map;
   }, [enrolledUniqueCourseIds, enrolledCourseDetailQueries]);
 
+  const enrolledCourseLessonsQueries = useQueries({
+    queries: enrolledUniqueCourseIds.map((courseId) => ({
+      queryKey: ['course-lessons', courseId],
+      queryFn: () => CourseService.getLessons(courseId),
+      enabled: activeTab === 'enrolled' && enrolledUniqueCourseIds.length > 0 && !!(filterChapterId || filterLessonId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const enrolledLessonsMapByCourseId = useMemo(() => {
+    const map = new Map<string, { data?: CourseLessonResponse[]; isLoading: boolean }>();
+    enrolledUniqueCourseIds.forEach((courseId, idx) => {
+      const query = enrolledCourseLessonsQueries[idx];
+      map.set(courseId, {
+        data: query?.data?.result,
+        isLoading: query?.isLoading || false,
+      });
+    });
+    return map;
+  }, [enrolledUniqueCourseIds, enrolledCourseLessonsQueries]);
+
   const publicCourses = useMemo<CourseResponse[]>(
     () =>
       (publicCoursesData?.result?.content ?? []).filter((course) => {
@@ -322,8 +349,12 @@ const StudentCourses: React.FC = () => {
   const filteredEnrollments = useMemo(() => {
     let list = activeEnrollments;
 
-    const needsGradeSubject = !!(filterGradeId || filterSubjectId);
-    if (!needsGradeSubject) return list;
+    const needsFilter = !!(filterGradeId || filterSubjectId || filterChapterId || filterLessonId);
+    if (!needsFilter) return list;
+
+    const selectedLevel = filterGradeId
+      ? schoolGrades.find((g) => g.id === filterGradeId)?.gradeLevel
+      : null;
 
     return list.filter((enrollment) => {
       const detailQ = enrolledDetailQueryByCourseId.get(enrollment.courseId);
@@ -331,8 +362,36 @@ const StudentCourses: React.FC = () => {
 
       const meta = enrolledCourseMetaByCourseId.get(enrollment.courseId);
       if (!meta) return false;
-      if (filterGradeId && meta.schoolGradeId !== filterGradeId) return false;
+
+      const gradeMatch =
+        !filterGradeId ||
+        meta.schoolGradeId === filterGradeId ||
+        (meta.schoolGradeId == null &&
+          selectedLevel != null &&
+          meta.gradeLevel != null &&
+          meta.gradeLevel === selectedLevel);
+      if (!gradeMatch) return false;
+
       if (filterSubjectId && meta.subjectId !== filterSubjectId) return false;
+
+      if (filterChapterId || filterLessonId) {
+        const lessonData = enrolledLessonsMapByCourseId.get(enrollment.courseId);
+        if (!lessonData || lessonData.isLoading || !lessonData.data) {
+          return true; // Keep visible while loading
+        }
+        
+        let hasMatch = false;
+        for (const lesson of lessonData.data) {
+          const chapterMatch = !filterChapterId || lesson.chapterId === filterChapterId;
+          const lessonMatch = !filterLessonId || lesson.lessonId === filterLessonId;
+          if (chapterMatch && lessonMatch) {
+            hasMatch = true;
+            break;
+          }
+        }
+        if (!hasMatch) return false;
+      }
+
       return true;
     });
   }, [
@@ -341,6 +400,10 @@ const StudentCourses: React.FC = () => {
     enrolledDetailQueryByCourseId,
     filterGradeId,
     filterSubjectId,
+    filterChapterId,
+    filterLessonId,
+    schoolGrades,
+    enrolledLessonsMapByCourseId,
   ]);
   const enrolledTotalPages = Math.max(1, Math.ceil(filteredEnrollments.length / PAGE_SIZE));
   const safeEnrolledPage = Math.min(enrolledPage, enrolledTotalPages);
@@ -574,11 +637,6 @@ const StudentCourses: React.FC = () => {
                       if (activeTab === 'browse') setBrowsePage(1);
                       handleFilterLessonChange(id);
                     }}
-                    footnote={
-                      activeTab === 'enrolled'
-                        ? 'Tab Đã đăng ký: chỉ áp dụng lọc theo lớp và môn. Chương/bài chỉ dùng cho tab Khám phá.'
-                        : 'Tab Khám phá: có thể lọc tới chương/bài khi khóa học có nội dung Bộ SGK gắn với bài đó.'
-                    }
                   />
                 )}
               </div>
