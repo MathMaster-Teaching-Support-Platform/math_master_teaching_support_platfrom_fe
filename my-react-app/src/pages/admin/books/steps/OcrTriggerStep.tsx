@@ -247,7 +247,9 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
                   ].join(' ')}
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-slate-800 font-medium break-words leading-snug">{seriesBook.title}</div>
+                    <div className="text-slate-800 font-medium break-words leading-snug">
+                      {seriesBook.title}
+                    </div>
                     <div className="text-[11px] text-slate-500">
                       OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} ·
                       mapped: {seriesBook.mappedLessonCount ?? 0}
@@ -276,7 +278,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
           >
             {showPdfPreview ? <EyeOff size={16} /> : <Eye size={16} />}
-            {showPdfPreview ? 'Ẩn preview PDF' : 'Xem preview PDF'}
+            {showPdfPreview ? 'Ẩn Sách' : 'Xem Sách'}
           </button>
 
           {showPdfPreview ? <BookPdfPreview bookId={book.id} hasServerPdf /> : null}
@@ -486,7 +488,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
                 </>
               ) : (
                 <>
-                  <RotateCcw size={14} /> Crawl lại OCR
+                  <RotateCcw size={14} /> Quét lại OCR
                 </>
               )}
             </button>
@@ -496,16 +498,14 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
               disabled={triggerOcr.isPending}
               className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
             >
-              <CheckCircle2 size={14} /> Sang bước Verify <ArrowRight size={14} />
+              <CheckCircle2 size={14} /> Sang bước xác minh <ArrowRight size={14} />
             </button>
           </>
         ) : (
           <button
             type="button"
             onClick={handleTrigger}
-            disabled={
-              !canTriggerInitial || triggerOcr.isPending || uiStatus === 'OCR_RUNNING'
-            }
+            disabled={!canTriggerInitial || triggerOcr.isPending || uiStatus === 'OCR_RUNNING'}
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
           >
             {triggerOcr.isPending || uiStatus === 'OCR_RUNNING' ? (
@@ -545,7 +545,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
               </div>
               <div className="min-w-0 space-y-1">
                 <h3 id="rerun-ocr-title" className="text-base font-semibold text-slate-900">
-                  Crawl lại OCR cho cuốn này?
+                  Quét lại OCR cho cuốn này?
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
                   Hệ thống sẽ chạy lại quét trên PDF cho đúng các bài đã map ở Bước 2. Nội dung OCR
@@ -575,7 +575,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
                   </>
                 ) : (
                   <>
-                    <RotateCcw size={14} /> Xác nhận crawl lại
+                    <RotateCcw size={14} /> Xác nhận quét lại
                   </>
                 )}
               </button>

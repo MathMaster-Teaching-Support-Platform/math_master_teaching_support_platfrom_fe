@@ -796,7 +796,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                             {chapter.chapterTitle}
                           </div>
                           <div className="text-[11px] text-slate-400">
-                            {chapterVerified}/{chapterTotal} trang đã verify
+                            {chapterVerified}/{chapterTotal} trang đã xác minh
                           </div>
                         </div>
                       </button>
@@ -844,7 +844,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
                                     {l.lessonTitle}
                                   </div>
                                   <div className="text-[11px] text-slate-400">
-                                    {verified}/{total} trang đã verify
+                                    {verified}/{total} trang đã xác minh
                                   </div>
                                 </div>
                                 {l.lessonVerified && (
@@ -1434,7 +1434,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             type="button"
             onClick={handleReOcrThisPage}
             disabled={singlePageOcrBusy}
-            title="Chạy lại pipeline Gemini + Mathpix cho đúng trang/bài này (giữ trạng thái đã verify nếu đã lưu trong Mongo)."
+            title="Chạy lại pipeline Gemini + Mathpix cho đúng trang/bài này (giữ trạng thái đã xác minh nếu đã lưu trong Mongo)."
             className={[
               'mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition',
               singlePageOcrBusy
@@ -1492,7 +1492,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             onClick={() => setShowHistoryModal(true)}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm hover:bg-slate-50"
           >
-            History
+            Lịch Sử
           </button>
         </div>
       </div>
@@ -1542,7 +1542,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             onClick={() => addBlockAt(0)}
             className="w-full border border-dashed border-slate-300 rounded-lg py-1.5 text-xs text-slate-500 hover:text-blue-700 hover:border-blue-300"
           >
-            + Chèn block đầu trang
+            + Chèn đoạn đầu trang
           </button>
           {blocks.map((b, idx) => (
             <div
@@ -1572,7 +1572,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
                 onClick={() => addBlockAt(idx + 1)}
                 className="mt-2 w-full border border-dashed border-slate-300 rounded-lg py-1.5 text-xs text-slate-500 hover:text-blue-700 hover:border-blue-300"
               >
-                + Chèn block phía dưới
+                + Chèn đoạn phía dưới
               </button>
             </div>
           ))}
