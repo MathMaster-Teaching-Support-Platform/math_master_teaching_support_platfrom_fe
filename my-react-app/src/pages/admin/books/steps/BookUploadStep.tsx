@@ -432,7 +432,7 @@ const BookUploadStep: React.FC<Props> = ({
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800 disabled:opacity-50"
         >
           {isSavingMetadata && <Loader2 size={14} className="animate-spin" />}
-          {book?.id && !isAddingAnother ? 'Cập nhật metadata' : 'Lưu thông tin sách'}
+          {book?.id && !isAddingAnother ? 'Cập nhật thông tin' : 'Lưu thông tin sách'}
         </button>
       </div>
 

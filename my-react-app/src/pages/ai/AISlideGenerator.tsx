@@ -564,9 +564,9 @@ const AISlideGenerator: React.FC = () => {
       if (apiError.code === 1166) {
         setError('File slide không còn tồn tại. Vui lòng refresh danh sách.');
       } else if (apiError.code === 1167) {
-        setError('Bạn không có quyền cập nhật metadata của file này.');
+        setError('Bạn không có quyền cập nhật thông tin của file này.');
       } else {
-        setError(err instanceof Error ? err.message : 'Không thể cập nhật metadata slide');
+        setError(err instanceof Error ? err.message : 'Không thể cập nhật thông tin slide');
       }
     } finally {
       setUpdatingMetadata(false);
