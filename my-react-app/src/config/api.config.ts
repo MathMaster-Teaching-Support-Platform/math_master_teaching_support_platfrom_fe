@@ -20,6 +20,13 @@ const envApiBaseUrl = normalizeUrl(import.meta.env.VITE_API_BASE_URL);
 
 export const API_BASE_URL = import.meta.env.PROD ? envApiBaseUrl : envApiBaseUrl || '/api';
 
+/**
+ * Template batch generation / blueprint calls many Gemini endpoints sequentially and can exceed
+ * several minutes. Browser fetch has no default limit, but the Vite dev proxy must allow the same
+ * window (see `vite.config.ts` proxy `proxyTimeout`).
+ */
+export const LONG_RUNNING_FETCH_MS = 20 * 60 * 1000;
+
 export const API_ENDPOINTS = {
   // Auth
   REGISTER: '/auth/register',

@@ -16,6 +16,9 @@ export default defineConfig({
       '/api/v1/crawl-data/static': {
         target: proxyTarget,
         changeOrigin: true,
+        // Same long-running backend routes as /api (Spring → Gemini, LaTeX, …)
+        timeout: 1_200_000,
+        proxyTimeout: 1_200_000,
       },
       // OCR/crawl-data REST APIs go to Python FastAPI service — must be listed before the general /api rule
       // Frontend path:  /api/v1/crawl-data/books  →  rewrite  →  /api/v1/books  →  Python :8001
@@ -27,6 +30,9 @@ export default defineConfig({
       '/api': {
         target: proxyTarget,
         changeOrigin: true,
+        // Default Node proxy closes ~2min; template generation is often 5–15+ minutes (many Gemini calls).
+        timeout: 1_200_000,
+        proxyTimeout: 1_200_000,
       },
     },
   },
