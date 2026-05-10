@@ -102,17 +102,17 @@ export function BlueprintConfirmModal({
         sampleValue:
           p.sampleValue === null || p.sampleValue === undefined ? '' : String(p.sampleValue),
       })),
-    [params],
+    [params]
   );
 
   const previewQuestionStem = useMemo(
     () => renderTemplateWithSamples(templateText, previewParameterInputs),
-    [templateText, previewParameterInputs],
+    [templateText, previewParameterInputs]
   );
 
   const previewSolution = useMemo(
     () => renderTemplateWithSamples(solutionSteps, previewParameterInputs),
-    [solutionSteps, previewParameterInputs],
+    [solutionSteps, previewParameterInputs]
   );
 
   const previewMcqOptions = useMemo(() => {
@@ -229,11 +229,9 @@ export function BlueprintConfirmModal({
           <div>
             <h3>Xác nhận Mẫu Câu Hỏi</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              AI đã chuyển câu hỏi thật của bạn thành mẫu câu hỏi. Hãy xem lại,
-              dùng khối <strong>Xem trước render</strong> bên dưới (giống học sinh
-              nhìn thấy sau khi thế giá trị mẫu), và bấm <strong>Phân tích lại</strong>{' '}
-              nếu bản nháp chưa đúng ý. Độ tin cậy:{' '}
-              <strong>{Math.round((blueprint.confidence ?? 0) * 100)}%</strong>
+              AI đã chuyển câu hỏi thật của bạn thành mẫu câu hỏi. Hãy xem lại, dùng khối{' '}
+              <strong>Xem trước render</strong> bên dưới (giống học sinh nhìn thấy sau khi thế giá
+              trị mẫu), và bấm <strong>Phân tích lại</strong> nếu bản nháp chưa đúng ý.
             </p>
           </div>
           <ModalCloseButton onClick={onCancel} />
@@ -330,8 +328,8 @@ export function BlueprintConfirmModal({
             <h4 style={{ marginTop: 0, color: '#1e40af' }}>Hệ số &amp; ràng buộc</h4>
             {params.length === 0 && (
               <p className="muted" style={{ fontSize: '0.85rem' }}>
-                AI không tìm thấy hệ số nào. Bạn có thể tiếp tục — Blueprint sẽ
-                tạo ra các câu hỏi giống hệt nhau.
+                AI không tìm thấy hệ số nào. Bạn có thể tiếp tục — Blueprint sẽ tạo ra các câu hỏi
+                giống hệt nhau.
               </p>
             )}
             {params.map((p, idx) => (
@@ -446,8 +444,8 @@ export function BlueprintConfirmModal({
               onChange={(e) => setDiagram(e.target.value)}
             />
             <p className="muted" style={{ marginTop: 6, marginBottom: 0, fontSize: '0.8rem' }}>
-              Nên bấm <strong>Render thử</strong> trước khi lưu — LaTeX lỗi sẽ làm luồng render
-              thất bại khi sinh câu hoặc hiển thị.
+              Nên bấm <strong>Render thử</strong> trước khi lưu — LaTeX lỗi sẽ làm luồng render thất
+              bại khi sinh câu hoặc hiển thị.
             </p>
             <DiagramTemplatePreview diagramTemplate={diagram} parameters={previewParameterInputs} />
           </label>
@@ -503,9 +501,7 @@ export function BlueprintConfirmModal({
 
           {/* Global constraints */}
           <section className="data-card" style={{ minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, color: '#1e3a8a' }}>
-              Ràng buộc giữa các biến
-            </h4>
+            <h4 style={{ marginTop: 0, color: '#1e3a8a' }}>Ràng buộc giữa các biến</h4>
             {globals.length === 0 && (
               <p className="muted" style={{ fontSize: '0.85rem' }}>
                 Không có ràng buộc nào.
@@ -518,9 +514,7 @@ export function BlueprintConfirmModal({
                 style={{ marginBottom: 6 }}
                 value={g}
                 onChange={(e) =>
-                  setGlobals((prev) =>
-                    prev.map((row, idx) => (idx === i ? e.target.value : row))
-                  )
+                  setGlobals((prev) => prev.map((row, idx) => (idx === i ? e.target.value : row)))
                 }
               />
             ))}
@@ -533,7 +527,11 @@ export function BlueprintConfirmModal({
             </button>
           </section>
 
-          {error && <div className="empty" style={{ color: '#b91c1c' }}>{error}</div>}
+          {error && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {error}
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">

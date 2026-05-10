@@ -40,9 +40,16 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
         <div className="modal-header">
           <div>
             <h3>Nhập mẫu câu hỏi từ file</h3>
-            <p className="muted" style={{ marginTop: 4 }}>Sử dụng AI để phân tích cấu trúc mẫu từ nội dung file.</p>
+            <p className="muted" style={{ marginTop: 4 }}>
+              Sử dụng AI để phân tích cấu trúc mẫu từ nội dung file.
+            </p>
           </div>
-          <ModalCloseButton onClick={() => { reset(); onClose(); }} />
+          <ModalCloseButton
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+          />
         </div>
 
         <div className="modal-body">
@@ -77,15 +84,29 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
 
               <div className="form-grid">
                 <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Gợi ý môn học</p>
-                  <input className="input" value={subjectHint} onChange={(event) => setSubjectHint(event.target.value)} />
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Gợi ý môn học
+                  </p>
+                  <input
+                    className="input"
+                    value={subjectHint}
+                    onChange={(event) => setSubjectHint(event.target.value)}
+                  />
                 </label>
                 <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Gợi ý bối cảnh</p>
-                  <input className="input" value={contextHint} onChange={(event) => setContextHint(event.target.value)} />
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Gợi ý bối cảnh
+                  </p>
+                  <input
+                    className="input"
+                    value={contextHint}
+                    onChange={(event) => setContextHint(event.target.value)}
+                  />
                 </label>
                 <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Ngân hàng câu hỏi (tùy chọn)</p>
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Ngân hàng câu hỏi (tùy chọn)
+                  </p>
                   <select
                     className="select"
                     value={questionBankId}
@@ -113,10 +134,17 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
             <>
               <div className="data-card" style={{ minHeight: 0 }}>
                 <div className="row" style={{ justifyContent: 'start' }}>
-                  {result.analysisSuccessful ? <CheckCircle2 size={18} color="#0f766e" /> : <AlertCircle size={18} color="#b45309" />}
-                  <h3>{result.analysisSuccessful ? 'Phân tích thành công' : 'Phân tích xong, có cảnh báo'}</h3>
+                  {result.analysisSuccessful ? (
+                    <CheckCircle2 size={18} color="#0f766e" />
+                  ) : (
+                    <AlertCircle size={18} color="#b45309" />
+                  )}
+                  <h3>
+                    {result.analysisSuccessful
+                      ? 'Phân tích thành công'
+                      : 'Phân tích xong, có cảnh báo'}
+                  </h3>
                 </div>
-                <p className="muted">Độ tin cậy: {result.confidenceScore ?? 0}%</p>
               </div>
 
               <div className="data-card" style={{ minHeight: 0 }}>
@@ -125,7 +153,9 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
                   <FileText size={16} />
                 </div>
                 <p className="muted">
-                  <MathText text={result.suggestedTemplate?.name || 'Không nhận diện được tên mẫu'} />
+                  <MathText
+                    text={result.suggestedTemplate?.name || 'Không nhận diện được tên mẫu'}
+                  />
                 </p>
                 <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: 12 }}>
                   {JSON.stringify(result.suggestedTemplate, null, 2)}
@@ -136,7 +166,13 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
         </div>
 
         <div className="modal-footer">
-          <button className="btn secondary" onClick={() => { reset(); onClose(); }}>
+          <button
+            className="btn secondary"
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+          >
             Hủy
           </button>
 
@@ -160,7 +196,9 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
 
           {result && (
             <>
-              <button className="btn secondary" onClick={reset}>Chọn file khác</button>
+              <button className="btn secondary" onClick={reset}>
+                Chọn file khác
+              </button>
               <button
                 className="btn"
                 onClick={() => {
