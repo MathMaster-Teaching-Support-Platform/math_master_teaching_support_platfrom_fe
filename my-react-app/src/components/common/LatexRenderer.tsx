@@ -9,6 +9,7 @@ export default function LatexRenderer({ latex }: Readonly<Props>) {
   const normalizedLatex = latex.trim();
   const containerRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -32,6 +33,10 @@ export default function LatexRenderer({ latex }: Readonly<Props>) {
   }, [normalizedLatex]);
 
   const { imageUrl, isLoading, error } = useLatexRender(normalizedLatex, inView);
+
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [imageUrl]);
 
   if (!normalizedLatex) return null;
 
@@ -63,7 +68,7 @@ export default function LatexRenderer({ latex }: Readonly<Props>) {
   if (error) {
     return (
       <div ref={containerRef} style={{ border: '1px solid #fecaca', borderRadius: 8, padding: '0.75rem', background: '#fef2f2' }}>
-        <p style={{ marginTop: 0, color: '#991b1b' }}>Render LaTeX thất bại.</p>
+        <p style={{ marginTop: 0, color: '#991b1b' }}>Không hiển thị được công thức.</p>
         <pre
           style={{
             margin: 0,
@@ -83,12 +88,31 @@ export default function LatexRenderer({ latex }: Readonly<Props>) {
 
   if (!imageUrl) return <div ref={containerRef} />;
 
+  if (imageLoadError) {
+    return (
+      <div
+        ref={containerRef}
+        style={{
+          border: '1px solid #fecaca',
+          borderRadius: 8,
+          padding: '0.75rem',
+          background: '#fef2f2',
+        }}
+      >
+        <p style={{ marginTop: 0, color: '#991b1b', marginBottom: 0 }}>
+          Không tải được ảnh công thức (mạng hoặc máy chủ ảnh). Vui lòng thử lại.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef}>
       <img
         src={imageUrl}
-        alt="LaTeX formula"
+        alt="Công thức LaTeX"
         loading="lazy"
+        onError={() => setImageLoadError(true)}
         style={{ maxWidth: '100%', display: 'block', background: '#fff' }}
       />
     </div>
