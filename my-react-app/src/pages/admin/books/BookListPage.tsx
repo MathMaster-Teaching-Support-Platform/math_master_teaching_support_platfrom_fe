@@ -61,7 +61,9 @@ const BookListPage: React.FC = () => {
   const [status, setStatus] = useState<BookStatus | ''>('');
   const [keyword, setKeyword] = useState('');
   const [pageIndex, setPageIndex] = useState(0);
-  const [renameTarget, setRenameTarget] = useState<{ seriesId: string; title: string } | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{ seriesId: string; title: string } | null>(
+    null
+  );
   const [renameValue, setRenameValue] = useState('');
   const [renameError, setRenameError] = useState('');
 
@@ -106,11 +108,15 @@ const BookListPage: React.FC = () => {
         return bTime - aTime;
       });
       const head = sortedBooks[0];
-      const mappedLessonCount = sortedBooks.reduce((sum, item) => sum + (item.mappedLessonCount ?? 0), 0);
+      const mappedLessonCount = sortedBooks.reduce(
+        (sum, item) => sum + (item.mappedLessonCount ?? 0),
+        0
+      );
       const allVerified = sortedBooks.length > 0 && sortedBooks.every((item) => item.verified);
       const hasRunning = sortedBooks.some((item) => item.status === 'OCR_RUNNING');
       const hasFailed = sortedBooks.some((item) => item.status === 'OCR_FAILED');
-      const allDone = sortedBooks.length > 0 && sortedBooks.every((item) => item.status === 'OCR_DONE');
+      const allDone =
+        sortedBooks.length > 0 && sortedBooks.every((item) => item.status === 'OCR_DONE');
       let status: BookStatus = head.status;
       if (hasRunning) {
         status = 'OCR_RUNNING';
@@ -216,7 +222,7 @@ const BookListPage: React.FC = () => {
                 Bộ sách giáo khoa
               </h1>
               <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                Quản lý theo bộ sách: thêm cuốn, mapping bài học, chạy OCR và xác minh nội dung.
+                Quản lý bộ sách
               </p>
             </div>
           </div>
@@ -336,7 +342,9 @@ const BookListPage: React.FC = () => {
           </div>
           <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
             <span>
-              {totalElements > 0 ? `${filteredSeries.length} bộ sách hiển thị` : 'Chưa có bộ sách phù hợp'}
+              {totalElements > 0
+                ? `${filteredSeries.length} bộ sách hiển thị`
+                : 'Chưa có bộ sách phù hợp'}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -374,16 +382,16 @@ const BookListPage: React.FC = () => {
           </div>
         )}
         {!isLoading && filteredSeries.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-xs text-slate-600">
                 <tr>
                   <th className="text-left px-4 py-2 font-semibold">Bộ sách</th>
-                  <th className="text-left px-4 py-2 font-semibold">Khối · Môn · CT</th>
+                  <th className="text-left px-4 py-2 font-semibold">Khối</th>
                   <th className="text-left px-4 py-2 font-semibold">Số cuốn</th>
-                  <th className="text-left px-4 py-2 font-semibold">Mapping</th>
+                  <th className="text-left px-4 py-2 font-semibold">Liên kết</th>
                   <th className="text-left px-4 py-2 font-semibold">Trạng thái</th>
-                  <th className="text-left px-4 py-2 font-semibold">Verify</th>
+                  <th className="text-left px-4 py-2 font-semibold">Xác Nhận</th>
                   <th className="text-right px-4 py-2 font-semibold">Hành động</th>
                 </tr>
               </thead>
@@ -391,7 +399,11 @@ const BookListPage: React.FC = () => {
                 {filteredSeries.map((s) => (
                   <tr key={s.seriesId} className="hover:bg-slate-50/50">
                     <td className="px-4 py-3">
-                      <button type="button" onClick={() => goToWizard(s.seriesId)} className="text-left">
+                      <button
+                        type="button"
+                        onClick={() => goToWizard(s.seriesId)}
+                        className="text-left"
+                      >
                         <div className="font-medium text-slate-800 hover:text-blue-700">
                           {s.title}
                         </div>
@@ -463,7 +475,7 @@ const BookListPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
-        </div>
+          </div>
         )}
 
         {/* Pagination */}

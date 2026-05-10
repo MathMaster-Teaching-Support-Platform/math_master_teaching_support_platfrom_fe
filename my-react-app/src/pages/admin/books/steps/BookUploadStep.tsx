@@ -246,8 +246,7 @@ const BookUploadStep: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">Bước 1 · Thông tin & Upload PDF</h2>
-        <p className="text-sm text-slate-500">Nhập metadata sách, sau đó upload file PDF nguồn.</p>
+        <h2 className="text-lg font-semibold text-slate-900">Bước 1 · Thông tin & Tải Lên PDF</h2>
       </div>
 
       {error && (
@@ -261,9 +260,8 @@ const BookUploadStep: React.FC<Props> = ({
         <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-medium text-slate-700">
-              {anchorSeriesId
-                ? 'Các cuốn trong bộ sách'
-                : 'Sách đã có cùng khối/môn (đã chọn)'} ({relatedBooks.length})
+              {anchorSeriesId ? 'Các cuốn trong bộ sách' : 'Sách đã có cùng khối/môn (đã chọn)'} (
+              {relatedBooks.length})
             </div>
             {!isAddingAnother && (
               <button
@@ -372,7 +370,7 @@ const BookUploadStep: React.FC<Props> = ({
             ))}
           </select>
         </Field>
-        <Field label="Tên sách *">
+        <Field label="Tên sách*">
           <input
             className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm"
             value={title}
@@ -405,18 +403,16 @@ const BookUploadStep: React.FC<Props> = ({
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Trang OCR từ *">
+          <Field label="Từ trang*">
             <input
               type="number"
               min={1}
               className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm"
               value={ocrPageFrom}
-              onChange={(e) =>
-                setOcrPageFrom(e.target.value === '' ? '' : Number(e.target.value))
-              }
+              onChange={(e) => setOcrPageFrom(e.target.value === '' ? '' : Number(e.target.value))}
             />
           </Field>
-          <Field label="Trang OCR đến *">
+          <Field label="Đến trang *">
             <input
               type="number"
               min={1}
@@ -436,14 +432,14 @@ const BookUploadStep: React.FC<Props> = ({
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm hover:bg-slate-800 disabled:opacity-50"
         >
           {isSavingMetadata && <Loader2 size={14} className="animate-spin" />}
-          {book?.id && !isAddingAnother ? 'Cập nhật metadata' : 'Lưu metadata sách mới'}
+          {book?.id && !isAddingAnother ? 'Cập nhật metadata' : 'Lưu thông tin sách'}
         </button>
       </div>
 
       {/* PDF upload */}
       <div className="border-t border-slate-200 pt-6">
         <h3 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-          <FileText size={16} /> File PDF nguồn
+          <FileText size={16} /> File PDF
         </h3>
         {!isAddingAnother && book?.pdfPath ? (
           <div className="space-y-2">
@@ -452,18 +448,14 @@ const BookUploadStep: React.FC<Props> = ({
               <div>
                 <p className="font-medium">Đã có PDF trên server (đường dẫn trong CSDL).</p>
                 <p className="mt-1 text-xs text-emerald-900/85 leading-relaxed">
-                  Preview lỗi 404 / NoSuchKey thường do file chỉ tồn tại trên MinIO của máy khác (ví dụ đã
-                  upload ở local). Chọn lại file PDF và bấm <strong>Thay thế PDF trên server</strong>{' '}
-                  để ghi đè lên MinIO hiện tại.
+                  Preview lỗi 404 / NoSuchKey thường do file chỉ tồn tại trên MinIO của máy khác (ví
+                  dụ đã upload ở local). Chọn lại file PDF và bấm{' '}
+                  <strong>Thay thế PDF trên server</strong> để ghi đè lên MinIO hiện tại.
                 </p>
               </div>
             </div>
           </div>
-        ) : (
-          <p className="text-xs text-slate-500 mb-2">
-            Chỉ chấp nhận file .pdf. Lưu metadata trước rồi mới upload được.
-          </p>
-        )}
+        ) : null}
         <div className="flex items-center gap-3 mt-3">
           <input
             ref={fileInputRef}
@@ -502,7 +494,7 @@ const BookUploadStep: React.FC<Props> = ({
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50"
             >
               {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
-              {showPreview ? 'Ẩn preview PDF' : 'Xem preview PDF'}
+              {showPreview ? 'Ẩn Sách' : 'Xem Sách'}
             </button>
 
             {showPreview ? (
@@ -522,8 +514,8 @@ const BookUploadStep: React.FC<Props> = ({
         message={
           pendingDeleteBook && (
             <>
-              Bạn sắp xóa <strong>&quot;{pendingDeleteBook.title}&quot;</strong>. Chỉ sách chưa upload
-              PDF mới được xóa.
+              Bạn sắp xóa <strong>&quot;{pendingDeleteBook.title}&quot;</strong>. Chỉ sách chưa
+              upload PDF mới được xóa.
             </>
           )
         }

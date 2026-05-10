@@ -33,7 +33,7 @@ const SeriesMappingGrid: React.FC<Props> = ({ rows, conflictsByBookId }) => {
               <th className="text-left px-3 py-2 font-semibold">Sách</th>
               <th className="text-left px-3 py-2 font-semibold">OCR từ trang</th>
               <th className="text-left px-3 py-2 font-semibold">OCR đến trang</th>
-              <th className="text-left px-3 py-2 font-semibold">Số bài map</th>
+              <th className="text-left px-3 py-2 font-semibold">Số bài </th>
               <th className="text-left px-3 py-2 font-semibold">Trạng thái trùng lặp</th>
             </tr>
           </thead>

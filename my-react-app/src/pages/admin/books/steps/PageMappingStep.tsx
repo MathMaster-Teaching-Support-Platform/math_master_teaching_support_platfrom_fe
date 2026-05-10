@@ -8,9 +8,7 @@ import {
 import { useChaptersBySubject } from '../../../../hooks/useChapters';
 import { useLessonsByChapter } from '../../../../hooks/useLessons';
 import type { BookResponse, SeriesPageMappingItem } from '../../../../types/book.types';
-import {
-  toSeriesRangeRows,
-} from '../../../../utils/seriesMappingOverlap';
+import { toSeriesRangeRows } from '../../../../utils/seriesMappingOverlap';
 import SeriesMappingGrid from './SeriesMappingGrid';
 
 interface Props {
@@ -309,7 +307,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     try {
       await saveMapping.mutateAsync({ mappings });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Lỗi khi lưu mapping.');
+      setError(e instanceof Error ? e.message : 'Lỗi khi lưu.');
     }
   };
 
@@ -321,7 +319,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-          <ListTree size={18} /> Bước 2 · Mapping bài học
+          <ListTree size={18} /> Bước 2 · Liên kết bài học → trang
         </h2>
         <p className="text-sm text-slate-500">
           Chọn chương → chọn tập sách + nhập khoảng trang cho từng bài. Khoảng OCR của sách hiện
@@ -346,7 +344,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
             Chương
           </div>
           <div className="px-3 py-2 text-[11px] text-slate-500 border-b bg-white">
-            Môn có thể có nhiều chương, bạn chỉ cần mapping các chương có trong sách hiện tại.
+            Môn có thể có nhiều chương, bạn chỉ cần liên kết các chương có trong sách hiện tại.
           </div>
           <ul className="max-h-[420px] overflow-y-auto">
             {chapters.isLoading && (
@@ -408,7 +406,9 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
               const mappedBookTitle = savedCurrent?.bookId
                 ? seriesBookNameMap.get(savedCurrent.bookId)
                 : undefined;
-              const draftBookTitle = current?.bookId ? seriesBookNameMap.get(current.bookId) : undefined;
+              const draftBookTitle = current?.bookId
+                ? seriesBookNameMap.get(current.bookId)
+                : undefined;
               const isPendingBookChange = Boolean(
                 current?.bookId && savedCurrent?.bookId && current.bookId !== savedCurrent.bookId
               );
@@ -419,7 +419,9 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                     {savedCurrent?.bookId && (
                       <div className="mt-1 text-[11px] text-emerald-700">
                         Đã map:{' '}
-                        <span className="font-medium">{mappedBookTitle ?? savedCurrent.bookId}</span>
+                        <span className="font-medium">
+                          {mappedBookTitle ?? savedCurrent.bookId}
+                        </span>
                       </div>
                     )}
                     {isPendingBookChange && (
@@ -465,7 +467,9 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                           savedCurrent?.chapterOrderIndex ??
                           chapterOrderIdx,
                         lessonOrderIndex:
-                          current?.lessonOrderIndex ?? savedCurrent?.lessonOrderIndex ?? lessonOrderIdx,
+                          current?.lessonOrderIndex ??
+                          savedCurrent?.lessonOrderIndex ??
+                          lessonOrderIdx,
                         bookId: current?.bookId ?? savedCurrent?.bookId ?? book.id,
                         pageStart: e.target.value === '' ? '' : Number(e.target.value),
                         pageEnd: current?.pageEnd ?? '',
@@ -490,7 +494,9 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
                           savedCurrent?.chapterOrderIndex ??
                           chapterOrderIdx,
                         lessonOrderIndex:
-                          current?.lessonOrderIndex ?? savedCurrent?.lessonOrderIndex ?? lessonOrderIdx,
+                          current?.lessonOrderIndex ??
+                          savedCurrent?.lessonOrderIndex ??
+                          lessonOrderIdx,
                         bookId: current?.bookId ?? savedCurrent?.bookId ?? book.id,
                         pageStart: current?.pageStart ?? '',
                         pageEnd: e.target.value === '' ? '' : Number(e.target.value),
@@ -520,7 +526,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
       {/* Mapped summary */}
       <div className="border border-slate-200 rounded-lg">
         <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b">
-          Tổng kết mapping ({savedDraft.length})
+          Tổng kết({savedDraft.length})
         </div>
         <div className="max-h-[200px] overflow-y-auto divide-y divide-slate-100">
           {savedDraft.length === 0 && (
@@ -550,7 +556,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
           className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50"
         >
           {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-          Lưu mapping
+          Lưu
         </button>
       </div>
     </div>
