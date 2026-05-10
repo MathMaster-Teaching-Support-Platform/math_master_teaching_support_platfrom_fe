@@ -1897,16 +1897,15 @@ const AISlideGenerator: React.FC = () => {
                           onClick={() => setTemplateId(template.id)}
                           aria-selected={selected}
                         >
-                          <div className="h-[100px] bg-[#E8E6DC] overflow-hidden">
+                          <div className="relative w-full overflow-hidden bg-[#E8E6DC]">
                             {previewUrl ? (
-                              <img
+                              <SlideThumbnailPreview
                                 src={previewUrl}
                                 alt={`Template: ${template.name}`}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
+                                frameClassName="relative w-full aspect-[3/4] overflow-hidden bg-[#E8E6DC]"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
+                              <div className="flex aspect-[3/4] w-full items-center justify-center bg-[#E8E6DC]">
                                 {loadingTemplatePreviews ? (
                                   <LoadingSpinner label="" />
                                 ) : (
@@ -2489,21 +2488,21 @@ const AISlideGenerator: React.FC = () => {
                       }}
                     >
                       {/* Thumbnail */}
-                      <div className="h-[120px] bg-[#E8E6DC] relative overflow-hidden">
+                      <div className="relative w-full overflow-hidden bg-[#E8E6DC]">
                         {generatedThumbnailUrls[file.id] ? (
-                          <img
+                          <SlideThumbnailPreview
                             src={generatedThumbnailUrls[file.id]}
                             alt={getGeneratedDisplayName(file)}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            frameClassName="relative w-full aspect-[3/4] overflow-hidden bg-[#E8E6DC]"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="flex aspect-[3/4] w-full items-center justify-center bg-[#E8E6DC]">
                             <span className="font-[Playfair_Display] text-[32px] font-medium text-[#B0AEA5]">
                               {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
                             </span>
                           </div>
                         )}
-                        <div className="absolute top-2.5 right-2.5">
+                        <div className="pointer-events-none absolute top-2.5 right-2.5 z-[5]">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-[Be_Vietnam_Pro] text-[10px] font-semibold ${
                               file.isPublic
