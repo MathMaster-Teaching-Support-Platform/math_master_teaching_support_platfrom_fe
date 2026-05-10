@@ -526,22 +526,73 @@
   color: #1d4ed8;
 }
 
-.module-layout-container .review-explanation-tech {
+/* Raw JS / engine formula (no LaTeX) — monospace */
+.module-layout-container .review-explanation-tech--code {
   margin: 0.45rem 0 0;
   padding: 0.55rem 0.65rem;
   font-size: 0.78rem;
-  line-height: 1.4;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: #f1f5f9;
+  color: #0f172a;
   border-radius: 8px;
-  border: 1px solid #334155;
-  max-height: 220px;
+  border: 1px solid #cbd5e1;
+  max-height: min(52vh, 420px);
   overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* LaTeX / mixed prose — same readability as main preview, scroll if long */
+.module-layout-container .review-explanation-tech--math {
+  margin: 0.45rem 0 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #142235;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  max-height: min(52vh, 420px);
+  overflow: auto;
+}
+
+.module-layout-container .review-explanation-tech--math .katex {
+  font-size: 1em;
 }
 
 .module-layout-container .review-explanation-plain {
   margin-top: 0;
+}
+
+/* Sinh lại — modal gợi ý */
+.module-layout-container .review-regenerate-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.module-layout-container .review-regenerate-modal__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.module-layout-container .review-regenerate-modal__textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.module-layout-container .review-regenerate-modal__hint-note {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.module-layout-container .review-queue-card-actions .btn {
+  justify-content: center;
 }

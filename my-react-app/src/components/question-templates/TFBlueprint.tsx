@@ -262,7 +262,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
           <>
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Hướng dẫn giải mẫu (cho AI tạo lời giải)
+                Hướng dẫn giải mẫu (cho AI tạo lời giải){' '}
+                <strong style={{ color: '#b45309' }}>— bắt buộc trước khi dùng AI</strong>
               </p>
               <textarea
                 className="textarea"

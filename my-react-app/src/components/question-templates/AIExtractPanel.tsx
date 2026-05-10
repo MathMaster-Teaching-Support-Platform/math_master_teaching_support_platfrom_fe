@@ -36,7 +36,7 @@ export function AIExtractPanel({
   const extractMutation = useExtractParameters();
 
   const handleExtract = async () => {
-    if (!templateText.trim()) return;
+    if (!templateText.trim() || !solutionSteps?.trim()) return;
     setError(null);
     setResult(null);
 
@@ -78,6 +78,7 @@ export function AIExtractPanel({
   };
 
   const isLoading = extractMutation.isPending;
+  const solutionReady = Boolean(solutionSteps?.trim());
 
   return (
     <div
@@ -109,7 +110,7 @@ export function AIExtractPanel({
             type="button"
             className="btn secondary"
             style={{ fontSize: '0.82rem', padding: '5px 12px' }}
-            disabled={isLoading || !templateText.trim()}
+            disabled={isLoading || !templateText.trim() || !solutionReady}
             onClick={() => void handleExtract()}
           >
             {isLoading ? (
@@ -136,6 +137,12 @@ export function AIExtractPanel({
           )}
         </div>
       </div>
+
+      {!solutionReady && templateText.trim() && (
+        <p style={{ fontSize: '0.8rem', color: '#b45309', marginTop: 10, marginBottom: 0 }}>
+          Nhập <strong>Hướng dẫn giải mẫu</strong> ở Bước 4 trước khi bấm Phân tích AI.
+        </p>
+      )}
 
       {/* Error state */}
       {error && (

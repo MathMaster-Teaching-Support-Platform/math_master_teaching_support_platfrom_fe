@@ -218,6 +218,13 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
     return null;
   }
 
+  function validateStep4(): string | null {
+    if (!solutionSteps.trim()) {
+      return 'Vui lòng nhập lời giải mẫu (Bước 4) — bắt buộc trước khi AI tạo Blueprint.';
+    }
+    return null;
+  }
+
   function goNext() {
     let err: string | null = null;
     if (currentStep === 2) err = validateStep2();
@@ -265,11 +272,12 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
     for (const [step, gate] of [
       [2, validateStep2],
       [3, validateStep3],
+      [4, validateStep4],
     ] as const) {
       const err = gate();
       if (err) {
         setError(err);
-        setCurrentStep(step as 2 | 3);
+        setCurrentStep(step as 2 | 3 | 4);
         return;
       }
     }
@@ -515,7 +523,11 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
             {/* STEP 4: Lời giải & xem trước */}
             {currentStep === 4 && (
               <>
-                <FormField htmlFor="rq-solution" label="Lời giải mẫu">
+                <FormField
+                  htmlFor="rq-solution"
+                  label="Lời giải mẫu"
+                  hint="Bắt buộc — AI cần các bước giải cụ thể để tạo Blueprint an toàn."
+                >
                   <>
                     <textarea
                       id="rq-solution"
