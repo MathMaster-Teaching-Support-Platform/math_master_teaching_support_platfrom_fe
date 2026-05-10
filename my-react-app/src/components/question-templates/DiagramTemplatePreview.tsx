@@ -52,6 +52,15 @@ export function DiagramTemplatePreview({ diagramTemplate, parameters }: Readonly
 
   return (
     <div style={{ marginTop: 8 }}>
+      {trimmed && (
+        <p className="muted" style={{ marginBottom: 8, fontSize: '0.78rem', lineHeight: 1.45 }}>
+          Gợi ý pgfplots/TikZ: mỗi nhãn giá trị (cực đại, cực tiểu, giao hoành độ) nên gắn tại{' '}
+          <code style={{ fontSize: '0.76rem' }}>at (axis cs: x, y)</code> đúng điểm đó — tránh đặt nhãn
+          gần gốc <code style={{ fontSize: '0.76rem' }}>O</code> khi điểm không nằm ở đó (hai cực tiểu
+          đối xứng cần hai tọa độ{' '}
+          <code style={{ fontSize: '0.76rem' }}>(±a, y_min)</code>).
+        </p>
+      )}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button
           type="button"
