@@ -158,7 +158,9 @@ export function CurriculumHierarchyFilter({
         )}
       </div>
       {footnote ? (
-        <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] leading-relaxed">{footnote}</p>
+        <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] leading-relaxed">
+          {footnote}
+        </p>
       ) : null}
     </div>
   );

@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import { API_BASE_URL, API_ENDPOINTS, LONG_RUNNING_FETCH_MS } from '../config/api.config';
 import {
   type AIEnhancedQuestionResponse,
   type ApiResponse,
@@ -47,6 +47,14 @@ const getAuthHeaders = () => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
+
+/** Abort after {@link LONG_RUNNING_FETCH_MS} so hung requests do not hang forever (browser supports only). */
+function longRunningAbortSignal(): AbortSignal | undefined {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(LONG_RUNNING_FETCH_MS);
+  }
+  return undefined;
+}
 
 const parseResponse = async <T>(response: Response, fallbackMessage: string): Promise<T> => {
   if (!response.ok) {
@@ -262,6 +270,7 @@ export const questionTemplateService = {
       {
         method: 'GET',
         headers: getAuthHeaders(),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<TemplateTestResponse>>(response, 'Không thể test template');
@@ -278,6 +287,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<GeneratedQuestionsBatchResponse>>(
@@ -295,6 +305,7 @@ export const questionTemplateService = {
       {
         method: 'POST',
         headers: getAuthHeaders(),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<AIEnhancedQuestionResponse>>(
@@ -325,6 +336,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers,
         body: formData,
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<TemplateImportResponse>>(
@@ -344,6 +356,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<ExtractParametersResponse>>(
@@ -363,6 +376,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<GenerateParametersResponse>>(
@@ -382,6 +396,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<GenerateParametersResponse>>(
@@ -400,6 +415,7 @@ export const questionTemplateService = {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(request),
+        signal: longRunningAbortSignal(),
       }
     );
     return parseResponse<ApiResponse<BlueprintFromRealQuestionResponse>>(

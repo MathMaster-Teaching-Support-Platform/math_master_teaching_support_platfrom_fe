@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { latexRenderService } from '../services/latexRenderService';
+import { translateLatexRenderError } from '../utils/latexRenderErrors';
 
 type UseLatexRenderResult = {
   imageUrl: string;
@@ -7,39 +8,58 @@ type UseLatexRenderResult = {
   error: string;
 };
 
-export function useLatexRender(latex: string, enabled = true): UseLatexRenderResult {
-  const [imageUrl, setImageUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+type FetchPayload = {
+  latex: string;
+  url: string;
+  error: string;
+  loading: boolean;
+};
 
-  useEffect(() => {
-    const normalizedLatex = latex.trim();
+export function useLatexRender(latex: string, enabled = true): UseLatexRenderResult {
+  const normalizedLatex = latex.trim();
+  const [fetchState, setFetchState] = useState<FetchPayload | null>(null);
+
+  useLayoutEffect(() => {
     if (!normalizedLatex || !enabled) {
-      setImageUrl('');
-      setError('');
-      setIsLoading(false);
+      setFetchState(null);
       return;
     }
 
+    setFetchState({
+      latex: normalizedLatex,
+      url: '',
+      error: '',
+      loading: true,
+    });
+
     const controller = new AbortController();
     const timer = globalThis.setTimeout(() => {
-      setIsLoading(true);
-      setError('');
-
       latexRenderService
         .renderLatex({ latex: normalizedLatex }, controller.signal)
         .then((payload) => {
-          setImageUrl(payload.imageUrl || '');
+          setFetchState((prev) => {
+            if (!prev || prev.latex !== normalizedLatex) return prev;
+            return {
+              latex: normalizedLatex,
+              url: payload.imageUrl ?? '',
+              error: '',
+              loading: false,
+            };
+          });
         })
         .catch((err) => {
           if (controller.signal.aborted) return;
-          setImageUrl('');
-          setError(err instanceof Error ? err.message : 'Latex rendering failed.');
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) {
-            setIsLoading(false);
-          }
+          const raw = err instanceof Error ? err.message : String(err);
+          const message = translateLatexRenderError(raw);
+          setFetchState((prev) => {
+            if (!prev || prev.latex !== normalizedLatex) return prev;
+            return {
+              latex: normalizedLatex,
+              url: '',
+              error: message,
+              loading: false,
+            };
+          });
         });
     }, 300);
 
@@ -48,6 +68,19 @@ export function useLatexRender(latex: string, enabled = true): UseLatexRenderRes
       controller.abort();
     };
   }, [latex, enabled]);
+
+  const active =
+    fetchState && fetchState.latex === normalizedLatex ? fetchState : null;
+
+  const imageUrl = active?.url ?? '';
+  const error = active?.error ?? '';
+
+  const isLoading =
+    !!normalizedLatex &&
+    enabled &&
+    (fetchState === null ||
+      fetchState.latex !== normalizedLatex ||
+      fetchState.loading);
 
   return { imageUrl, isLoading, error };
 }

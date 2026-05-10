@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
-import { AuthService } from './api/auth.service';
 import type { LatexRenderRequest, LatexRenderResponse } from '../types/latexRender';
+import { translateLatexRenderError } from '../utils/latexRenderErrors';
+import { AuthService } from './api/auth.service';
 
 const getAuthHeaders = () => {
   const token = AuthService.getToken();
@@ -30,12 +31,12 @@ export const latexRenderService = {
     }
 
     if (!response.ok) {
-      const message = payload?.error || `Latex rendering failed (${response.status}).`;
-      throw new Error(message);
+      const raw = payload?.error || `Latex rendering failed (${response.status}).`;
+      throw new Error(translateLatexRenderError(raw));
     }
 
     if (!payload?.success || !payload.imageUrl) {
-      throw new Error(payload?.error || 'Latex rendering failed.');
+      throw new Error(translateLatexRenderError(payload?.error || 'Latex rendering failed.'));
     }
 
     return payload;
