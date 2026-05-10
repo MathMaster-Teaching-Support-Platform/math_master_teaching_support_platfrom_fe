@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, Check, RefreshCw, RotateCcw, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -12,6 +12,7 @@ import {
   useApproveQuestion,
   useBulkApproveQuestions,
   useBulkRejectQuestions,
+  useGenerateQuestions,
   useReviewQueue,
 } from '../../hooks/useQuestionTemplate';
 import { useToast } from '../../context/ToastContext';
@@ -91,12 +92,16 @@ export function QuestionReviewQueue() {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rejectReason, setRejectReason] = useState('');
+  /** Optional hint per row → forwarded to blueprint value selector as distinctnessHint */
+  const [regenerateHints, setRegenerateHints] = useState<Record<string, string>>({});
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   const queueEnabled = !!templateId;
   const { data, isLoading, isError, error, refetch } = useReviewQueue(templateId, page, 20);
   const approveOne = useApproveQuestion();
   const bulkApprove = useBulkApproveQuestions();
   const bulkReject = useBulkRejectQuestions();
+  const generateQuestions = useGenerateQuestions();
 
   const items = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
@@ -149,6 +154,56 @@ export function QuestionReviewQueue() {
         type: 'error',
         message: e instanceof Error ? e.message : 'Không thể duyệt các câu hỏi đã chọn.',
       });
+    }
+  }
+
+  async function regenerateOne(question: ReviewQuestionResponse) {
+    const tmpl =
+      question.templateId ?? templateId;
+    if (!tmpl) {
+      showToast({
+        type: 'error',
+        message: 'Thiếu template — không thể sinh lại.',
+      });
+      return;
+    }
+    const hint = (regenerateHints[question.id] ?? '').trim();
+    setRegeneratingId(question.id);
+    try {
+      await bulkReject.mutateAsync({
+        questionIds: [question.id],
+        reason: 'Sinh lại: thay bằng bản draft mới từ cùng mẫu',
+      });
+      const resp = await generateQuestions.mutateAsync({
+        id: tmpl,
+        count: 1,
+        avoidDuplicates: true,
+        distinctnessHint: hint || undefined,
+      });
+      const batch = resp.result;
+      if (batch?.totalGenerated != null && batch.totalGenerated < 1) {
+        const w = batch.warnings?.filter(Boolean) ?? [];
+        showToast({
+          type: 'warning',
+          message:
+            w[0] ??
+            'Không tạo được câu mới (kiểm tra ràng buộc mẫu hoặc thử gợi ý khác).',
+        });
+      } else {
+        showToast({ type: 'success', message: 'Đã sinh lại câu hỏi mới vào hàng chờ duyệt.' });
+      }
+      setRegenerateHints((prev) => {
+        const next = { ...prev };
+        delete next[question.id];
+        return next;
+      });
+    } catch (e) {
+      showToast({
+        type: 'error',
+        message: e instanceof Error ? e.message : 'Không thể sinh lại câu hỏi.',
+      });
+    } finally {
+      setRegeneratingId(null);
     }
   }
 
@@ -330,10 +385,55 @@ export function QuestionReviewQueue() {
                             solutionSteps={q.solutionSteps}
                           />
                         </div>
-                        <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
+                        <div
+                          className="row"
+                          style={{
+                            flexDirection: 'column',
+                            gap: 8,
+                            alignItems: 'stretch',
+                            minWidth: 196,
+                          }}
+                        >
+                          <span className="muted" style={{ fontSize: '0.72rem', marginBottom: -4 }}>
+                            Gợi ý sinh lại (tuỳ chọn)
+                          </span>
+                          <textarea
+                            id={`regenerate-hint-${q.id}`}
+                            aria-label="Gợi ý sinh lại (tuỳ chọn)"
+                            className="input"
+                            rows={2}
+                            placeholder="Ví dụ: đổi dấu tham số, dùng số nhỏ hơn… Để trống = chỉ sinh lại."
+                            value={regenerateHints[q.id] ?? ''}
+                            onChange={(e) =>
+                              setRegenerateHints((prev) => ({
+                                ...prev,
+                                [q.id]: e.target.value,
+                              }))
+                            }
+                            style={{
+                              fontSize: '0.8rem',
+                              resize: 'vertical',
+                              minHeight: 52,
+                              marginBottom: 2,
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn secondary"
+                            disabled={
+                              regeneratingId === q.id ||
+                              bulkReject.isPending ||
+                              generateQuestions.isPending ||
+                              !(q.templateId ?? templateId)
+                            }
+                            onClick={() => void regenerateOne(q)}
+                          >
+                            <RotateCcw size={14} />
+                            Sinh lại
+                          </button>
                           <button
                             className="btn btn--feat-emerald"
-                            disabled={approveOne.isPending}
+                            disabled={approveOne.isPending || regeneratingId === q.id}
                             onClick={() => void approve(q.id)}
                           >
                             <Check size={14} />
@@ -341,7 +441,7 @@ export function QuestionReviewQueue() {
                           </button>
                           <button
                             className="btn danger"
-                            disabled={bulkReject.isPending}
+                            disabled={bulkReject.isPending || regeneratingId === q.id}
                             onClick={() =>
                               void bulkReject
                                 .mutateAsync({
