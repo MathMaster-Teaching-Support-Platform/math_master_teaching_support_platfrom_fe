@@ -60,6 +60,29 @@ const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
   </span>
 );
 
+/** Blurred fill + sharp centered image — avoids ugly stretch/crop from wide frames + object-cover. */
+const SlideThumbnailPreview: React.FC<{
+  src: string;
+  alt: string;
+  frameClassName?: string;
+}> = ({ src, alt, frameClassName = 'h-[120px]' }) => (
+  <div className={`relative w-full overflow-hidden bg-[#E8E6DC] ${frameClassName}`}>
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-2xl saturate-[1.05]"
+    />
+    <div className="absolute inset-0 flex items-center justify-center p-2">
+      <img
+        src={src}
+        alt={alt}
+        className="relative z-[1] max-h-full max-w-full object-contain object-center"
+      />
+    </div>
+  </div>
+);
+
 const getTemplatePreviewUrl = (templateId: string, previewImage?: string | null): string => {
   if (previewImage && /^https?:\/\//i.test(previewImage)) {
     return previewImage;
@@ -366,6 +389,15 @@ const AISlideGenerator: React.FC = () => {
   );
   const [metadataName, setMetadataName] = useState('');
   const [metadataThumbnailFile, setMetadataThumbnailFile] = useState<File | null>(null);
+  const metadataThumbnailPreviewUrl = useMemo(
+    () => (metadataThumbnailFile ? URL.createObjectURL(metadataThumbnailFile) : null),
+    [metadataThumbnailFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (metadataThumbnailPreviewUrl) URL.revokeObjectURL(metadataThumbnailPreviewUrl);
+    };
+  }, [metadataThumbnailPreviewUrl]);
   const [metadataIsPublic, setMetadataIsPublic] = useState(false);
   const [updatingMetadata, setUpdatingMetadata] = useState(false);
   const previewRenderRequestSeqRef = useRef(0);
@@ -2015,10 +2047,10 @@ const AISlideGenerator: React.FC = () => {
                       className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${newSlideThumbnailPreview ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
                     >
                       {newSlideThumbnailPreview ? (
-                        <img
+                        <SlideThumbnailPreview
                           src={newSlideThumbnailPreview}
                           alt="Thumbnail preview"
-                          className="w-full h-[120px] object-cover"
+                          frameClassName="h-[120px]"
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center gap-2 py-8 bg-[#F5F4ED]">
@@ -2862,12 +2894,12 @@ const AISlideGenerator: React.FC = () => {
               onSubmit={(e) => void handleUpdateMetadata(e)}
             >
               {/* Current thumbnail preview */}
-              <div className="h-[100px] rounded-xl overflow-hidden bg-[#E8E6DC]">
+              <div className="rounded-xl overflow-hidden">
                 {generatedThumbnailUrls[editingMetadataFile.id] ? (
-                  <img
+                  <SlideThumbnailPreview
                     src={generatedThumbnailUrls[editingMetadataFile.id]}
                     alt={getGeneratedDisplayName(editingMetadataFile)}
-                    className="w-full h-full object-cover"
+                    frameClassName="h-[100px]"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -2916,11 +2948,11 @@ const AISlideGenerator: React.FC = () => {
                   <div
                     className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${metadataThumbnailFile ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
                   >
-                    {metadataThumbnailFile ? (
-                      <img
-                        src={window.URL.createObjectURL(metadataThumbnailFile)}
-                        alt="preview"
-                        className="w-full h-[80px] object-cover"
+                    {metadataThumbnailFile && metadataThumbnailPreviewUrl ? (
+                      <SlideThumbnailPreview
+                        src={metadataThumbnailPreviewUrl}
+                        alt="Ảnh thumbnail mới"
+                        frameClassName="h-[80px]"
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-2 py-5 bg-[#F5F4ED]">

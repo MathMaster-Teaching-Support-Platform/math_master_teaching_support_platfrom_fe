@@ -762,7 +762,7 @@ export default function TeacherMindmaps() {
                       </div>
                       <div className="w-40">
                         <label className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5 block">
-                          Số cấp độ
+                          Cấp độ của mindmap
                         </label>
                         <input
                           type="number"
