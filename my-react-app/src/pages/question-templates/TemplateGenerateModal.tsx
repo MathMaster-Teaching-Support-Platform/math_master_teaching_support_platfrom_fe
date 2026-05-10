@@ -6,8 +6,7 @@ import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import { QuestionTemplateApiError } from '../../services/questionTemplateService';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
-const NO_TOKEN_TOAST =
-  'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
+const NO_TOKEN_TOAST = 'Bạn đã hết lượt sử dụng AI. Vui lòng liên hệ quản trị viên để nạp thêm.';
 
 type Props = {
   isOpen: boolean;
@@ -16,12 +15,7 @@ type Props = {
   onGenerated: (message: string) => void;
 };
 
-export function TemplateGenerateModal({
-  isOpen,
-  onClose,
-  template,
-  onGenerated,
-}: Readonly<Props>) {
+export function TemplateGenerateModal({ isOpen, onClose, template, onGenerated }: Readonly<Props>) {
   const [count, setCount] = useState(5);
   const [avoidDuplicates, setAvoidDuplicates] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +52,7 @@ export function TemplateGenerateModal({
     } catch (err) {
       // Out-of-tokens / no-subscription errors get a toast, no inline error
       // (per spec). Other errors keep the inline message.
-      if (
-        err instanceof QuestionTemplateApiError &&
-        (err.code === 1167 || err.code === 1166)
-      ) {
+      if (err instanceof QuestionTemplateApiError && (err.code === 1167 || err.code === 1166)) {
         showToast({ type: 'error', message: NO_TOKEN_TOAST });
         return;
       }
@@ -89,13 +80,13 @@ export function TemplateGenerateModal({
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Số lượng câu hỏi (tối đa 5)
+                Số lượng câu hỏi (tối đa 3)
               </p>
               <input
                 className="input"
                 type="number"
                 min={1}
-                max={5}
+                max={3}
                 value={count}
                 onChange={(e) => setCount(Number(e.target.value))}
               />
@@ -122,8 +113,8 @@ export function TemplateGenerateModal({
                 color: '#1e3a8a',
               }}
             >
-              Câu hỏi sau khi tạo sẽ ở trạng thái <strong>Chờ duyệt</strong>. Bạn cần
-              duyệt lại trước khi sử dụng.
+              Câu hỏi sau khi tạo sẽ ở trạng thái <strong>Chờ duyệt</strong>. Bạn cần duyệt lại
+              trước khi sử dụng.
             </div>
           </div>
 
@@ -131,11 +122,7 @@ export function TemplateGenerateModal({
             <button type="button" className="btn secondary" onClick={onClose}>
               Huỷ
             </button>
-            <button
-              type="submit"
-              className="btn"
-              disabled={generateMutation.isPending}
-            >
+            <button type="submit" className="btn" disabled={generateMutation.isPending}>
               {generateMutation.isPending ? (
                 'Đang tạo…'
               ) : (
