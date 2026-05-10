@@ -42,7 +42,7 @@ function readWizardStepFromLocationSearch(): StepIdx {
 }
 
 const STEPS: Array<{ key: StepIdx; title: string; icon: React.ReactNode }> = [
-  { key: 0, title: 'Thông tin & Upload PDF', icon: <FileText size={16} /> },
+  { key: 0, title: 'Thông tin & Tải lên PDF', icon: <FileText size={16} /> },
   { key: 1, title: 'Liên kết bài học → trang', icon: <ListTree size={16} /> },
   { key: 2, title: 'Chạy OCR', icon: <Rocket size={16} /> },
   { key: 3, title: 'Xác minh nội dung', icon: <ClipboardCheck size={16} /> },
@@ -296,8 +296,7 @@ const BookCreateWizard: React.FC = () => {
               {routeId || seriesId ? 'Thiết lập bộ sách giáo khoa' : 'Thêm sách giáo khoa mới'}
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-              Quy trình 4 bước theo bộ sách: nhập metadata + upload PDF, mapping bài học, chạy OCR,
-              sau đó xác minh nội dung.
+              Quy trình 4 bước theo bộ sách:
             </p>
           </div>
         </div>

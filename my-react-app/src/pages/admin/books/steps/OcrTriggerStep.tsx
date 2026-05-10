@@ -251,8 +251,8 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
                       {seriesBook.title}
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      OCR range: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} ·
-                      mapped: {seriesBook.mappedLessonCount ?? 0}
+                      Khoảng: {seriesBook.ocrPageFrom ?? '?'}–{seriesBook.ocrPageTo ?? '?'} · Đã
+                      liên kết: {seriesBook.mappedLessonCount ?? 0}
                     </div>
                   </div>
                   <span
@@ -305,7 +305,7 @@ const OcrTriggerStep: React.FC<Props> = ({ book, onSelectSeriesBook, onComplete 
           </div>
           <Row label="Tổng số trang PDF" value={String(book.totalPages ?? '?')} />
           <Row label="Khoảng OCR" value={`${book.ocrPageFrom ?? '?'} – ${book.ocrPageTo ?? '?'}`} />
-          <Row label="Số bài đã mapping" value={String(book.mappedLessonCount ?? 0)} />
+          <Row label="Số bài đã liên kết" value={String(book.mappedLessonCount ?? 0)} />
           <Row
             label="Trạng thái"
             value={

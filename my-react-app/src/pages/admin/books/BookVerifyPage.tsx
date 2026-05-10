@@ -658,7 +658,7 @@ export const BookVerifyContent: React.FC<BookVerifyContentProps> = ({
               )}
               <StatusPill verified={book.verified} />
               <span className="text-slate-400">·</span>
-              <span className="text-slate-500">{book.mappedLessonCount} bài đã mapping</span>
+              <span className="text-slate-500">{book.mappedLessonCount} bài đã liên kết</span>
             </div>
           )}
         </div>
@@ -1426,7 +1426,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
         <div>
           <div className="text-sm font-semibold text-slate-800">Trang sách {page.pageNumber}</div>
           <div className="text-[11px] text-slate-400">
-            {blocks.length} block · OCR confidence:{' '}
+            {blocks.length} Đoạn · Độ chính xác:{' '}
             {page.ocrConfidence != null ? page.ocrConfidence.toFixed(2) : 'n/a'}
             {savedAt ? ` · Đã lưu lúc ${savedAt}` : ''}
           </div>
@@ -1529,12 +1529,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
               onClick={() => addBlockAt(blocks.length)}
               className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
             >
-              <Plus size={12} /> Thêm block
+              <Plus size={12} /> Thêm đoạn
             </button>
           </div>
           {blocks.length === 0 && (
             <div className="text-xs text-slate-400 py-4 text-center border border-dashed border-slate-200 rounded">
-              Trang chưa có nội dung OCR. Bấm "Thêm block" để tạo thủ công.
+              Trang chưa có nội dung OCR. Bấm "Thêm đoạn" để tạo thủ công.
             </div>
           )}
           <button
@@ -1970,7 +1970,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-mono text-slate-400 w-6">#{index + 1}</span>
         <span className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 text-slate-500 cursor-grab">
-          Keo tha
+          Kéo Thả
         </span>
         <select
           value={typeSelectValue}
@@ -2088,11 +2088,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
                 <Trash2 size={12} /> Xoá ảnh
               </button>
             )}
-            {hasImage && (
-              <span className="text-[11px] text-slate-400">
-                Đã đính kèm ảnh — URL được ẩn để tránh lộ đường dẫn nội bộ.
-              </span>
-            )}
+            {hasImage && <span className="text-[11px] text-slate-400">Đính kèm ảnh.</span>}
           </div>
 
           {uploadError && (

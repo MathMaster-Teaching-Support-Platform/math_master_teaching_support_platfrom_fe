@@ -37,7 +37,7 @@ const BookPdfPreview: React.FC<BookPdfPreviewProps> = ({
           ) : (
             <p className="text-xs text-slate-500">
               Kiểm tra lại sách để chuẩn bị OCR. Khung trống hoặc lỗi MinIO → quay lại bước 1 và{' '}
-              <strong>Thay thế PDF trên server</strong>.
+              <strong>Tải lên sách mới</strong>.
             </p>
           )}
         </div>
