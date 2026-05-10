@@ -9,6 +9,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Send,
   Upload,
   Wallet,
   X,
@@ -254,7 +255,10 @@ function ApproveModal({ request, onClose, onDone }: ApproveModalProps) {
                 <Loader2 size={15} className="wad-spin" /> Đang xử lý...
               </>
             ) : (
-              'Xác nhận hoàn tất'
+              <>
+                <CheckCircle2 size={15} aria-hidden />
+                Xác nhận hoàn tất
+              </>
             )}
           </button>
         </div>
@@ -327,15 +331,27 @@ function RejectModal({ request, onClose, onDone }: RejectModalProps) {
             </div>
           )}
           <div className="wad-modal__actions">
-            <button className="wad-btn-ghost" onClick={onClose}>
+            <button type="button" className="wad-btn-ghost" onClick={onClose}>
+              <X size={15} aria-hidden />
               Hủy
             </button>
             <button
+              type="button"
               className="wad-btn-reject"
               onClick={handleSubmit}
               disabled={rejectMutation.isPending}
             >
-              {rejectMutation.isPending ? 'Đang xử lý...' : 'Từ chối'}
+              {rejectMutation.isPending ? (
+                <>
+                  <Loader2 size={15} className="wad-spin" aria-hidden />
+                  Đang xử lý...
+                </>
+              ) : (
+                <>
+                  <XCircle size={15} aria-hidden />
+                  Từ chối
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -438,10 +454,12 @@ function DetailDrawer({ request, onClose, onApprove, onReject }: DetailDrawerPro
 
           {canProcess && (
             <div className="wad-modal__actions">
-              <button className="wad-btn-reject" onClick={onReject}>
+              <button type="button" className="wad-btn-reject" onClick={onReject}>
+                <XCircle size={15} aria-hidden />
                 Từ chối
               </button>
-              <button className="wad-btn-confirm" onClick={onApprove}>
+              <button type="button" className="wad-btn-confirm" onClick={onApprove}>
+                <Send size={15} aria-hidden />
                 Xử lý & Chuyển khoản
               </button>
             </div>
@@ -649,27 +667,33 @@ const AdminWithdrawals: React.FC = () => {
                       <td>
                         <div className="wad-actions-cell">
                           <button
+                            type="button"
                             className="wad-action-btn"
                             title="Xem chi tiết"
+                            aria-label="Xem chi tiết"
                             onClick={() => setDetailItem(req)}
                           >
-                            <Eye size={14} />
+                            <Eye size={16} className="shrink-0" aria-hidden />
                           </button>
                           {req.status === 'PENDING_ADMIN' && (
                             <>
                               <button
+                                type="button"
                                 className="wad-action-btn wad-action-btn--approve"
                                 title="Xử lý & Chuyển khoản"
+                                aria-label="Xử lý và chuyển khoản"
                                 onClick={() => setApproveItem(req)}
                               >
-                                <CheckCircle2 size={14} />
+                                <Send size={16} className="shrink-0" aria-hidden />
                               </button>
                               <button
+                                type="button"
                                 className="wad-action-btn wad-action-btn--reject"
                                 title="Từ chối"
+                                aria-label="Từ chối yêu cầu"
                                 onClick={() => setRejectItem(req)}
                               >
-                                <XCircle size={14} />
+                                <XCircle size={16} className="shrink-0" aria-hidden />
                               </button>
                             </>
                           )}
