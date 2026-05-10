@@ -386,7 +386,7 @@ const PageMappingStep: React.FC<Props> = ({ book }) => {
         <div className="border border-slate-200 rounded-lg overflow-hidden">
           <div className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-600 border-b flex justify-between">
             <span>Bài học trong chương</span>
-            <span>{draft.length} bài đã mapping</span>
+            <span>{draft.length} bài đã liên kết</span>
           </div>
           <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100">
             {lessons.isLoading && (

@@ -445,14 +445,7 @@ const BookUploadStep: React.FC<Props> = ({
           <div className="space-y-2">
             <div className="flex items-start gap-2 px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 text-sm text-emerald-800">
               <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium">Đã có PDF trên server (đường dẫn trong CSDL).</p>
-                <p className="mt-1 text-xs text-emerald-900/85 leading-relaxed">
-                  Preview lỗi 404 / NoSuchKey thường do file chỉ tồn tại trên MinIO của máy khác (ví
-                  dụ đã upload ở local). Chọn lại file PDF và bấm{' '}
-                  <strong>Thay thế PDF trên server</strong> để ghi đè lên MinIO hiện tại.
-                </p>
-              </div>
+              <div></div>
             </div>
           </div>
         ) : null}
@@ -472,7 +465,7 @@ const BookUploadStep: React.FC<Props> = ({
             className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50"
           >
             {uploadButtonIcon}
-            {hasServerPdf ? 'Thay thế PDF trên server' : 'Upload PDF'}
+            {hasServerPdf ? 'Tải lên sách mới' : 'Upload PDF'}
           </button>
           {!isAddingAnother && (
             <button
