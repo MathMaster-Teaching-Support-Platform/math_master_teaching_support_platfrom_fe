@@ -7,6 +7,7 @@ import Pagination from '../../components/common/Pagination';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import { TrueFalseAnswerSummary } from '../../components/question/TrueFalseAnswerSummary';
 import { extractOptionText } from '../../utils/optionText';
+import { splitExplanationForTeacherReview } from '../../utils/reviewExplanationDisplay';
 import {
   useApproveQuestion,
   useBulkApproveQuestions,
@@ -16,12 +17,68 @@ import {
 import { useToast } from '../../context/ToastContext';
 import type { ReviewQuestionResponse } from '../../types/questionTemplate';
 
+import './template-review.css';
+
 const QUESTION_STATUS_VI = {
   AI_DRAFT: 'Nháp AI',
   UNDER_REVIEW: 'Chờ duyệt',
   APPROVED: 'Đã duyệt',
   ARCHIVED: 'Đã lưu trữ',
 } as const;
+
+function ReviewExplanationSection({
+  explanation,
+  solutionSteps,
+}: {
+  explanation?: string;
+  solutionSteps?: string;
+}) {
+  const solTrim = solutionSteps?.trim();
+  const expTrim = explanation?.trim();
+  const duplicate =
+    Boolean(solTrim && expTrim && solTrim === expTrim);
+
+  if (!expTrim && !solTrim) {
+    return null;
+  }
+
+  const renderBlock = (label: string, text: string, key: string) => {
+    const parsed = splitExplanationForTeacherReview(text);
+    if (parsed.mode === 'plain') {
+      return (
+        <div key={key} className="review-explanation-block">
+          <div className="review-explanation-label">{label}</div>
+          <div className="preview-box review-explanation-plain" style={{ marginTop: 0 }}>
+            <MathText text={parsed.fullText} />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div key={key} className="review-explanation-block">
+        <div className="review-explanation-label">{label}</div>
+        <p className="review-explanation-summary">{parsed.summary}</p>
+        {parsed.statedNumericAnswer && (
+          <p className="muted review-explanation-hint">
+            Giá trị ghi kèm trong lời giải lưu:{' '}
+            <strong>{parsed.statedNumericAnswer}</strong>
+          </p>
+        )}
+        <details className="review-explanation-details">
+          <summary>Biểu thức trong mẫu (logic máy tính — mở để kiểm tra)</summary>
+          <pre className="review-explanation-tech">{parsed.technical}</pre>
+        </details>
+      </div>
+    );
+  };
+
+  return (
+    <div className="review-explanation-stack">
+      {expTrim ? renderBlock('Lời giải gợi ý', expTrim, 'exp') : null}
+      {solTrim && !duplicate ? renderBlock('Các bước đã lưu', solTrim, 'sol') : null}
+    </div>
+  );
+}
 
 // Per-template review screen. Reached only with a `templateId` query param —
 // there is no global pending queue. Without a template the page redirects to
@@ -268,13 +325,10 @@ export function QuestionReviewQueue() {
                               </div>
                             )
                           )}
-                          {q.explanation && (
-                            <div className="muted" style={{ marginTop: 8 }}>
-                              <em>
-                                <MathText text={q.explanation} />
-                              </em>
-                            </div>
-                          )}
+                          <ReviewExplanationSection
+                            explanation={q.explanation}
+                            solutionSteps={q.solutionSteps}
+                          />
                         </div>
                         <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
                           <button

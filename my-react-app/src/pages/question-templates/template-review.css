@@ -473,3 +473,75 @@
     background-position: -100% 0;
   }
 }
+
+/* ── Teacher question review: hide raw JS behind friendly copy ── */
+.module-layout-container .review-explanation-stack {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.module-layout-container .review-explanation-block {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: #fafbfd;
+}
+
+.module-layout-container .review-explanation-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+.module-layout-container .review-explanation-summary {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+.module-layout-container .review-explanation-hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+}
+
+.module-layout-container .review-explanation-details {
+  margin-top: 0.25rem;
+}
+
+.module-layout-container .review-explanation-details summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.2rem 0;
+  list-style-position: outside;
+}
+
+.module-layout-container .review-explanation-details summary:hover {
+  color: #1d4ed8;
+}
+
+.module-layout-container .review-explanation-tech {
+  margin: 0.45rem 0 0;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.module-layout-container .review-explanation-plain {
+  margin-top: 0;
+}
