@@ -628,7 +628,6 @@ export default function TeacherAssessments() {
                   {filteredAssessments.map((assessment, idx) => {
                     const showTags =
                       assessment.assessmentMode === 'MATRIX_BASED' ||
-                      !!assessment.examMatrixGradeLevel ||
                       !!assessment.examMatrixName;
                     const accent = coverAccents[idx % coverAccents.length];
                     return (
@@ -705,11 +704,6 @@ export default function TeacherAssessments() {
                                   Theo ma trận
                                 </span>
                               )}
-                              {assessment.examMatrixGradeLevel != null && (
-                                <span className="px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59] border border-[#E8E6DC]">
-                                  Lớp {assessment.examMatrixGradeLevel}
-                                </span>
-                              )}
                               {assessment.examMatrixName && (
                                 <span
                                   className="px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59] border border-[#E8E6DC] max-w-full truncate"
@@ -739,7 +733,6 @@ export default function TeacherAssessments() {
                   {filteredAssessments.map((assessment, idx) => {
                     const showTags =
                       assessment.assessmentMode === 'MATRIX_BASED' ||
-                      !!assessment.examMatrixGradeLevel ||
                       !!assessment.examMatrixName;
                     const accent = coverAccents[idx % coverAccents.length];
                     return (
@@ -792,11 +785,6 @@ export default function TeacherAssessments() {
                               {assessment.assessmentMode === 'MATRIX_BASED' && (
                                 <span className="px-2 py-0.5 rounded-full bg-violet-50 font-[Be_Vietnam_Pro] text-[11px] font-medium text-violet-600">
                                   Theo ma trận
-                                </span>
-                              )}
-                              {assessment.examMatrixGradeLevel != null && (
-                                <span className="px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59]">
-                                  Lớp {assessment.examMatrixGradeLevel}
                                 </span>
                               )}
                             </div>
