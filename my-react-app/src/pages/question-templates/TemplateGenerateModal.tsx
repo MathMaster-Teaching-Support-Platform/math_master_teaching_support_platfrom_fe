@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function TemplateGenerateModal({ isOpen, onClose, template, onGenerated }: Readonly<Props>) {
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(3);
   const [avoidDuplicates, setAvoidDuplicates] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +33,8 @@ export function TemplateGenerateModal({ isOpen, onClose, template, onGenerated }
       setError('Số lượng câu hỏi phải ≥ 1.');
       return;
     }
-    if (count > 5) {
-      setError('Số lượng câu hỏi tối đa là 5.');
+    if (count > 3) {
+      setError('Số lượng câu hỏi tối đa là 3.');
       return;
     }
 
