@@ -24,15 +24,18 @@ const HEADLINE_EQUALS_FORM =
 function looksLikeTechnicalExpression(s: string): boolean {
   const t = s.trim();
   if (t.length < 12) return false;
-  return (
+  const hasDollarMath = /\$(?!\s)/.test(t);
+  const codeSignals =
     /\bvar\b/u.test(t) ||
     /\?\s*:/u.test(t) ||
     /\b===?\b/u.test(t) ||
     /\|\|/u.test(t) ||
     /&&/u.test(t) ||
-    /\/\/[^\n]*/u.test(t) ||
-    (t.includes(';') && /[=<>]=?/.test(t))
-  );
+    /\/\/[^\n]*/u.test(t);
+  // Intervals like $(-\infty; -5)$ contain `;` — do not treat as JS just because of ; and =
+  const semicolonEqualsRule =
+    t.includes(';') && /[=<>]=?/.test(t) && !hasDollarMath;
+  return codeSignals || semicolonEqualsRule;
 }
 
 /**

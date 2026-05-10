@@ -1,6 +1,7 @@
 import { ArrowLeft, Check, RefreshCw, RotateCcw, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { QbModal } from '../../components/question-banks/qb-ui';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
@@ -26,6 +27,22 @@ const QUESTION_STATUS_VI = {
   APPROVED: 'Đã duyệt',
   ARCHIVED: 'Đã lưu trữ',
 } as const;
+
+/** Teacher review: show stored technical block with KaTeX when it is math prose, not monospace raw text. */
+function looksLikeMathRichTechnical(s: string): boolean {
+  return /\$|\\\[|\\\(|\\frac|\\sqrt|\\text\b|\\infty|\\mathrm|\\mathbb/u.test(s);
+}
+
+function ReviewTechnicalDetails({ body }: { body: string }) {
+  if (looksLikeMathRichTechnical(body)) {
+    return (
+      <div className="review-explanation-tech review-explanation-tech--math">
+        <MathText text={body} />
+      </div>
+    );
+  }
+  return <pre className="review-explanation-tech review-explanation-tech--code">{body}</pre>;
+}
 
 function ReviewExplanationSection({
   explanation,
@@ -66,8 +83,8 @@ function ReviewExplanationSection({
           </p>
         )}
         <details className="review-explanation-details">
-          <summary>Biểu thức trong mẫu (logic máy tính — mở để kiểm tra)</summary>
-          <pre className="review-explanation-tech">{parsed.technical}</pre>
+          <summary>Nội dung đầy đủ (mở để xem chi tiết)</summary>
+          <ReviewTechnicalDetails body={parsed.technical} />
         </details>
       </div>
     );
@@ -92,8 +109,12 @@ export function QuestionReviewQueue() {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rejectReason, setRejectReason] = useState('');
-  /** Optional hint per row → forwarded to blueprint value selector as distinctnessHint */
-  const [regenerateHints, setRegenerateHints] = useState<Record<string, string>>({});
+  /** Modal: sinh lại với gợi ý tuỳ chọn (distinctnessHint). */
+  const [regenerateModal, setRegenerateModal] = useState<{
+    question: ReviewQuestionResponse;
+    hint: string;
+  } | null>(null);
+  const regenerateHintRef = useRef<HTMLTextAreaElement>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   const queueEnabled = !!templateId;
@@ -110,6 +131,12 @@ export function QuestionReviewQueue() {
   useEffect(() => {
     setSelected(new Set());
   }, [templateId, page]);
+
+  useEffect(() => {
+    if (regenerateModal) {
+      requestAnimationFrame(() => regenerateHintRef.current?.focus());
+    }
+  }, [regenerateModal]);
 
   if (!queueEnabled) {
     return <Navigate to="/teacher/question-templates" replace />;
@@ -157,9 +184,11 @@ export function QuestionReviewQueue() {
     }
   }
 
-  async function regenerateOne(question: ReviewQuestionResponse) {
-    const tmpl =
-      question.templateId ?? templateId;
+  async function regenerateOne(
+    question: ReviewQuestionResponse,
+    distinctnessHint?: string
+  ) {
+    const tmpl = question.templateId ?? templateId;
     if (!tmpl) {
       showToast({
         type: 'error',
@@ -167,7 +196,7 @@ export function QuestionReviewQueue() {
       });
       return;
     }
-    const hint = (regenerateHints[question.id] ?? '').trim();
+    const hint = (distinctnessHint ?? '').trim();
     setRegeneratingId(question.id);
     try {
       await bulkReject.mutateAsync({
@@ -192,11 +221,6 @@ export function QuestionReviewQueue() {
       } else {
         showToast({ type: 'success', message: 'Đã sinh lại câu hỏi mới vào hàng chờ duyệt.' });
       }
-      setRegenerateHints((prev) => {
-        const next = { ...prev };
-        delete next[question.id];
-        return next;
-      });
     } catch (e) {
       showToast({
         type: 'error',
@@ -233,6 +257,66 @@ export function QuestionReviewQueue() {
       contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
+        <QbModal
+          isOpen={!!regenerateModal}
+          onClose={() => setRegenerateModal(null)}
+          title="Sinh lại câu hỏi"
+          description="Bản nháp hiện tại sẽ bị từ chối và hệ thống sinh một câu mới từ cùng mẫu. Có thể thêm gợi ý để đổi tham số hoặc phong cách (tuỳ chọn)."
+          size="sm"
+          footer={
+            <div
+              className="review-regenerate-modal__footer"
+              style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}
+            >
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setRegenerateModal(null)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="btn btn--feat-emerald"
+                disabled={!(regenerateModal?.question.templateId ?? templateId)}
+                onClick={() => {
+                  if (!regenerateModal) return;
+                  const { question, hint } = regenerateModal;
+                  setRegenerateModal(null);
+                  void regenerateOne(question, hint);
+                }}
+              >
+                <RotateCcw size={14} />
+                Sinh lại
+              </button>
+            </div>
+          }
+        >
+          {regenerateModal && (
+            <div className="review-regenerate-modal__body">
+              <label className="review-regenerate-modal__label" htmlFor="review-regenerate-hint">
+                Gợi ý cho AI (tuỳ chọn)
+              </label>
+              <textarea
+                ref={regenerateHintRef}
+                id="review-regenerate-hint"
+                className="input review-regenerate-modal__textarea"
+                rows={4}
+                placeholder="Ví dụ: dùng hệ số nhỏ hơn, đổi dấu tham số, tránh số tròn… Để trống nếu chỉ muốn sinh lại ngẫu nhiên khác."
+                value={regenerateModal.hint}
+                onChange={(e) =>
+                  setRegenerateModal((prev) =>
+                    prev ? { ...prev, hint: e.target.value } : prev
+                  )
+                }
+              />
+              <p className="muted review-regenerate-modal__hint-note">
+                Gợi ý được gửi kèm khi chọn tham số để tránh trùng với các lần sinh trước.
+              </p>
+            </div>
+          )}
+        </QbModal>
+
         <section className="module-page" style={{ padding: '1.25rem' }}>
           <header className="page-header" style={{ marginBottom: '1rem' }}>
             <div className="header-stack">
@@ -386,37 +470,14 @@ export function QuestionReviewQueue() {
                           />
                         </div>
                         <div
-                          className="row"
+                          className="row review-queue-card-actions"
                           style={{
                             flexDirection: 'column',
                             gap: 8,
                             alignItems: 'stretch',
-                            minWidth: 196,
+                            minWidth: 148,
                           }}
                         >
-                          <span className="muted" style={{ fontSize: '0.72rem', marginBottom: -4 }}>
-                            Gợi ý sinh lại (tuỳ chọn)
-                          </span>
-                          <textarea
-                            id={`regenerate-hint-${q.id}`}
-                            aria-label="Gợi ý sinh lại (tuỳ chọn)"
-                            className="input"
-                            rows={2}
-                            placeholder="Ví dụ: đổi dấu tham số, dùng số nhỏ hơn… Để trống = chỉ sinh lại."
-                            value={regenerateHints[q.id] ?? ''}
-                            onChange={(e) =>
-                              setRegenerateHints((prev) => ({
-                                ...prev,
-                                [q.id]: e.target.value,
-                              }))
-                            }
-                            style={{
-                              fontSize: '0.8rem',
-                              resize: 'vertical',
-                              minHeight: 52,
-                              marginBottom: 2,
-                            }}
-                          />
                           <button
                             type="button"
                             className="btn secondary"
@@ -426,10 +487,12 @@ export function QuestionReviewQueue() {
                               generateQuestions.isPending ||
                               !(q.templateId ?? templateId)
                             }
-                            onClick={() => void regenerateOne(q)}
+                            onClick={() =>
+                              setRegenerateModal({ question: q, hint: '' })
+                            }
                           >
                             <RotateCcw size={14} />
-                            Sinh lại
+                            Sinh lại…
                           </button>
                           <button
                             className="btn btn--feat-emerald"
