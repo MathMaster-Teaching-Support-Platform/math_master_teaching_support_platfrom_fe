@@ -60,20 +60,25 @@ const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
   </span>
 );
 
-/** Blurred fill + sharp centered image — avoids ugly stretch/crop from wide frames + object-cover. */
+/** Blurred fill + sharp centered image — narrow tall frame so the sharp layer scales up (not a wide strip). */
 const SlideThumbnailPreview: React.FC<{
   src: string;
   alt: string;
+  /** Outer frame; default = centered portrait card (~300×400). */
   frameClassName?: string;
-}> = ({ src, alt, frameClassName = 'h-[120px]' }) => (
-  <div className={`relative w-full overflow-hidden bg-[#E8E6DC] ${frameClassName}`}>
+}> = ({
+  src,
+  alt,
+  frameClassName = 'relative mx-auto w-full max-w-[300px] aspect-[3/4] overflow-hidden bg-[#E8E6DC]',
+}) => (
+  <div className={frameClassName}>
     <img
       src={src}
       alt=""
       aria-hidden
       className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-2xl saturate-[1.05]"
     />
-    <div className="absolute inset-0 flex items-center justify-center p-2">
+    <div className="absolute inset-0 flex items-center justify-center p-3">
       <img
         src={src}
         alt={alt}
@@ -2042,7 +2047,7 @@ const AISlideGenerator: React.FC = () => {
                   <p className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] mb-1.5">
                     Ảnh thumbnail
                   </p>
-                  <label className="block cursor-pointer">
+                  <label className="mx-auto block w-full max-w-[300px] cursor-pointer">
                     <div
                       className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${newSlideThumbnailPreview ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
                     >
@@ -2050,7 +2055,6 @@ const AISlideGenerator: React.FC = () => {
                         <SlideThumbnailPreview
                           src={newSlideThumbnailPreview}
                           alt="Thumbnail preview"
-                          frameClassName="h-[120px]"
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center gap-2 py-8 bg-[#F5F4ED]">
@@ -2894,15 +2898,15 @@ const AISlideGenerator: React.FC = () => {
               onSubmit={(e) => void handleUpdateMetadata(e)}
             >
               {/* Current thumbnail preview */}
-              <div className="rounded-xl overflow-hidden">
+              <div className="overflow-hidden rounded-xl">
                 {generatedThumbnailUrls[editingMetadataFile.id] ? (
                   <SlideThumbnailPreview
                     src={generatedThumbnailUrls[editingMetadataFile.id]}
                     alt={getGeneratedDisplayName(editingMetadataFile)}
-                    frameClassName="h-[100px]"
+                    frameClassName="relative mx-auto w-full max-w-[240px] aspect-[3/4] overflow-hidden bg-[#E8E6DC]"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="flex h-[120px] w-full items-center justify-center bg-[#E8E6DC]">
                     <span className="font-[Playfair_Display] text-[32px] font-medium text-[#B0AEA5]">
                       {getGeneratedDisplayName(editingMetadataFile).slice(0, 1).toUpperCase()}
                     </span>
@@ -2944,7 +2948,7 @@ const AISlideGenerator: React.FC = () => {
                 <p className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] mb-1.5">
                   Ảnh thumbnail mới
                 </p>
-                <label className="block cursor-pointer">
+                <label className="mx-auto block w-full max-w-[240px] cursor-pointer">
                   <div
                     className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${metadataThumbnailFile ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
                   >
@@ -2952,7 +2956,7 @@ const AISlideGenerator: React.FC = () => {
                       <SlideThumbnailPreview
                         src={metadataThumbnailPreviewUrl}
                         alt="Ảnh thumbnail mới"
-                        frameClassName="h-[80px]"
+                        frameClassName="relative mx-auto w-full max-w-[240px] aspect-[3/4] overflow-hidden bg-[#E8E6DC]"
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-2 py-5 bg-[#F5F4ED]">
