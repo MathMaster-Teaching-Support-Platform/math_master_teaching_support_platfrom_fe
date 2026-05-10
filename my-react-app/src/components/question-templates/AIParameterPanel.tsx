@@ -43,7 +43,7 @@ export function AIParameterPanel({
 
   // ── Generate ────────────────────────────────────────────────────────────────
   const handleGenerate = async () => {
-    if (parameters.length === 0) return;
+    if (parameters.length === 0 || !solutionSteps?.trim()) return;
     setError(null);
     setUpdateError(null);
     setResult(null);
@@ -75,7 +75,7 @@ export function AIParameterPanel({
 
   // ── Refine via teacher command ───────────────────────────────────────────────
   const handleRefine = async () => {
-    if (!result || !refinementCommand.trim()) return;
+    if (!result || !refinementCommand.trim() || !solutionSteps?.trim()) return;
     setUpdateError(null);
 
     const request: UpdateParametersRequest = {
@@ -111,6 +111,8 @@ export function AIParameterPanel({
   const isGenerating = generateMutation.isPending;
   const isUpdating = updateMutation.isPending;
   const hasParams = parameters.length > 0;
+  /** Backend + product rule: sample solution steps must exist before any AI parameter flow. */
+  const solutionReady = Boolean(solutionSteps?.trim());
 
   return (
     <div
@@ -149,7 +151,9 @@ export function AIParameterPanel({
             type="button"
             className="btn secondary"
             style={{ fontSize: '0.82rem', padding: '5px 12px' }}
-            disabled={isGenerating || !hasParams || !templateText.trim()}
+            disabled={
+              isGenerating || !hasParams || !templateText.trim() || !solutionReady
+            }
             onClick={() => void handleGenerate()}
           >
             {isGenerating ? (
@@ -186,6 +190,11 @@ export function AIParameterPanel({
       {!hasParams && (
         <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: 8 }}>
           {'Khai báo ít nhất một hệ số ({{a}}) trước khi dùng AI tạo tham số.'}
+        </p>
+      )}
+      {hasParams && !solutionReady && (
+        <p style={{ fontSize: '0.8rem', color: '#b45309', marginTop: 8 }}>
+          Nhập <strong>Hướng dẫn giải mẫu</strong> ở Bước 4 trước khi dùng AI tạo / tinh chỉnh tham số.
         </p>
       )}
 
@@ -318,7 +327,7 @@ export function AIParameterPanel({
                 type="button"
                 className="btn secondary"
                 style={{ alignSelf: 'flex-end', fontSize: '0.82rem', padding: '6px 12px' }}
-                disabled={isUpdating || !refinementCommand.trim()}
+                disabled={isUpdating || !refinementCommand.trim() || !solutionReady}
                 onClick={() => void handleRefine()}
               >
                 {isUpdating ? (
@@ -342,7 +351,7 @@ export function AIParameterPanel({
               type="button"
               className="btn secondary"
               style={{ fontSize: '0.85rem' }}
-              disabled={isGenerating}
+              disabled={isGenerating || !solutionReady}
               onClick={() => void handleGenerate()}
             >
               <RefreshCw size={13} style={{ marginRight: 4 }} />

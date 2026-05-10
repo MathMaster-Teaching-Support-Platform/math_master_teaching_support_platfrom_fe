@@ -478,11 +478,40 @@ export function TemplateFormModal({
     return null;
   }
 
+  function validateStep4(): string | null {
+    if (templateType === QuestionType.MULTIPLE_CHOICE) {
+      const data = mcqBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (!data.solutionStepsTemplate?.trim()) {
+        return 'Vui lòng nhập hướng dẫn giải mẫu (Bước 4) — bắt buộc trước khi lưu hoặc dùng AI.';
+      }
+      return null;
+    }
+    if (templateType === QuestionType.TRUE_FALSE) {
+      const data = tfBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (!data.solutionStepsTemplate?.trim()) {
+        return 'Vui lòng nhập hướng dẫn giải mẫu (Bước 4) — bắt buộc trước khi lưu hoặc dùng AI.';
+      }
+      return null;
+    }
+    if (templateType === QuestionType.SHORT_ANSWER) {
+      const data = saBlueprintRef.current?.getData();
+      if (!data) return 'Lỗi nội bộ: không đọc được dữ liệu blueprint.';
+      if (!data.solutionStepsTemplate?.trim()) {
+        return 'Vui lòng nhập hướng dẫn giải mẫu (Bước 4) — bắt buộc trước khi lưu hoặc dùng AI.';
+      }
+      return null;
+    }
+    return null;
+  }
+
   function goNext() {
     let err: string | null = null;
     if (currentStep === 1) err = validateStep1();
     else if (currentStep === 2) err = validateStep2();
     else if (currentStep === 3) err = validateStep3();
+    else if (currentStep === 4) err = validateStep4();
     if (err) {
       setSubmitError(err);
       return;
@@ -530,11 +559,12 @@ export function TemplateFormModal({
       [1, validateStep1],
       [2, validateStep2],
       [3, validateStep3],
+      [4, validateStep4],
     ] as const) {
       const err = gate();
       if (err) {
         setSubmitError(err);
-        setCurrentStep(step as 1 | 2 | 3);
+        setCurrentStep(step as 1 | 2 | 3 | 4);
         return;
       }
     }
@@ -851,6 +881,13 @@ export function TemplateFormModal({
                     : (mcqBlueprintRef.current?.getData().templateText ??
                       saBlueprintRef.current?.getData().templateText ??
                       '')
+                }
+                solutionSteps={
+                  templateType === QuestionType.MULTIPLE_CHOICE
+                    ? mcqBlueprintRef.current?.getData().solutionStepsTemplate
+                    : templateType === QuestionType.TRUE_FALSE
+                      ? tfBlueprintRef.current?.getData().solutionStepsTemplate
+                      : saBlueprintRef.current?.getData().solutionStepsTemplate
                 }
                 answerFormula={
                   templateType === QuestionType.MULTIPLE_CHOICE
